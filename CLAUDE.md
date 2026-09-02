@@ -23,6 +23,11 @@ decisions (ADRs, glossary terms, specifications), not deliverables.
 - Small core, explicit platform boundary, one Mattermost adapter. Minimise runtime dependencies.
   Every 0.4.x capability gets an explicit keep / redesign / drop decision.
 - Async and sync APIs are both required, implemented without duplicated code paths.
+- **Documentation is the product of this phase.** `docs/design/` is an arc42 architecture document
+  with C4 diagrams in Mermaid; every component gets an LLD from `docs/design/components/_template.md`
+  (patterns named as on refactoring.guru, explicit SOLID analysis, failure modes, typing/async rules,
+  testing). `docs/design/engineering-style.md` is the rulebook every LLD and later every PR obeys.
+  Read `docs/design/README.md` before touching the catalogue.
 
 ## Agent skills
 
