@@ -28,7 +28,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | — | `components/_template.md` | reviewed | #35 | — |
 | — | `docs/documentation-style.md` | reviewed | #35 | — |
 | — | `docs/adr/_template.md`, `docs/adr/README.md` | reviewed | #35 | — |
-| — | Docs-as-code linting (markdown, Vale, lychee, Mermaid, index check) | — | docs-lint task | #26 |
+| — | Docs-as-code linting (markdown, Vale, lychee, Mermaid, index check) | — | #43 | #26 |
 
 ## B. Decision areas → ADR
 
