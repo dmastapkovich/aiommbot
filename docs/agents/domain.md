@@ -49,3 +49,26 @@ If the concept you need isn't in the glossary yet, that's a signal — either yo
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
 > _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+
+## CONTEXT.md format
+
+```md
+# aiommbot
+
+{One or two sentences: what this context is and why it exists.}
+
+## Language
+
+**Term**:
+{One or two sentences defining what it IS, not what it does.}
+_Avoid_: synonym, synonym
+```
+
+Be opinionated: one canonical term per concept, the rejected synonyms under `_Avoid_`. Only terms
+specific to this project belong; general programming concepts do not. Group under subheadings when
+clusters emerge. `CONTEXT.md` is a glossary and nothing else — no implementation detail, no spec.
+Create it when the first term is resolved (expected in ticket #13).
+
+## ADR format
+
+`docs/adr/_template.md`. Number = highest existing + 1. Add the row to `docs/adr/README.md`.

@@ -31,6 +31,8 @@ one node richer. The deliverable of this phase is documentation; code starts on 
 | Engineering style rulebook | `docs/design/engineering-style.md` | style ticket |
 | Diagram conventions | `docs/design/diagrams.md` | fixed |
 | Research findings | `docs/research/NN-*.md` | research tickets |
+| Documentation standard (types, naming, linking, status, discovery protocol) | `docs/documentation-style.md` | fixed |
+| Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
 | Tracker conventions | `docs/agents/issue-tracker.md`, `docs/agents/domain.md` | fixed |
 | Backlog ideas that are not decisions | GitHub issues labelled `enhancement` + a fog line in #1 | maintainer |
@@ -50,6 +52,8 @@ one node richer. The deliverable of this phase is documentation; code starts on 
   alternative, SOLID is argued per component, diagrams are C4 in Mermaid, and a document is
   *reviewed* only when the checklist says so.
 - Never commit secrets or personal data; never paste tokens, cookies or private URLs into issues.
+- Anything the design did not foresee goes through the discovery protocol in
+  `docs/agents/session-playbook.md` — one home per finding, current ticket unchanged.
 
 ## Skills in this repository
 

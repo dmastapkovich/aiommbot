@@ -94,3 +94,22 @@ Autonomous; may run several in parallel as background agents.
 Manual work that unblocks a decision. Do it (or hand the maintainer a precise checklist when only
 they can), record what was created and any facts later tickets depend on in the resolution
 comment, close. *Done when the blocked decision can proceed.*
+
+## Discovery protocol
+
+Something surfaces that no ticket, arc42 section, ADR or template anticipates — a capability, a
+mechanism, a detail, a whole document type. Classify it, file it where its class lives, link it
+from the current ticket, and return to the current ticket without designing the discovery in
+passing.
+
+| Class | Test | Where it goes |
+|---|---|---|
+| Out of scope | It lies beyond the Destination | one line in the map's *Out of scope*; if a ticket already exists for it, close that ticket |
+| Fog | In scope, but the question cannot yet be stated precisely | one line in the map's *Not yet specified* |
+| Sharp question | The question can be stated now, even if it cannot be answered now | a new wayfinder ticket: create, wire `blocked_by`, add as sub-issue of #1; a `TRACKER.md` row in §B, §D or §E if it is a decision, a concern or a 0.4.8 capability |
+| Backlog idea | A feature or tool, not a design decision | an `enhancement` issue plus one fog line in the map (precedent: #34) |
+| Gap in the catalogue itself | The document type, template or rulebook cannot hold the finding | a task ticket to extend `docs/documentation-style.md`, the template or the tracker; the finding is parked as fog until the gap is closed |
+
+*Done when the discovery has exactly one home, the current ticket links to it, and the current
+ticket's question is unchanged.*
+
