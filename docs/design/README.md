@@ -30,6 +30,9 @@ diagram renders on GitHub, is reviewed in pull requests and is diffed like code.
 
 Each file starts with a status line: `Status: not started | in progress (#ticket) | reviewed`.
 
+Readiness of every document, decision area, component and cross-cutting concern is tracked in
+[`TRACKER.md`](TRACKER.md); update it in the same commit as the document it describes.
+
 ## How the catalogue grows
 
 1. A wayfinder grilling ticket resolves a decision → an ADR is written and the relevant arc42
