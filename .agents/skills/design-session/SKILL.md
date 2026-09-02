@@ -1,6 +1,6 @@
 ---
 name: design-session
-description: Use when working any ticket of the aiommbot 0.5.0 wayfinder map (issue #1) — research, grilling, prototype, LLD or task — or when the maintainer says "take the next ticket", "продолжим карту", or names an issue number.
+description: "Use when working any ticket of the aiommbot 0.5.0 wayfinder map (GitHub issue 1) — research, grilling, prototype, LLD or task — or when the maintainer says take the next ticket, продолжим карту, or names an issue number."
 ---
 
 # Design session
