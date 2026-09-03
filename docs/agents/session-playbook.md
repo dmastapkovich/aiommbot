@@ -20,9 +20,10 @@ session ends only when the final step's criterion holds.
 5. **Verify.** Walk `docs/agents/design-quality-checklist.md` for every document touched; fix
    before closing. Confirm no existing ADR is contradicted, or write the superseding ADR and mark
    the old one `superseded by`. *Done when every checklist line for the touched documents is true.*
-6. **Close.** Comment `## Resolution` on the ticket (gist plus links to the files), close it, add
-   one line to the map's *Decisions so far* (title as link, one-line gist, file pointer). *Done
-   when the map body shows the new line.*
+6. **Close.** Draft the `## Resolution` comment (gist plus links to the files) and the map line
+   into files first; then post the comment, close the ticket, and add the line to the map's
+   *Decisions so far* (title as link, one-line gist, file pointer). *Done when the map body shows
+   the new line.*
 7. **Clear the fog.** Graduate anything the answer made specifiable into new tickets
    (create, then wire `blocked_by`, then add as sub-issues of #1); remove the graduated line from
    *Not yet specified*; rule mis-scoped tickets out of scope by closing them with a line in *Out of

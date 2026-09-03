@@ -9,17 +9,25 @@ sources: the ADRs, the map and the research files are authoritative.
 `aiommbot` is an async Python framework for Mattermost bots. The internal 0.4.x line (~20k LOC,
 eleven company bots, private GitLab) is frozen. 0.5.0 is a **from-scratch public rewrite** with a
 clean history in this repository, MIT, English, starting at 0.5.0, with **no compatibility** with
-0.4.x ([ADR-0001](../adr/0001-fresh-start-as-a-public-package.md)). The inspirations are
-**django-modern-rest** (discipline, mechanically enforced quality, tiny public API, plugin isolation
-via import-linter, executable docs, 100 % coverage) and **FastStream** (agent-native `.agents/skills`,
-`_internal` boundary, in-memory `TestBroker`, `docs_src` with tests). This phase produces the design
-catalogue; implementation is a later map.
+0.4.x ([ADR-0001](../adr/0001-fresh-start-as-a-public-package.md)). The project develops on its
+own terms: peer frameworks are studied as evidence in `docs/research/`, never cited as authority
+in user-facing documents. This phase produces the design catalogue; implementation is a later map.
+
+## Principles we hold (own words, not borrowed)
+
+- Quality by mechanism: several strict type checkers, `ruff` with all rules, import-linter
+  contracts, executable docs, typing tests, full coverage. Nothing is enforced by memory.
+- A small public API with a documented internal boundary; optional features isolated so the core
+  installs and runs with no extras.
+- Agent-native repository: skills, playbooks and a readiness tracker are first-class artefacts.
+- Testing without infrastructure: an in-memory transport and recording clients ship with the
+  framework.
 
 ## Settled while charting (do not reopen without new evidence)
 
 - Destination: a complete design catalogue — glossary, ADRs, arc42 architecture document with HLD,
   a reviewed LLD per component, engineering style rulebook, standards, hand-off.
-- Quality bar adopted whole from django-modern-rest: several strict type checkers (mypy, pyright,
+- Quality bar fixed while charting: several strict type checkers (mypy, pyright,
   pyrefly, ty), `ruff` all rules, wemake-python-styleguide, import-linter contracts, slotscheck,
   100 % coverage, executable docs, typing tests, smoke imports without extras. Versions are a
   ticket; the level is not.
@@ -103,6 +111,33 @@ backpressure policies, DI resolved once at registration, friendly "install extra
   the bot framework's responsibility at all before designing it.
 - Values the state of the art over habit: expects primary-source facts, named patterns, SOLID
   reasoning and current (2026) tooling, and says so when a proposal feels dated.
-- Likes concrete artefacts to react to (code sketches, diagrams) and wants a FastStream-docs-style
-  handler catalogue eventually (issue #34) — keep handlers introspectable as data.
+- Likes concrete artefacts to react to (code sketches, diagrams) and wants an auto-generated
+  handler catalogue and debug console eventually (issue #34) — keep handlers introspectable as data.
 - Prefers recommendations stated first with the reason, then the alternatives.
+- Positions the project as independent: no other framework is named as an inspiration or
+  authority in README, community files or agent docs. Research notes cite peers as evidence only.
+
+## Decided in Core ideology (#13, 2026-09-03)
+
+Six ADRs and the first glossary terms; read them before any ticket that touches the core.
+
+- [ADR-0002](../adr/0002-core-scope-two-condition-test.md): two-condition admission test for the
+  Core; the refusal list; stdlib-only Core; one distribution with import-linter isolation; explicit
+  composition.
+- [ADR-0003](../adr/0003-stateless-core-state-plugin-with-explicit-backend.md): stateless Core;
+  State Plugin with a mandatory explicit backend; in-memory needs a single-process declaration.
+- [ADR-0004](../adr/0004-async-engine-with-generated-sync-runtime.md): one asyncio engine; sync
+  handlers in a thread pool; synchronous face only for the Runtime, generated from async.
+- [ADR-0005](../adr/0005-one-ingress-many-workers.md): one WebSocket consumer, replicable webhook
+  ingress, work in workers; processes declare their role.
+- [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md): composition over inheritance,
+  Core-owned Protocols, named patterns justified per LLD, no singletons, immutable events,
+  declarative thin introspectable handlers, Python 3.12+ typing as the contract, fail closed.
+- [ADR-0007](../adr/0007-tiny-public-root-with-explicit-subpackages.md): tiny root namespace,
+  explicit subpackages, the rest `_internal`.
+- `CONTEXT.md` terms: Core, Adapter, Plugin, Transport, Bot, Runtime, Handler, State.
+  "Channel" is reserved for the Mattermost channel.
+
+Follow-ups routed: single-process declaration and checks framework → #14; process roles and the
+single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance
+suite → #18; tenets into rules → #36; layout and `__all__` guard → #24.

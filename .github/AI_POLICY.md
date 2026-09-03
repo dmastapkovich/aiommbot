@@ -17,5 +17,4 @@ the work — are closed without review.
 
 Using AI to translate or polish English you wrote yourself is welcome.
 
-This policy is adapted from the [Astral AI policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md),
-which is also used by django-modern-rest.
+Wording adapted from the [Astral AI policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md) (MIT).

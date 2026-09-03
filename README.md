@@ -1,8 +1,8 @@
 # aiommbot
 
-> An async Python framework for building Mattermost bots. Rewritten from scratch for 0.5.0
-> with the discipline of [django-modern-rest](https://github.com/wemake-services/django-modern-rest)
-> and the agent-native openness of [FastStream](https://github.com/ag2ai/faststream).
+> An async Python framework for building Mattermost bots, rewritten from scratch for 0.5.0:
+> a small stateless core, an explicit platform boundary, quality enforced by mechanism, and a
+> repository built to be developed together with AI coding agents.
 
 **Status: design phase.** There is no code here yet, on purpose. Every hard-to-reverse decision is
 being made in the open first — as a [wayfinder map](https://github.com/dmastapkovich/aiommbot/issues?q=label%3Awayfinder%3Amap)

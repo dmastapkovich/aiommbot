@@ -12,3 +12,6 @@ to Claude Code.
   `gh`, or the web can answer, and keep only the decision for the human.
 - Long research runs as background agents writing straight into `docs/research/`; commit each
   file as it lands and close its ticket with a resolution comment.
+- Run `gh` one command per Bash call; compound `gh … && gh …` lines may be sandboxed differently.
+  Draft the resolution comment and the map line into files first, then post them. If `gh` or
+  `git push` is blocked, hand the maintainer the exact commands instead of retrying.

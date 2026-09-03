@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+share/python-wheels/
+MANIFEST
+
+# Environments and tooling
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.python-version.local
+uv.lock.bak
+.tox/
+.nox/
+
+# Test, lint and type-check caches
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.ty_cache/
+.pyrefly/
+.cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit*.xml
+codequality.json
+
+# Docs build
+site/
+docs/_build/
+.docs-cache/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Agent and local state
+.claude/settings.local.json
+.claude/*.local.*
+.scratch/
+*.log

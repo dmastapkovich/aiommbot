@@ -106,4 +106,4 @@ file in a typed directory appears in its index. Until then the checklist is the 
 
 arc42 (arc42.org) · C4 model (c4model.com) · Diátaxis (diataxis.fr) · Nygard, *Documenting
 Architecture Decisions* · Google developer documentation style guide · Write the Docs, *Docs as
-Code* · django-modern-rest and FastStream documentation as living precedents.
+Code*.

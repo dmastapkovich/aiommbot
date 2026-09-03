@@ -31,7 +31,7 @@ Consequences fixed with the same decision:
   an import-linter `forbidden` contract and a smoke import of the Core with no extras installed.
 - **One distribution**, `aiommbot`, with the Core, the Mattermost Adapter and first-party Plugins as
   subpackages; boundaries are import-linter `layers` and `forbidden` contracts, optional
-  dependencies are extras. One version, one changelog (as django-modern-rest and FastStream).
+  dependencies are extras. One version, one changelog.
 - **Explicit composition**: functionality is enabled by listing it in code
   (`Bot(plugins=[...])`, explicit router inclusion). Nothing is active because it is installed or
   imported. From Django we take the staged boot, `ready()`-style hooks, the checks framework and
