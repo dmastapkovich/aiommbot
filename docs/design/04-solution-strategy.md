@@ -90,7 +90,17 @@ events per key by default, surfaces conflicts and stale records as typed outcome
 every record with a sliding logical TTL of one hour by default. In-memory and Redis first-party.
 → [ADR-0022](../adr/0022-state-plugin-model.md)
 
+## A supervised, resumable, never-stalling WebSocket gateway
+
+One reconnect loop with a TaskGroup per connection and a transient/resumable/fatal exit table;
+JSON `ping` every 30 s with a 60 s silence monitor; full-jitter backoff 1→300 s, unbounded with a
+`Degraded` Signal; resume by `connection_id`+`seq` with continuity checks and in-memory dedup,
+`Resynced` on loss; a reader that never stalls into a bounded queue with typed per-kind overflow
+policies; graceful drain within 25 s; a declared single consumer with an optional lease; Bearer
+auth via `TokenProvider` and auth-loss detection through the `ping` reply and a REST probe, ending
+in `FatalError(AuthRevoked)`; `websockets` primary, `picows` optional behind one Protocol.
+→ [ADR-0023](../adr/0023-websocket-gateway-resilience.md)
+
 ## Still to be written here
 
-Execution-model mechanism (#22), gateway resilience
-strategy (#19), quality-by-mechanism toolchain (#23, #28).
+Execution-model mechanism (#22), webhook ingress (#20), API layer (#21), quality-by-mechanism toolchain (#23, #28).

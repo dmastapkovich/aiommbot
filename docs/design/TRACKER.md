@@ -56,7 +56,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Core error boundary | #17 | 0021 | reviewed |
 | State/FSM, event isolation, storage contract, first-party backends, lifetime | #18 | 0022 | reviewed |
 | Declarative scenes on top of State | #48 | | — |
-| WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain) | #19 | | — |
+| WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
 | Webhook ingress: interactive actions, dialogs, callback security | #20 | | — |
 | Mattermost API layer: codegen, serialisation, HTTP client, error taxonomy | #21 | | — |
 | Execution model: async core, sync face mechanism | #22 | | — |
@@ -103,10 +103,10 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
 | Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
-| Backpressure and flow control between transport and handlers | #19 | §8, gateway LLD | | — |
+| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`) | §8, gateway LLD | | wip |
 | Idempotency and stale-action handling | ADR-0022 (`KeyValueStore` CAS + `LockProvider` shared with dedup), #20 | §8 | | wip |
-| Single WebSocket consumer and horizontal scaling | ADR-0005, #19 #40 | §7 | | wip |
-| Graceful shutdown and drain | #19 #22 | §6, §8 | | — |
+| Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | wip |
+| Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), #22 | §6, §8 | | wip |
 | Deprecation and public-API definition for semver | #28 | §8 | | — |
 
 ## E. Disposition of every 0.4.8 capability
@@ -117,7 +117,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 
 | 0.4.8 capability | Used by (of 11 bots) | Disposition | Decided in | Status |
 |---|---|---|---|---|
-| WebSocket channel (posts, events) | 11 | keep as adapter-specific Transport plugin (ADR-0015); resilience in #19 | #19 | wip |
+| WebSocket channel (posts, events) | 11 | keep, redesigned as the resilient `WebSocketTransport` (ADR-0023) | #19 | reviewed |
 | Webhook channel + interactive actions/dialogs | 10 | keep as adapter-specific Transport plugin (ADR-0015); design in #20 | #20 | wip |
 | Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | | #20 | — |
 | Message / action / dialog handlers, `direct_added` | ≥8 | keep as first-class payloads (ADR-0012) | #15 | reviewed |
@@ -133,7 +133,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | Taskiq scheduling (`@router.schedule`) | few, in-memory broker only | not core (ADR-0002); placement pending | #30 | — |
 | Retry / idempotency / dead-letter middlewares, `RetryableError` family | 0 | not core (ADR-0002); placement pending | #30 | — |
 | Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | not core (ADR-0002); placement pending | #30 | — |
-| Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | | #19 | — |
+| Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | keep the idea, redesigned: bounded queue, N workers, typed per-kind `OverflowPolicy` with `Dropped` Signal (ADR-0023) | #19 | reviewed |
 | `ObservabilityProvider` / Prometheus, Sentry middleware | some | not core (ADR-0002); placement pending | #29 | — |
 | `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep as Runtime with generated sync face (ADR-0004) | #22 | wip |
 | `EventPreparer` (user/channel resolution) | some | | #15 #21 | — |

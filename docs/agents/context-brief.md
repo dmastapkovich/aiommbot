@@ -228,11 +228,29 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
 - Scenes → #48 (blocked by #18). Evidence: `docs/research/07`, `13`.
 - Glossary: StateKey, Flow, StateContext, KeyValueStore, LockProvider.
 
+## Decided in WebSocket gateway (#19, 2026-09-03)
+
+- [ADR-0023](../adr/0023-websocket-gateway-resilience.md): one reconnect loop + TaskGroup per
+  connection, exit table transient/resumable/fatal; JSON `ping` 30 s + 60 s silence monitor
+  (configurable), close 4000; full-jitter backoff 1→300 s, unbounded, `Degraded` Signal, no-hello
+  10 s = failure; resume by `connection_id`+`seq`, continuity → 4001, dedup `(connection_id,
+  seq)`, `Resynced(since)` with backfill as plugin/recipe; reader never stalls, bounded queue, N
+  workers, typed per-kind `OverflowPolicy` (drop oldest low-value with `Dropped`); drain: close
+  first, ≤ 25 s, `DrainTimedOut`; `ProcessProfile.websocket_consumer` + optional lease via
+  `LockProvider`; Bearer on handshake via `TokenProvider`; auth loss detected by parsing the `ping`
+  reply + REST probe `/users/me`, one token refresh, then `FatalError(AuthRevoked)`; library:
+  `websockets` 17 primary, `picows` optional extra, both behind `WebSocketConnection`; REST
+  candidate `httpx2` (decided in #21). Evidence: `docs/research/01`, `02`, `14`, `15`.
+- Mattermost facts to remember: the server never closes a socket for auth loss and sends no
+  event; bot PATs get 100-year sessions recreated on demand; only PAT delete/disable, bot disable
+  or user deactivation kill a bot; the server never negotiates permessage-deflate.
+- Glossary: Resync.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
 CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
-middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25.
+middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25; `HTTPTransport` Protocol and httpx2 → #21; backfill plugin and `AuthLossDetector` → #41; gateway quality scenarios → #37.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

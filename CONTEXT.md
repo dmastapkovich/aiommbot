@@ -172,6 +172,12 @@ Core Protocol for a per-key asynchronous lock with a TTL and a wait timeout. Use
 isolation and dedup; separate from KeyValueStore.
 _Avoid_: event isolation (that is the middleware using it), mutex, semaphore
 
+**Resync**:
+The moment the server hands the gateway a fresh `connection_id` after an unrecoverable gap: buffered
+events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the loss window so a
+plugin or the application can backfill over REST.
+_Avoid_: reconnect (that may resume without loss), full sync, catch-up (bare)
+
 **Quarantine**:
 A module under `_internal/compat/` that adapts one third-party library with incomplete typing to a
 Core-owned Protocol. The only place a lint or type suppression may exist, each tied to an upstream
