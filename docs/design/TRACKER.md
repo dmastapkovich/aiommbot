@@ -17,7 +17,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 4 | `04-solution-strategy.md` | wip (#13 → #14, #38) | #38 | same |
 | 5 | `05-building-block-view.md` | — | #38 | same |
 | 6 | `06-runtime-view.md` | — | #39 | #38 #16 #17 |
-| 7 | `07-deployment-view.md` | — | #40 | #38 #24 #29 #30 |
+| 7 | `07-deployment-view.md` | wip (hosting shapes and topology inputs from #19, #20; #40 completes) | #40 | #38 #24 #29 #30 |
 | 8 | `08-cross-cutting-concepts.md` | — | #40 | same |
 | 9 | `docs/adr/` | rolling | every grilling ticket | — |
 | 10 | `10-quality-requirements.md` | — | #37 | #13 |

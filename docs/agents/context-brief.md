@@ -260,6 +260,10 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   rules. Mattermost facts: one attempt, no retries, 30 s shared with `trigger_id`, 1 MiB reply cap,
   no signature towards external URLs. Evidence: `docs/research/11`, `16`.
 - Glossary: Reply channel, Callback token, StaleAction.
+- Hosting and topology inputs recorded in arc42 §7 (`docs/design/07-deployment-view.md`): the
+  framework starts no HTTP server; three hosting shapes (mount in own ASGI app, hand to uvicorn,
+  CLI `--serve`); topology by composition (all-in-one / split WS consumer + N webhook replicas /
+  plus workers); the only hard constraint is one WebSocket consumer per bot. #40 completes it.
 
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
