@@ -43,6 +43,12 @@ gates, parsing and dependency injection happen outside its body; the body makes 
 and answers.
 _Avoid_: callback, listener, endpoint, view
 
+**Quarantine**:
+A module under `_internal/compat/` that adapts one third-party library with incomplete typing to a
+Core-owned Protocol. The only place a lint or type suppression may exist, each tied to an upstream
+issue and counted against a baseline that only decreases.
+_Avoid_: shim, wrapper module, compat layer (as a general term)
+
 **State**:
 The first-party Plugin that gives a conversation a finite-state machine and per-key event
 isolation over an explicitly chosen storage backend.

@@ -138,6 +138,23 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
 - `CONTEXT.md` terms: Core, Adapter, Plugin, Transport, Bot, Runtime, Handler, State.
   "Channel" is reserved for the Mattermost channel.
 
+## Decided in Python floor and typing toolchain (#23, 2026-09-03)
+
+- [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md): `>=3.12`, support until EOL,
+  matrix 3.12–3.15 + blocking 3.14t, `typing_extensions` as the Core's only runtime dependency
+  (amends ADR-0002), lazy annotation reads, one compat module.
+- [ADR-0009](../adr/0009-four-strict-type-checkers.md): mypy + pyright + pyrefly + ty, all beyond
+  strict, all blocking, pinned; `tests/typing` with `assert_type` and negative cases;
+  `--verifytypes` 100 %.
+- [ADR-0010](../adr/0010-zero-suppressions-with-a-quarantine.md): no suppressions in the package;
+  Quarantine modules under `_internal/compat/` are the only exception, baseline only decreases.
+- [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md): ruff ALL + preview with
+  explained ignores (TC off), format 100/double/google, WPS blocking, semgrep rules for banned
+  patterns, import-linter, slotscheck require-*, deptry/uv audit/typos/pyproject-fmt/zizmor,
+  `just` + pre-commit.
+
 Follow-ups routed: single-process declaration and checks framework → #14; process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance
-suite → #18; tenets into rules → #36; layout and `__all__` guard → #24.
+suite → #18; tenets into rules → #36; layout and `__all__` guard → #24; toolchain config verified on a stub → #32;
+CI matrix and free-threaded job → #28; banned-pattern rules with examples → #36; quarantine
+location in the layout → #24.

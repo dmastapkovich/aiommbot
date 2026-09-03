@@ -12,7 +12,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | § | Document | Status | Ticket | Depends on |
 |---|---|---|---|---|
 | 1 | `01-introduction-and-goals.md` | — | #37 | #13 |
-| 2 | `02-constraints.md` | — | #37 | #13 |
+| 2 | `02-constraints.md` | wip (#23 → #37) | #37 | #13 |
 | 3 | `03-context-and-scope.md` | — | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
 | 4 | `04-solution-strategy.md` | wip (#13 → #14, #38) | #38 | same |
 | 5 | `05-building-block-view.md` | — | #38 | same |
@@ -52,7 +52,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Webhook ingress: interactive actions, dialogs, callback security | #20 | | — |
 | Mattermost API layer: codegen, serialisation, HTTP client, error taxonomy | #21 | | — |
 | Execution model: async core, sync face mechanism | #22 | | — |
-| Python floor and typing toolchain | #23 | | — |
+| Python floor and support policy | #23 | 0008 | reviewed |
+| Type checkers and typing tests | #23 | 0009 | reviewed |
+| Zero suppressions and quarantine | #23 | 0010 | reviewed |
+| Lint, format, architecture toolchain, task runner | #23 | 0011 | reviewed |
 | Repository layout, public/internal boundary, extras | #24 | | — |
 | Testing toolkit | #25 | | — |
 | Documentation stack and executable docs | #26 | | — |
@@ -81,7 +84,7 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|
-| Typing discipline and banned patterns | #23 #36 | §8, style | | — |
+| Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
 | Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | #21 #15 | §8 | | — |
 | Async, cancellation, timeouts, structured concurrency | #22 #19 | §8, style | | — |
 | Configuration and settings, plugin-contributed settings | #14 #24 | §8 | | — |
