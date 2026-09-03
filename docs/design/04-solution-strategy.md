@@ -51,7 +51,18 @@ closed. → [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.
 [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
 [ADR-0014](../adr/0014-filters-and-extractors-with-closed-handler-signatures.md)
 
+## One Adapter, explicit Plugins, three-phase start, typed Signals
+
+Exactly one Adapter supplies the platform vocabulary; every optional capability, transports
+included, is a Plugin with a frozen declaration and narrow contribution Protocols, generic or
+adapter-specific, ordered topologically by declared dependencies and configured through typed
+frozen settings objects. The Bot composes, checks against a ProcessProfile with the full list of
+failures, then starts; lifecycle notifications are typed async Signals.
+→ [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
+[ADR-0016](../adr/0016-three-phase-start-with-checks.md),
+[ADR-0017](../adr/0017-typed-async-lifecycle-signals.md)
+
 ## Still to be written here
 
-Plugin model (#14), execution-model mechanism (#22), gateway resilience
+Execution-model mechanism (#22), gateway resilience
 strategy (#19), quality-by-mechanism toolchain (#23, #28).

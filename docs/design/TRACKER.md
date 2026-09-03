@@ -43,7 +43,9 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Scaling model: one ingress, many workers | #13 (→ #19, #40) | 0005 | reviewed |
 | Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed |
 | Public API surface: tiny root + explicit subpackages | #13 (→ #24) | 0007 | reviewed |
-| Plugin and contribution model | #14 | | — |
+| Plugin contract, adapter role, ordering, settings, discovery, stability | #14 | 0015 | reviewed |
+| Three-phase start, checks framework, ProcessProfile | #14 | 0016 | reviewed |
+| Lifecycle Signals | #14 | 0017 | reviewed |
 | Event model: envelope, payload registry, first-class kinds | #15 | 0012 | reviewed |
 | Routing: type-driven subscription, tree walk, typed outcome, reachability | #15 | 0013 | reviewed |
 | Filters, extractors, closed handler signatures | #15 | 0014 | reviewed |
@@ -90,12 +92,12 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
 | Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | #21 #15 | §8 | | — |
 | Async, cancellation, timeouts, structured concurrency | #22 #19 | §8, style | | — |
-| Configuration and settings, plugin-contributed settings | #14 #24 | §8 | | — |
+| Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
 | Logging and redaction (no message text, tokens, PII) | #36 #29 | §8 | | — |
 | Observability hooks and naming | #29 | §8 | | — |
 | Security: callback signing, secrets, PII, replay | #20 | §8 | | — |
 | Dependency injection scopes and lifecycle | #16 | §8 | | — |
-| Extension points and plugin isolation (import-linter) | ADR-0002 (principle), #14 #24 | §8 | | wip |
+| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
 | Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
 | Backpressure and flow control between transport and handlers | #19 | §8, gateway LLD | | — |
@@ -112,8 +114,8 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 
 | 0.4.8 capability | Used by (of 11 bots) | Disposition | Decided in | Status |
 |---|---|---|---|---|
-| WebSocket channel (posts, events) | 11 | | #19 | — |
-| Webhook channel + interactive actions/dialogs | 10 | | #20 | — |
+| WebSocket channel (posts, events) | 11 | keep as adapter-specific Transport plugin (ADR-0015); resilience in #19 | #19 | wip |
+| Webhook channel + interactive actions/dialogs | 10 | keep as adapter-specific Transport plugin (ADR-0015); design in #20 | #20 | wip |
 | Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | | #20 | — |
 | Message / action / dialog handlers, `direct_added` | ≥8 | keep as first-class payloads (ADR-0012) | #15 | reviewed |
 | 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | drop as separate classes; reactions/group/user events stay first-class payloads, the rest via RawEvent (ADR-0012) | #15 | reviewed |
@@ -134,10 +136,10 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | `EventPreparer` (user/channel resolution) | some | | #15 #21 | — |
 | `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | | #21 | — |
 | Attachments, buttons, selects, dialog element builders | 10 | | #20 | — |
-| Lifespan, `combine_lifespans`, `bot.state` | ≥8 | | #14 #16 | — |
+| Lifespan, `combine_lifespans`, `bot.state` | ≥8 | redesign: plugin `HasLifecycle` + Signals replace lifespan composition (ADR-0015/0017); `bot.state` → dependencies in #16 | #16 | wip |
 | CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
 | `aiommbot.testing` toolkit, mock Mattermost server | 2 | | #25 | — |
-| `extras.py` friendly missing-extra errors, nine extras | — | | #24 | — |
+| `extras.py` friendly missing-extra errors, nine extras | — | keep the idea: extras per first-party plugin with a friendly error (ADR-0015); count and names in #24 | #24 | wip |
 | uvloop/winloop switching | — | not core (ADR-0002); placement pending | #22 | — |
 | Cache utilities | — | | #21 | — |
 

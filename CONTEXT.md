@@ -12,19 +12,42 @@ registry. Standard library only; holds no state between events.
 _Avoid_: engine, kernel, framework core, runtime
 
 **Adapter**:
-The binding of the Core to one chat platform — for 0.5.0, Mattermost: wire models, REST client,
-WebSocket and webhook Transports, platform-specific filters.
+The binding of the Core to one chat platform — for 0.5.0, Mattermost. Exactly one per Bot. It
+supplies the platform vocabulary: payload types and the EventRegistry, the REST client and Runtime,
+platform filters and router aliases. Its Transports are adapter-specific Plugins.
 _Avoid_: platform, driver, connector, integration
 
 **Plugin**:
-An optional capability enabled by listing it explicitly in the Bot's composition. It contributes
-routers, middleware, dependencies, settings and lifecycle hooks; it is never active merely because
-it is installed.
+An optional capability enabled by listing it explicitly in the Bot's composition. Carries a frozen
+PluginSpec and implements only the contribution Protocols it needs. Either generic (depends on the
+Core only) or adapter-specific (bound to one Adapter). Never active merely because it is installed.
 _Avoid_: extension, app, addon, module
+
+**PluginSpec**:
+The immutable declaration of a Plugin: name, contract version, `requires` and `after` dependencies
+on other plugins, adapter binding, settings type. Readable without running code.
+_Avoid_: manifest, metadata, config
+
+**Check**:
+A side-effect-free validation run in the check phase of start-up, contributed by the Core, the
+Adapter or a Plugin: id, severity, message, hint. Any error-severity Check stops the start with the
+full list of failures.
+_Avoid_: validation, assertion, health check (that is a runtime probe)
+
+**ProcessProfile**:
+The typed declaration of what kind of process is starting (at least whether it is a single
+process), which Checks are evaluated against.
+_Avoid_: mode, role (informal), deployment flag
+
+**Signal**:
+A typed asynchronous lifecycle notification of the Core or a Transport (started, stopping,
+connected, disconnected, resumed), delivered to every subscriber. Not a platform Event.
+_Avoid_: hook, lifecycle event, callback
 
 **Transport**:
 A source of inbound events for the Core — the Mattermost WebSocket connection or the webhook
-callback endpoint. A Transport delivers events; it does not interpret them.
+callback endpoint. An adapter-specific Plugin implementing the Core-owned Transport Protocol; it
+delivers events and does not interpret them. A Bot may have none.
 _Avoid_: channel (reserved for the Mattermost channel), ingress, source, gateway, connection
 
 **Bot**:

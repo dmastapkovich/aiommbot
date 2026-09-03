@@ -171,7 +171,27 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   for research #44 and is made in #20.
 - Glossary: Event, Payload, Router, Filter, Extractor, HandlerSpec.
 
-Follow-ups routed: single-process declaration and checks framework → #14; process roles and the
+## Decided in Plugin model and contribution model (#14, 2026-09-03)
+
+- [ADR-0015](../adr/0015-plugin-contract-and-composition.md): `Bot(adapter=..., plugins=[...])`;
+  exactly one Adapter supplying the platform vocabulary; transports are adapter-specific Plugins;
+  plugins are generic or bound to an adapter; frozen `PluginSpec` + narrow contribution Protocols
+  (`ContributesRouters`, `ContributesMiddleware`, `ContributesDependencies`,
+  `ContributesEventTypes`, `ContributesChecks`, `HasLifecycle`); `requires`/`after` topological
+  order; typed frozen settings objects, loading is the app's; explicit import only, no entry
+  points; contract under semver with a version check; contract test kit in `aiommbot.testing`.
+- [ADR-0016](../adr/0016-three-phase-start-with-checks.md): compose → check → start; typed Checks
+  from Core, Adapter and plugins; full failure list; `ProcessProfile`; check-only entry point.
+- [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md): `Signal[T]` async-only lifecycle
+  notifications, subscriber failures collected not swallowed; separate from platform events.
+- Glossary: Adapter and Plugin refined; PluginSpec, Check, ProcessProfile, Signal added.
+
+Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
+and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
+#20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
+CONTRIBUTING.
+
+Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance
 suite → #18; tenets into rules → #36; layout and `__all__` guard → #24; toolchain config verified on a stub → #32;
 CI matrix and free-threaded job → #28; banned-pattern rules with examples → #36; quarantine
