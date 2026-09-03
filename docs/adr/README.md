@@ -26,3 +26,5 @@ which decision.
 | [0017](0017-typed-async-lifecycle-signals.md) | Lifecycle notifications are typed asynchronous Signals separate from platform events | accepted |
 | [0018](0018-core-owned-type-keyed-dependency-injection.md) | The Core owns a type-keyed dependency resolver with two scopes, declared providers and a start-up-compiled graph; external containers plug in behind a Protocol | accepted |
 | [0019](0019-handler-parameter-resolution-rules.md) | Handler parameters resolve from extractors first, then providers; minimal built-ins, never the Bot; overrides only in the testing toolkit | accepted |
+| [0020](0020-two-layer-middleware-chain.md) | Middleware is an async chain in two named layers with typed outcomes, typed Event-scope publication and typed handler flags | accepted |
+| [0021](0021-core-error-boundary.md) | The Core owns a narrow, non-removable error boundary: log without payload, report, return `Failed`; a failing process is an explicit policy | accepted |

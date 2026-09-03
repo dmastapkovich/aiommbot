@@ -52,7 +52,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Full typed coverage of the event catalogue | #45 | | — |
 | Dependency injection: ownership, key, scopes, providers, graph | #16 | 0018 | reviewed |
 | Handler parameter resolution rules, built-ins, test overrides | #16 | 0019 | reviewed |
-| Middleware semantics | #17 | | — |
+| Middleware layers, contract, publication, flags, ordering | #17 | 0020 | reviewed |
+| Core error boundary | #17 | 0021 | reviewed |
 | State/FSM, event isolation, storage contract, first-party backends | #18 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain) | #19 | | — |
 | Webhook ingress: interactive actions, dialogs, callback security | #20 | | — |
@@ -91,7 +92,7 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|
 | Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
-| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | #21 #15 | §8 | | — |
+| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), #21 | §8 | | wip |
 | Async, cancellation, timeouts, structured concurrency | #22 #19 | §8, style | | — |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
 | Logging and redaction (no message text, tokens, PII) | #36 #29 | §8 | | — |
@@ -123,8 +124,8 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | `external` events | 1 | not a platform event; revisit as a plugin-registered payload if a need appears (ADR-0012) | #15 | reviewed |
 | Filters (`DIRECT_CHAT_TYPE_FILTER`, `StateFilter`, regex `matched_params`) | ≥8 | redesign: Filter predicates + typed Extractors (ADR-0014) | #15 | reviewed |
 | DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, type-keyed resolution with compiled plans (ADR-0014, 0018, 0019) | #16 | reviewed |
-| Inner/outer middleware, auto-wired reliability stack | 11 / 0 | | #17 #30 | — |
-| Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | | #17 #36 | — |
+| Inner/outer middleware, auto-wired reliability stack | 11 / 0 | redesign: Inbound/Handler layers, typed contract, no auto-wiring (ADR-0020); reliability as plugin middleware pending #30 | #17 #30 | wip |
+| Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | replace with Core ErrorBoundary: no payload, no swallow, typed `Failed` (ADR-0021) | #17 | reviewed |
 | FSM (`StatesGroup`, `Context`) | ≥8 | | #18 | — |
 | Storage backends: memory / Redis / Mongo | mixed | not core except in-memory (ADR-0003); backends in State plugin | #18 | wip |
 | Storage profiles (one backend for state + broker + breaker) | 3 | no precedent (research 07); decide in #18 | #18 | — |

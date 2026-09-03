@@ -72,6 +72,16 @@ toolkit; dishka and wireup are offered as bridge plugins.
 → [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md),
 [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md)
 
+## Two-layer middleware with a narrow error boundary
+
+Inbound and Handler middleware layers, registered on the Bot or a Router, with an async
+`__call__(event, call_next, *deps) -> Outcome` contract, typed Event-scope publication instead of a
+data dictionary, typed handler Flags, topological order from explicit lists and plugin
+declarations. The outermost link is the Core's ErrorBoundary: log without payload, report, return
+`Failed`; a failing process is an explicit policy.
+→ [ADR-0020](../adr/0020-two-layer-middleware-chain.md),
+[ADR-0021](../adr/0021-core-error-boundary.md)
+
 ## Still to be written here
 
 Execution-model mechanism (#22), gateway resilience

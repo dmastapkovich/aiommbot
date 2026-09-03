@@ -200,11 +200,25 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   cleaned in reverse under an exit stack.
 - Glossary: Provider, Qualifier, Scope, Resolution plan.
 
+## Decided in Middleware semantics (#17, 2026-09-03)
+
+- [ADR-0020](../adr/0020-two-layer-middleware-chain.md): Inbound (before the walk) and Handler
+  (around the match) layers, global and per-router; class with async `__call__(event, call_next,
+  *deps) -> Outcome`, deps by annotation, no `data` dict; short-circuit, derived envelope, wrap in
+  timeout/lock/retry allowed, changing route or payload forbidden; typed publication into
+  Event-scope declared in `provides`; `MatchedHandler` + typed Flags; explicit list + plugin
+  declarations ordered topologically, frozen and exposed as `bot.middleware()`.
+- [ADR-0021](../adr/0021-core-error-boundary.md): non-removable Core `ErrorBoundary`, catches
+  `Exception` only, logs without payload, reports to observability, returns `Failed(error)` to the
+  Transport; process failure only by explicit policy or `FatalError`; replies/retries/DLQ belong to
+  plugins. Evidence: `docs/research/12` (twelve frameworks, none lets a handler kill the process).
+- Glossary: Middleware, Outcome, Flag, MatchedHandler, ErrorBoundary.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
 CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
-middleware access to Event-scope dependencies → #17.
+middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

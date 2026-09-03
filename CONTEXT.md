@@ -101,6 +101,33 @@ The frozen sequence of steps compiled once per Handler in the check phase that p
 parameters from extractor values and Providers. No introspection at dispatch time.
 _Avoid_: injection plan, dependency graph (that is the whole), wiring
 
+**Middleware**:
+An asynchronous link in the dispatch chain: `__call__(event, call_next, *deps) -> Outcome`. Lives in
+one of two layers — **Inbound** (every event, before the router walk) or **Handler** (around the
+matched Handler) — registered on the Bot or on a Router for its subtree.
+_Avoid_: interceptor, hook (that is a Signal subscriber), outer/inner middleware
+
+**Outcome**:
+The typed result of dispatching an Event: `Handled`, `Unhandled`, or `Failed(error)` from the
+ErrorBoundary. Returned by `call_next` and by the dispatcher to the Transport, which reacts to it.
+_Avoid_: result, response, status
+
+**Flag**:
+A typed object attached to a Handler at its subscription to parametrise a Middleware (a timeout, a
+required role, a rate limit); stored in the HandlerSpec by type. A Flag with no consuming
+Middleware is a Check error.
+_Avoid_: option, annotation (as the generic term), marker
+
+**MatchedHandler**:
+The Event-scoped value the Core publishes after a match: the HandlerSpec and the resolved extractor
+values, available to Handler-layer Middleware by annotation.
+_Avoid_: route match, target, handler context
+
+**ErrorBoundary**:
+The non-removable outermost Middleware of the Core. Catches `Exception`, logs without payload,
+reports to observability, returns `Failed`. Lets `BaseException` and `FatalError` through.
+_Avoid_: error handler, exception middleware, catch-all
+
 **HandlerSpec**:
 The frozen record built when a Handler is registered: name, router path, event kind, filters and
 extractors as data, declared dependencies, docstring, location, metadata flags. Exposed as
