@@ -14,7 +14,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 1 | `01-introduction-and-goals.md` | — | #37 | #13 |
 | 2 | `02-constraints.md` | — | #37 | #13 |
 | 3 | `03-context-and-scope.md` | — | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
-| 4 | `04-solution-strategy.md` | — | #38 | same |
+| 4 | `04-solution-strategy.md` | wip (#13 → #14, #38) | #38 | same |
 | 5 | `05-building-block-view.md` | — | #38 | same |
 | 6 | `06-runtime-view.md` | — | #39 | #38 #16 #17 |
 | 7 | `07-deployment-view.md` | — | #40 | #38 #24 #29 #30 |
@@ -22,7 +22,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 9 | `docs/adr/` | rolling | every grilling ticket | — |
 | 10 | `10-quality-requirements.md` | — | #37 | #13 |
 | 11 | `11-risks-and-technical-debt.md` | — | #42 | #40 #41 |
-| 12 | `CONTEXT.md` | rolling | every ticket | — |
+| 12 | `CONTEXT.md` | rolling (8 terms, #13) | every ticket | — |
 | — | `engineering-style.md` | — | #36 | #23 #13 |
 | — | `diagrams.md` | reviewed | #35 | — |
 | — | `components/_template.md` | reviewed | #35 | — |
@@ -37,7 +37,12 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Area | Ticket | ADR | Status |
 |---|---|---|---|
 | Fresh public start, no 0.4.x compatibility | charting | 0001 | reviewed |
-| Core scope: what the bare core owns and refuses | #13 | | — |
+| Core scope: what the bare core owns and refuses | #13 | 0002 | reviewed |
+| Stateless core; State plugin with mandatory backend | #13 (→ #18) | 0003 | reviewed |
+| Execution model boundary: async engine, generated sync Runtime | #13 (→ #22) | 0004 | reviewed |
+| Scaling model: one ingress, many workers | #13 (→ #19, #40) | 0005 | reviewed |
+| Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed |
+| Public API surface: tiny root + explicit subpackages | #13 (→ #24) | 0007 | reviewed |
 | Plugin and contribution model | #14 | | — |
 | Event model, routing, filters | #15 | | — |
 | Dependency injection | #16 | | — |
@@ -84,12 +89,12 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Observability hooks and naming | #29 | §8 | | — |
 | Security: callback signing, secrets, PII, replay | #20 | §8 | | — |
 | Dependency injection scopes and lifecycle | #16 | §8 | | — |
-| Extension points and plugin isolation (import-linter) | #14 #24 | §8 | | — |
-| Sync/async duality | #22 | §8 | | — |
+| Extension points and plugin isolation (import-linter) | ADR-0002 (principle), #14 #24 | §8 | | wip |
+| Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
 | Backpressure and flow control between transport and handlers | #19 | §8, gateway LLD | | — |
 | Idempotency and stale-action handling | #18 #20 | §8 | | — |
-| Single WebSocket consumer and horizontal scaling | #19 #40 | §7 | | — |
+| Single WebSocket consumer and horizontal scaling | ADR-0005, #19 #40 | §7 | | wip |
 | Graceful shutdown and drain | #19 #22 | §6, §8 | | — |
 | Deprecation and public-API definition for semver | #28 | §8 | | — |
 
@@ -112,22 +117,22 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | Inner/outer middleware, auto-wired reliability stack | 11 / 0 | | #17 #30 | — |
 | Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | | #17 #36 | — |
 | FSM (`StatesGroup`, `Context`) | ≥8 | | #18 | — |
-| Storage backends: memory / Redis / Mongo | mixed | | #18 | — |
-| Storage profiles (one backend for state + broker + breaker) | 3 | | #18 | — |
-| Taskiq scheduling (`@router.schedule`) | few, in-memory broker only | | #30 | — |
-| Retry / idempotency / dead-letter middlewares, `RetryableError` family | 0 | | #30 | — |
-| Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | | #30 | — |
+| Storage backends: memory / Redis / Mongo | mixed | not core except in-memory (ADR-0003); backends in State plugin | #18 | wip |
+| Storage profiles (one backend for state + broker + breaker) | 3 | no precedent (research 07); decide in #18 | #18 | — |
+| Taskiq scheduling (`@router.schedule`) | few, in-memory broker only | not core (ADR-0002); placement pending | #30 | — |
+| Retry / idempotency / dead-letter middlewares, `RetryableError` family | 0 | not core (ADR-0002); placement pending | #30 | — |
+| Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | not core (ADR-0002); placement pending | #30 | — |
 | Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | | #19 | — |
-| `ObservabilityProvider` / Prometheus, Sentry middleware | some | | #29 | — |
-| `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | | #22 | — |
+| `ObservabilityProvider` / Prometheus, Sentry middleware | some | not core (ADR-0002); placement pending | #29 | — |
+| `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep as Runtime with generated sync face (ADR-0004) | #22 | wip |
 | `EventPreparer` (user/channel resolution) | some | | #15 #21 | — |
 | `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | | #21 | — |
 | Attachments, buttons, selects, dialog element builders | 10 | | #20 | — |
 | Lifespan, `combine_lifespans`, `bot.state` | ≥8 | | #14 #16 | — |
-| CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | | #30 | — |
+| CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
 | `aiommbot.testing` toolkit, mock Mattermost server | 2 | | #25 | — |
 | `extras.py` friendly missing-extra errors, nine extras | — | | #24 | — |
-| uvloop/winloop switching | — | | #22 | — |
+| uvloop/winloop switching | — | not core (ADR-0002); placement pending | #22 | — |
 | Cache utilities | — | | #21 | — |
 
 ## F. Fog and backlog
