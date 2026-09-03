@@ -28,3 +28,4 @@ which decision.
 | [0019](0019-handler-parameter-resolution-rules.md) | Handler parameters resolve from extractors first, then providers; minimal built-ins, never the Bot; overrides only in the testing toolkit | accepted |
 | [0020](0020-two-layer-middleware-chain.md) | Middleware is an async chain in two named layers with typed outcomes, typed Event-scope publication and typed handler flags | accepted |
 | [0021](0021-core-error-boundary.md) | The Core owns a narrow, non-removable error boundary: log without payload, report, return `Failed`; a failing process is an explicit policy | accepted |
+| [0022](0022-state-plugin-model.md) | Conversation state is a typed `Flow[Data]` keyed by a `StateKey`, stored through two Core Protocols with compare-and-set, isolated per key, bounded by a sliding logical TTL | accepted |

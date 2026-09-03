@@ -145,6 +145,33 @@ gates, parsing and dependency injection happen outside its body; the body makes 
 and answers.
 _Avoid_: callback, listener, endpoint, view
 
+**StateKey**:
+The frozen identity of a conversation's state: channel, user, thread root and a scope name, built by
+the Adapter from an Event according to the plugin's strategy (`USER_IN_CHANNEL` by default).
+_Avoid_: storage key, session id, chat id
+
+**Flow**:
+A typed group of states with a typed, versioned data model — `class Order(Flow[OrderData])` —
+describing one multi-step dialogue. Its data is the draft of the current dialogue, never business
+data.
+_Avoid_: states group, FSM (as the thing), scene (that is #48), conversation
+
+**StateContext**:
+The Event-scoped handle a Handler receives for a Flow: typed `state`, `data`, `set_state()`,
+`update()`; writes are compare-and-set. May be `StaleState` when the record is expired, from
+another schema version or in an unknown state.
+_Avoid_: FSM context, context (bare), session
+
+**KeyValueStore**:
+Core Protocol for versioned bytes by key with compare-and-set and optional TTL capability. Used by
+State and by other plugins (dedup). In-memory and Redis are first-party implementations.
+_Avoid_: storage (bare), backend (for the Protocol), database
+
+**LockProvider**:
+Core Protocol for a per-key asynchronous lock with a TTL and a wait timeout. Used for event
+isolation and dedup; separate from KeyValueStore.
+_Avoid_: event isolation (that is the middleware using it), mutex, semaphore
+
 **Quarantine**:
 A module under `_internal/compat/` that adapts one third-party library with incomplete typing to a
 Core-owned Protocol. The only place a lint or type suppression may exist, each tied to an upstream

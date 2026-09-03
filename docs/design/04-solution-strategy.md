@@ -82,6 +82,14 @@ declarations. The outermost link is the Core's ErrorBoundary: log without payloa
 → [ADR-0020](../adr/0020-two-layer-middleware-chain.md),
 [ADR-0021](../adr/0021-core-error-boundary.md)
 
+## Typed, isolated, bounded conversation state
+
+The State plugin keys state by a `StateKey`, models dialogues as `Flow[Data]` with typed versioned
+data, stores through the Core's `KeyValueStore` (compare-and-set) and `LockProvider`, isolates
+events per key by default, surfaces conflicts and stale records as typed outcomes, and bounds
+every record with a sliding logical TTL of one hour by default. In-memory and Redis first-party.
+→ [ADR-0022](../adr/0022-state-plugin-model.md)
+
 ## Still to be written here
 
 Execution-model mechanism (#22), gateway resilience

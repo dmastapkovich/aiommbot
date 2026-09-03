@@ -214,11 +214,25 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   plugins. Evidence: `docs/research/12` (twelve frameworks, none lets a handler kill the process).
 - Glossary: Middleware, Outcome, Flag, MatchedHandler, ErrorBoundary.
 
+## Decided in State/FSM (#18, 2026-09-03)
+
+- [ADR-0022](../adr/0022-state-plugin-model.md): `StateKey` (channel, user, thread, scope) built by
+  the Adapter via `StateKeyProvider`, strategy on the plugin (`USER_IN_CHANNEL` default);
+  `Flow[Data]` typed states + typed versioned data, `StateContext[Flow]`, `InState` filter; Core
+  Protocols `KeyValueStore` (CAS, optional TTL) and `LockProvider`, no storage profile; in-memory
+  and Redis first-party, Mongo/SQL external with `aiommbot.testing` conformance; isolation on by
+  default as State's Inbound middleware with lock TTL + wait timeout; CAS writes with typed
+  `Conflict`; schema version per record with typed `StaleState` (reset + Signal, optional
+  `upgrade`); logical `expires_at`, default 1 h sliding, per-Flow override, `StaleState(Expired)`;
+  single-step interactions carry state in Mattermost `context`/dialog `state`.
+- Scenes → #48 (blocked by #18). Evidence: `docs/research/07`, `13`.
+- Glossary: StateKey, Flow, StateContext, KeyValueStore, LockProvider.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
 CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
-middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30.
+middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

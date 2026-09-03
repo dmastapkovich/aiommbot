@@ -54,7 +54,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Handler parameter resolution rules, built-ins, test overrides | #16 | 0019 | reviewed |
 | Middleware layers, contract, publication, flags, ordering | #17 | 0020 | reviewed |
 | Core error boundary | #17 | 0021 | reviewed |
-| State/FSM, event isolation, storage contract, first-party backends | #18 | | — |
+| State/FSM, event isolation, storage contract, first-party backends, lifetime | #18 | 0022 | reviewed |
+| Declarative scenes on top of State | #48 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain) | #19 | | — |
 | Webhook ingress: interactive actions, dialogs, callback security | #20 | | — |
 | Mattermost API layer: codegen, serialisation, HTTP client, error taxonomy | #21 | | — |
@@ -103,7 +104,7 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
 | Backpressure and flow control between transport and handlers | #19 | §8, gateway LLD | | — |
-| Idempotency and stale-action handling | #18 #20 | §8 | | — |
+| Idempotency and stale-action handling | ADR-0022 (`KeyValueStore` CAS + `LockProvider` shared with dedup), #20 | §8 | | wip |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, #19 #40 | §7 | | wip |
 | Graceful shutdown and drain | #19 #22 | §6, §8 | | — |
 | Deprecation and public-API definition for semver | #28 | §8 | | — |
@@ -126,9 +127,9 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, type-keyed resolution with compiled plans (ADR-0014, 0018, 0019) | #16 | reviewed |
 | Inner/outer middleware, auto-wired reliability stack | 11 / 0 | redesign: Inbound/Handler layers, typed contract, no auto-wiring (ADR-0020); reliability as plugin middleware pending #30 | #17 #30 | wip |
 | Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | replace with Core ErrorBoundary: no payload, no swallow, typed `Failed` (ADR-0021) | #17 | reviewed |
-| FSM (`StatesGroup`, `Context`) | ≥8 | | #18 | — |
-| Storage backends: memory / Redis / Mongo | mixed | not core except in-memory (ADR-0003); backends in State plugin | #18 | wip |
-| Storage profiles (one backend for state + broker + breaker) | 3 | no precedent (research 07); decide in #18 | #18 | — |
+| FSM (`StatesGroup`, `Context`) | ≥8 | keep, redesigned as `Flow[Data]` + `StateContext` + `InState` filter (ADR-0022) | #18 | reviewed |
+| Storage backends: memory / Redis / Mongo | mixed | in-memory + Redis first-party behind `KeyValueStore`/`LockProvider`; Mongo/SQL external packages with the conformance suite (ADR-0022) | #18 | reviewed |
+| Storage profiles (one backend for state + broker + breaker) | 3 | drop: two separate Core Protocols instead, no profile (ADR-0022) | #18 | reviewed |
 | Taskiq scheduling (`@router.schedule`) | few, in-memory broker only | not core (ADR-0002); placement pending | #30 | — |
 | Retry / idempotency / dead-letter middlewares, `RetryableError` family | 0 | not core (ADR-0002); placement pending | #30 | — |
 | Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | not core (ADR-0002); placement pending | #30 | — |
