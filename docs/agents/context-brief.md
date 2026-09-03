@@ -186,10 +186,25 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   notifications, subscriber failures collected not swallowed; separate from platform events.
 - Glossary: Adapter and Plugin refined; PluginSpec, Check, ProcessProfile, Signal added.
 
+## Decided in Dependency injection (#16, 2026-09-03)
+
+- [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md): Core-owned stdlib resolver
+  behind `DependencyProvider`; key = type, `Annotated[T, Qualifier(...)]` for homonyms; Scopes App
+  and Event; `Provider[T]` from `ContributesDependencies` and `Bot(dependencies=[...])`; graph
+  validated and resolution plans compiled in the check phase; dishka and wireup bridge plugins
+  ship as extras.
+- [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md): extractors declared at the
+  subscription win over providers; built-ins = `Event[P]`, `EventMeta`, `Signals`,
+  `ProcessProfile`, `CorrelationId`, Adapter's `Runtime`; the Bot is never injected; overrides
+  only via `aiommbot.testing`; async or cheap sync providers; Event-scope lazy, cached per event,
+  cleaned in reverse under an exit stack.
+- Glossary: Provider, Qualifier, Scope, Resolution plan.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
-CONTRIBUTING.
+CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
+middleware access to Event-scope dependencies → #17.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

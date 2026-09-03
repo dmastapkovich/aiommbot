@@ -50,7 +50,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Routing: type-driven subscription, tree walk, typed outcome, reachability | #15 | 0013 | reviewed |
 | Filters, extractors, closed handler signatures | #15 | 0014 | reviewed |
 | Full typed coverage of the event catalogue | #45 | | — |
-| Dependency injection | #16 | | — |
+| Dependency injection: ownership, key, scopes, providers, graph | #16 | 0018 | reviewed |
+| Handler parameter resolution rules, built-ins, test overrides | #16 | 0019 | reviewed |
 | Middleware semantics | #17 | | — |
 | State/FSM, event isolation, storage contract, first-party backends | #18 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain) | #19 | | — |
@@ -96,7 +97,7 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Logging and redaction (no message text, tokens, PII) | #36 #29 | §8 | | — |
 | Observability hooks and naming | #29 | §8 | | — |
 | Security: callback signing, secrets, PII, replay | #20 | §8 | | — |
-| Dependency injection scopes and lifecycle | #16 | §8 | | — |
+| Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | wip |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
 | Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
@@ -121,7 +122,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | drop as separate classes; reactions/group/user events stay first-class payloads, the rest via RawEvent (ADR-0012) | #15 | reviewed |
 | `external` events | 1 | not a platform event; revisit as a plugin-registered payload if a need appears (ADR-0012) | #15 | reviewed |
 | Filters (`DIRECT_CHAT_TYPE_FILTER`, `StateFilter`, regex `matched_params`) | ≥8 | redesign: Filter predicates + typed Extractors (ADR-0014) | #15 | reviewed |
-| DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, parameters by annotation (ADR-0014); mechanism in #16 | #16 | wip |
+| DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, type-keyed resolution with compiled plans (ADR-0014, 0018, 0019) | #16 | reviewed |
 | Inner/outer middleware, auto-wired reliability stack | 11 / 0 | | #17 #30 | — |
 | Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | | #17 #36 | — |
 | FSM (`StatesGroup`, `Context`) | ≥8 | | #18 | — |
@@ -136,7 +137,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | `EventPreparer` (user/channel resolution) | some | | #15 #21 | — |
 | `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | | #21 | — |
 | Attachments, buttons, selects, dialog element builders | 10 | | #20 | — |
-| Lifespan, `combine_lifespans`, `bot.state` | ≥8 | redesign: plugin `HasLifecycle` + Signals replace lifespan composition (ADR-0015/0017); `bot.state` → dependencies in #16 | #16 | wip |
+| Lifespan, `combine_lifespans`, `bot.state` | ≥8 | redesign: plugin `HasLifecycle` + Signals replace lifespan composition (ADR-0015/0017); `bot.state` replaced by App-scoped Providers, Bot never injected (ADR-0019) | #16 | reviewed |
 | CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
 | `aiommbot.testing` toolkit, mock Mattermost server | 2 | | #25 | — |
 | `extras.py` friendly missing-extra errors, nine extras | — | keep the idea: extras per first-party plugin with a friendly error (ADR-0015); count and names in #24 | #24 | wip |

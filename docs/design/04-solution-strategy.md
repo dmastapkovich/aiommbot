@@ -62,6 +62,16 @@ failures, then starts; lifecycle notifications are typed async Signals.
 [ADR-0016](../adr/0016-three-phase-start-with-checks.md),
 [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md)
 
+## Core-owned, type-keyed dependency injection
+
+A small stdlib resolver in the Core behind the `DependencyProvider` Protocol: dependencies keyed by
+type with `Qualifier` for homonyms, two Scopes (App, Event), typed Providers from plugins and the
+application, a graph validated and resolution plans compiled in the check phase. Extractors win
+over providers; built-ins are minimal and never the Bot; overrides live only in the testing
+toolkit; dishka and wireup are offered as bridge plugins.
+→ [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md),
+[ADR-0019](../adr/0019-handler-parameter-resolution-rules.md)
+
 ## Still to be written here
 
 Execution-model mechanism (#22), gateway resilience

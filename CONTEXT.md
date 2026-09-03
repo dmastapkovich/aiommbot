@@ -81,6 +81,26 @@ A typed parser that turns an Event into a value a handler receives by annotation
 `NoMatch` (skip this handler) or `Invalid` (the event is about this, the data is bad).
 _Avoid_: converter, parser (as the generic term), transformer
 
+**Provider**:
+A declaration that a dependency key (type plus optional Qualifier) is produced by a factory in a
+given Scope. Contributed by Plugins or the application; its own parameters are injected.
+_Avoid_: factory (as the whole), binding, registration, dependency (for the declaration)
+
+**Qualifier**:
+The `Annotated` marker that tells two dependencies of the same type apart, on both the Provider and
+the consuming parameter.
+_Avoid_: name, tag, label
+
+**Scope**:
+The lifetime of a resolved dependency: `App` (one per Bot, start to shutdown) or `Event` (one per
+dispatched Event, closed after the handler).
+_Avoid_: lifetime, context (as the generic term), request scope
+
+**Resolution plan**:
+The frozen sequence of steps compiled once per Handler in the check phase that produces its
+parameters from extractor values and Providers. No introspection at dispatch time.
+_Avoid_: injection plan, dependency graph (that is the whole), wiring
+
 **HandlerSpec**:
 The frozen record built when a Handler is registered: name, router path, event kind, filters and
 extractors as data, declared dependencies, docstring, location, metadata flags. Exposed as

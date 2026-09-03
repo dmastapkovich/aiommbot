@@ -24,3 +24,5 @@ which decision.
 | [0015](0015-plugin-contract-and-composition.md) | A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are generic or adapter-specific | accepted |
 | [0016](0016-three-phase-start-with-checks.md) | The Bot starts in three phases — compose, check, start — and stops on the full list of check failures | accepted |
 | [0017](0017-typed-async-lifecycle-signals.md) | Lifecycle notifications are typed asynchronous Signals separate from platform events | accepted |
+| [0018](0018-core-owned-type-keyed-dependency-injection.md) | The Core owns a type-keyed dependency resolver with two scopes, declared providers and a start-up-compiled graph; external containers plug in behind a Protocol | accepted |
+| [0019](0019-handler-parameter-resolution-rules.md) | Handler parameters resolve from extractors first, then providers; minimal built-ins, never the Bot; overrides only in the testing toolkit | accepted |
