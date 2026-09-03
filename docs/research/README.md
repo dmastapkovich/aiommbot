@@ -16,3 +16,4 @@ decisions — see `docs/adr/` for what was actually decided.
 | `08-peer-responsibility-boundaries.md` | Scheduling, observability, CLI, reliability: core, plugin, recipe or absent in peer frameworks? |
 | `09-usage-mining-0.4.x-bots.md` | Which aiommbot 0.4.x features do the eleven company bots actually use, and which workarounds recur? |
 | `10-plugin-systems.md` | What plugin models (Django apps, pluggy, entry points, Litestar, FastStream, Sphinx, Home Assistant) teach us? |
+| `11-webhook-ingress-patterns.md` | How do peer frameworks bring HTTP callbacks into an event-driven core, and what does Mattermost's callback contract actually look like? |
