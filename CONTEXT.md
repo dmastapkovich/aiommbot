@@ -135,9 +135,10 @@ extractors as data, declared dependencies, docstring, location, metadata flags. 
 _Avoid_: route, handler object, observer
 
 **Runtime**:
-The API a process uses to act on the platform without consuming events — send and edit posts,
-open dialogs, resolve users — available in an asynchronous face and a generated synchronous face.
-_Avoid_: client (too broad), API manager, bot runtime
+The Event-aware layer over the API client that a Handler or a process uses to act on the platform —
+answer, reply, update, open a dialog, send to a user, upload a file, resolve a user — available in an
+asynchronous face (`Runtime`) and a generated synchronous face (`SyncRuntime`).
+_Avoid_: client (that is the API client), API manager, bot runtime
 
 **Handler**:
 A user function registered on a router for a kind of event. Declarative and thin: filters, state
@@ -205,3 +206,56 @@ _Avoid_: shim, wrapper module, compat layer (as a general term)
 The first-party Plugin that gives a conversation a finite-state machine and per-key event
 isolation over an explicitly chosen storage backend.
 _Avoid_: FSM plugin, context storage, session
+
+**API client**:
+The typed, standalone Mattermost REST client of the Adapter — `MattermostClient` and the generated
+`SyncMattermostClient` — with one resource group per spec tag and one method per Operation. Knows
+nothing of Bot or Event; a script constructs it directly.
+_Avoid_: SDK, driver, HTTP client (that is the transport), ApiManager
+
+**Operation**:
+The frozen, generated descriptor of one REST call — method, path template, parameter names, request
+and response types, overlay flags — that a resource method executes and that an application may
+declare itself for an endpoint outside the spec.
+_Avoid_: endpoint (that is the server side), route, request spec
+
+**HTTPTransport**:
+Core Protocol at the level of raw HTTP — method, URL, headers, body or stream, multipart in; status,
+headers, body or stream out — behind which the API client runs. httpx2 is the shipped
+implementation; an in-memory one ships in the testing toolkit.
+_Avoid_: session, connection pool, HTTP client (bare)
+
+**Codec**:
+Core Protocol for strict serialisation of models — encode to bytes, decode bytes into a type,
+convert builtins into a type — consumed by the API client, the Transports and generic plugins.
+`MsgspecCodec` from the Adapter is the shipped implementation.
+_Avoid_: serializer, parser (bare), JSON layer
+
+**RetryPolicy**:
+The API client's typed retry setting: how many times, on which errors and for which Operations a
+call is repeated, honouring the server's `Retry-After`. Narrow by default and disabled by one field.
+_Avoid_: backoff (that is one parameter of it), resilience, retry middleware (that is a plugin)
+
+**ApiError**:
+The root of the Adapter's REST failure hierarchy: status, Mattermost `error_id`, `message`,
+`request_id`, a `retryable` flag; one subclass per HTTP class a caller acts on. Never carries a body
+or a token.
+_Avoid_: HTTP error, AppError (that is the wire shape), response error
+
+**UserRef**:
+The typed union a Runtime resolution accepts — `UserId | Email | Username | Nickname | FullName` —
+resolved in that priority.
+_Avoid_: identifier (bare), user lookup, principal
+
+**IdentityCache**:
+The optional adapter-specific Plugin that caches resolved users and direct channels on the
+KeyValueStore with a TTL and event-driven invalidation. Absent, the Runtime queries the API every
+time.
+_Avoid_: user cache, EventPreparer, lookup cache
+
+**RequestObserver**:
+The Protocol an application implements to observe API calls — `on_request`, `on_response`,
+`on_error` over a typed record without bodies, headers or tokens. Several may be registered, each
+isolated from the others; an observer never changes the call. Modifying behaviour is done by
+decorating the HTTPTransport or by Middleware.
+_Avoid_: hook (that is a Signal subscriber), interceptor, tracer, instrumentation

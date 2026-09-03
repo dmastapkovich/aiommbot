@@ -111,6 +111,25 @@ deadline and an empty-200 default. The webhook plugin is a bare ASGI callable pl
 configured, nonce store opt-in, `StaleAction` events for expired or replayed tokens.
 → [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md)
 
+## A generated, standalone Mattermost API client behind Core-owned Protocols
+
+Models are generated from a pinned, overlaid OpenAPI spec into standard-library dataclasses and
+serialised through the Core's `Codec` Protocol with msgspec as the shipped implementation; the
+server version policy is the pinned ESR and newer with a nightly drift check. The REST client is a
+standalone typed API client — httpx2 behind an `HTTPTransport` Protocol, generated `Operation`
+descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async
+first with a generated `Sync` face. API failures are exceptions in a typed hierarchy carrying the
+server's `AppError` fields and a retryable flag. The Runtime is a thin Event-aware layer over the
+client with a fixed helper set; identity resolution is uncached in the Runtime and caching is an
+optional plugin. Observability is optional and replaceable: no observer is registered by default, a
+first-party one ships as an extra, an application may implement the observer Protocol under its own
+conventions, and behaviour is changed by decorating the transport or by Middleware, never by an
+observer.
+→ [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md),
+[ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md),
+[ADR-0027](../adr/0027-api-error-taxonomy.md),
+[ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md)
+
 ## Still to be written here
 
-Execution-model mechanism (#22), API layer (#21), quality-by-mechanism toolchain (#23, #28).
+Execution-model mechanism (#22), quality-by-mechanism toolchain (#23, #28).

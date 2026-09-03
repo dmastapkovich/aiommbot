@@ -58,7 +58,12 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Declarative scenes on top of State | #48 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
 | Webhook ingress: events + reply channel, bare ASGI, callback authenticity, replay policy | #20 | 0024 | reviewed |
-| Mattermost API layer: codegen, serialisation, HTTP client, error taxonomy | #21 | | — |
+| Mattermost API layer: generated dataclass models, Codec Protocol, server version policy | #21 | 0025 | reviewed |
+| Standalone typed API client: HTTPTransport, httpx2, Operation descriptors, pagination, retries, faces | #21 | 0026 | reviewed |
+| API error taxonomy | #21 | 0027 | reviewed |
+| Runtime helpers, identity resolution, IdentityCache plugin | #21 | 0028 | reviewed |
+| Message composition: attachment, button, select and dialog builders embedding Callback tokens | graduated from #21 (ticket pending) | | — |
+| File API ergonomics: limits, resumable uploads, streaming | graduated from #21 (ticket pending) | | — |
 | Execution model: async core, sync face mechanism | #22 | | — |
 | Python floor and support policy | #23 | 0008 | reviewed |
 | Type checkers and typing tests | #23 | 0009 | reviewed |
@@ -93,15 +98,15 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|
 | Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
-| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), #21 | §8 | | wip |
+| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`) | §8 | | wip |
 | Async, cancellation, timeouts, structured concurrency | #22 #19 | §8, style | | — |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
-| Logging and redaction (no message text, tokens, PII) | #36 #29 | §8 | | — |
-| Observability hooks and naming | #29 | §8 | | — |
+| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 #29 | §8 | | wip |
+| Observability hooks and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | wip |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | wip |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | wip |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
-| Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
+| Sync/async duality | ADR-0004 (boundary), ADR-0026 (bare name async, `Sync` prefix), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`) | §8, gateway LLD | | wip |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | wip |
@@ -136,15 +141,15 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | keep the idea, redesigned: bounded queue, N workers, typed per-kind `OverflowPolicy` with `Dropped` Signal (ADR-0023) | #19 | reviewed |
 | `ObservabilityProvider` / Prometheus, Sentry middleware | some | not core (ADR-0002); placement pending | #29 | — |
 | `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep as Runtime with generated sync face (ADR-0004) | #22 | wip |
-| `EventPreparer` (user/channel resolution) | some | | #15 #21 | — |
-| `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | | #21 | — |
-| Attachments, buttons, selects, dialog element builders | 10 | | #20 | — |
+| `EventPreparer` (user/channel resolution) | 6 | redesign: `runtime.users.resolve(UserRef)` and `runtime.channels.direct`, uncached; `IdentityCache` optional plugin (ADR-0028) | #21 | reviewed |
+| `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | redesign: standalone generated API client (ADR-0025, 0026) + Runtime helpers (ADR-0028); errors per ADR-0027 | #21 | reviewed |
+| Attachments, buttons, selects, dialog element builders | 10 | keep; models as dataclasses in the Adapter (ADR-0025), builders decided in the message-composition ticket graduated from #21 | pending | — |
 | Lifespan, `combine_lifespans`, `bot.state` | ≥8 | redesign: plugin `HasLifecycle` + Signals replace lifespan composition (ADR-0015/0017); `bot.state` replaced by App-scoped Providers, Bot never injected (ADR-0019) | #16 | reviewed |
 | CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
 | `aiommbot.testing` toolkit, mock Mattermost server | 2 | | #25 | — |
 | `extras.py` friendly missing-extra errors, nine extras | — | keep the idea: extras per first-party plugin with a friendly error (ADR-0015); count and names in #24 | #24 | wip |
 | uvloop/winloop switching | — | not core (ADR-0002); placement pending | #22 | — |
-| Cache utilities | — | | #21 | — |
+| Cache utilities | — | drop as utilities; `IdentityCache` optional plugin on `KeyValueStore` (ADR-0028) | #21 | reviewed |
 
 ## F. Fog and backlog
 

@@ -265,6 +265,40 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   CLI `--serve`); topology by composition (all-in-one / split WS consumer + N webhook replicas /
   plus workers); the only hard constraint is one WebSocket consumer per bot. #40 completes it.
 
+## Decided in Mattermost API layer (#21, 2026-09-03)
+
+- [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md): models generated from
+  a spec pinned to the latest ESR plus an OpenAPI Overlay 1.0 layer into
+  `dataclass(frozen, slots, kw_only)`, output committed and `--check`ed; responses get overlay
+  `required` + `T | None`, requests use `UNSET`; Core `Codec` Protocol with `MsgspecCodec` as the
+  only shipped implementation (msgspec is in maintenance mode, so no public type inherits from it);
+  supported servers = pinned ESR and newer, unknown fields ignored in production and forbidden in
+  tests; nightly drift job; conformance from committed fixtures, no Docker in PRs.
+- [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md): a
+  standalone `MattermostClient` usable without a Bot; `httpx2 >=2.12,<3` behind the Core
+  `HTTPTransport` Protocol with an in-memory double; whole spec generated as frozen
+  `Operation[Req, Resp]` descriptors grouped by tag, `client.execute(op)` as the typed escape hatch
+  for plugin endpoints, no raw `request()`; `iter_*` pagination at `per_page=200`; `RetryPolicy`
+  2 attempts, full-jitter, network/408/429/5xx, idempotent methods plus `create_post` via
+  `pending_post_id` (server dedupes 30 s); bare name = async, `Sync` prefix for the generated face;
+  observability optional and composable — no default observer, a first-party extra, an application's
+  own `RequestObserver`, and modification only through a transport decorator or Middleware.
+- [ADR-0027](../adr/0027-api-error-taxonomy.md): exceptions, not result unions, for API calls;
+  `AiommbotError` → `TransportError` (Connect/Network/Timeout/Protocol) and `ApiError` (status,
+  `error_id`, `message`, `detailed_error`, `request_id`) with a subclass per HTTP class,
+  `DecodeError` for contract drift, `retryable` as a property, no payload in any exception.
+- [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md): Runtime helpers fixed to
+  answer/reply/update/delete/open_dialog, send/send_direct/ephemeral, upload/download; everything
+  else via `runtime.api.*`; `users.resolve(UserRef)` and `channels.direct` uncached, `IdentityCache`
+  an optional plugin on `KeyValueStore` with a 1 h TTL and event invalidation.
+- Mattermost facts worth remembering: rate limiting is **off by default** (`PerSec=10`,
+  `MaxBurst=100` when on) and 429 comes back as plain text, not `AppError`; `per_page` default 60,
+  maximum 200, no total header; `X-Requested-With` is irrelevant to Bearer auth; `MaxFileSize`
+  default 100 MB with resumable `/uploads` sessions; `create_post` deduplicates by
+  `pending_post_id` for 30 s.
+- Graduated from #21: message composition builders, file API ergonomics, and the HTTP-client
+  observability research that finalises the observer shape with #29.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
