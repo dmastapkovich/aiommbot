@@ -18,3 +18,6 @@ which decision.
 | [0009](0009-four-strict-type-checkers.md) | Four type checkers run at maximum strictness and all of them block | accepted |
 | [0010](0010-zero-suppressions-with-a-quarantine.md) | Zero lint and type suppressions in the package; foreign types wrapped in quarantine modules | accepted |
 | [0011](0011-lint-format-and-architecture-toolchain.md) | One toolchain enforces style, complexity, architecture and dependencies; just is the entry point | accepted |
+| [0012](0012-generic-event-envelope-with-adapter-payloads.md) | Inbound events are one generic envelope `Event[P]`; payload types and their registry belong to the Adapter | accepted |
+| [0013](0013-type-driven-routing-with-a-typed-dispatch-outcome.md) | Handlers subscribe by annotation on a router tree walked depth-first to the first match, with a typed outcome and reachability checks | accepted |
+| [0014](0014-filters-and-extractors-with-closed-handler-signatures.md) | Filters are pure predicates, Extractors produce typed values, handler signatures are closed | accepted |

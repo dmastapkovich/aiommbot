@@ -153,6 +153,24 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   patterns, import-linter, slotscheck require-*, deptry/uv audit/typos/pyproject-fmt/zizmor,
   `just` + pre-commit.
 
+## Decided in Event model, routing and filters (#15, 2026-09-03)
+
+- [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md): one generic `Event[P]`
+  envelope in the Core (kind, payload, meta with optional reply channel); Adapter owns payload
+  types and a declarative `EventRegistry`; 15 first-class payloads, `RawEvent` for every other
+  name; full catalogue coverage is #45.
+- [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md): `@router.on`
+  infers the kind from the first parameter's annotation, Adapter aliases reduce to it; router
+  tree, DFS, first match, registration order, no priorities; `Handled | Unhandled` outcome with an
+  unhandled hook; `Skip`; frozen `HandlerSpec` via `bot.routes()`; unreachable handlers fail
+  start-up.
+- [ADR-0014](../adr/0014-filters-and-extractors-with-closed-handler-signatures.md): `Filter[P]`
+  predicates with `& | ~`, no magic DSL; `Extractor[P, T]` with `Value | NoMatch | Invalid`;
+  closed signatures, first parameter `Event[P]`, everything else by annotation, no `**kwargs`.
+- Webhook callbacks are candidates for the same model via the reply channel; the decision waits
+  for research #44 and is made in #20.
+- Glossary: Event, Payload, Router, Filter, Extractor, HandlerSpec.
+
 Follow-ups routed: single-process declaration and checks framework → #14; process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance
 suite → #18; tenets into rules → #36; layout and `__all__` guard → #24; toolchain config verified on a stub → #32;

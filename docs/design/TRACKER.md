@@ -44,7 +44,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed |
 | Public API surface: tiny root + explicit subpackages | #13 (→ #24) | 0007 | reviewed |
 | Plugin and contribution model | #14 | | — |
-| Event model, routing, filters | #15 | | — |
+| Event model: envelope, payload registry, first-class kinds | #15 | 0012 | reviewed |
+| Routing: type-driven subscription, tree walk, typed outcome, reachability | #15 | 0013 | reviewed |
+| Filters, extractors, closed handler signatures | #15 | 0014 | reviewed |
+| Full typed coverage of the event catalogue | #45 | | — |
 | Dependency injection | #16 | | — |
 | Middleware semantics | #17 | | — |
 | State/FSM, event isolation, storage contract, first-party backends | #18 | | — |
@@ -112,11 +115,11 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | WebSocket channel (posts, events) | 11 | | #19 | — |
 | Webhook channel + interactive actions/dialogs | 10 | | #20 | — |
 | Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | | #20 | — |
-| Message / action / dialog handlers, `direct_added` | ≥8 | | #15 | — |
-| 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | | #15 | — |
-| `external` events | 1 | | #15 | — |
-| Filters (`DIRECT_CHAT_TYPE_FILTER`, `StateFilter`, regex `matched_params`) | ≥8 | | #15 | — |
-| DI by handler signature, `**kwargs: Any` boilerplate | 11 | | #16 | — |
+| Message / action / dialog handlers, `direct_added` | ≥8 | keep as first-class payloads (ADR-0012) | #15 | reviewed |
+| 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | drop as separate classes; reactions/group/user events stay first-class payloads, the rest via RawEvent (ADR-0012) | #15 | reviewed |
+| `external` events | 1 | not a platform event; revisit as a plugin-registered payload if a need appears (ADR-0012) | #15 | reviewed |
+| Filters (`DIRECT_CHAT_TYPE_FILTER`, `StateFilter`, regex `matched_params`) | ≥8 | redesign: Filter predicates + typed Extractors (ADR-0014) | #15 | reviewed |
+| DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, parameters by annotation (ADR-0014); mechanism in #16 | #16 | wip |
 | Inner/outer middleware, auto-wired reliability stack | 11 / 0 | | #17 #30 | — |
 | Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | | #17 #36 | — |
 | FSM (`StatesGroup`, `Context`) | ≥8 | | #18 | — |

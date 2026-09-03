@@ -32,6 +32,38 @@ The composition root: it is configured with an Adapter, Plugins and routers, own
 and runs the dispatch loop. One Bot per process is the documented model.
 _Avoid_: app, application, dispatcher (the dispatcher is a component inside the Bot)
 
+**Event**:
+The immutable generic envelope `Event[P]` the Core dispatches: the platform event name (`kind`),
+a typed `payload`, and `meta` (transport, receive time, correlation id, sequence, raw data, optional
+reply channel). The Core knows the envelope, never a concrete payload.
+_Avoid_: request, update, message (as the generic term), incoming
+
+**Payload**:
+The typed body of an Event, defined by the Adapter for one platform event name and registered in
+the EventRegistry. `RawEvent` is the payload for any name without a registered type.
+_Avoid_: data, body, model (as the generic term)
+
+**Router**:
+A node in the handler tree. Holds handlers and child routers in registration order and may carry
+filter gates. Dispatch walks the tree depth-first and stops at the first match.
+_Avoid_: dispatcher (the dispatcher walks routers), blueprint, cog
+
+**Filter**:
+A pure predicate over an Event, composable with `&`, `|`, `~`. Decides whether a handler is a
+candidate; never produces data.
+_Avoid_: matcher, guard, check
+
+**Extractor**:
+A typed parser that turns an Event into a value a handler receives by annotation, or reports
+`NoMatch` (skip this handler) or `Invalid` (the event is about this, the data is bad).
+_Avoid_: converter, parser (as the generic term), transformer
+
+**HandlerSpec**:
+The frozen record built when a Handler is registered: name, router path, event kind, filters and
+extractors as data, declared dependencies, docstring, location, metadata flags. Exposed as
+`bot.routes()`.
+_Avoid_: route, handler object, observer
+
 **Runtime**:
 The API a process uses to act on the platform without consuming events — send and edit posts,
 open dialogs, resolve users — available in an asynchronous face and a generated synchronous face.

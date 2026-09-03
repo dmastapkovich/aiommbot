@@ -41,7 +41,17 @@ events; declarative thin handlers; Python 3.12+ typing as the contract; fail clo
 `aiommbot` exports Core concepts only; the Adapter, Plugins and testing toolkit are explicit
 subpackages; the rest is `_internal`. → [ADR-0007](../adr/0007-tiny-public-root-with-explicit-subpackages.md)
 
+## One event envelope, type-driven routing, typed extraction
+
+Every inbound event is `Event[P]`; the Adapter owns payload types and an explicit registry with
+`RawEvent` as the fallback. Handlers subscribe by the annotation of their first parameter on a
+router tree walked depth-first to the first match; dispatch returns a typed outcome; unreachable
+handlers stop start-up. Filters are predicates, Extractors produce typed values, signatures are
+closed. → [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md),
+[ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
+[ADR-0014](../adr/0014-filters-and-extractors-with-closed-handler-signatures.md)
+
 ## Still to be written here
 
-Plugin model (#14), event model (#15), execution-model mechanism (#22), gateway resilience
+Plugin model (#14), execution-model mechanism (#22), gateway resilience
 strategy (#19), quality-by-mechanism toolchain (#23, #28).
