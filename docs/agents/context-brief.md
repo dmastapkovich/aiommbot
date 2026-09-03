@@ -246,11 +246,26 @@ Six ADRs and the first glossary terms; read them before any ticket that touches 
   or user deactivation kill a bot; the server never negotiates permessage-deflate.
 - Glossary: Resync.
 
+## Decided in Webhook ingress (#20, 2026-09-03)
+
+- [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md): callbacks are
+  `Event[InteractiveAction]`/`Event[DialogSubmission]` in the same model; payload-bound single-use
+  reply (`ActionReply`, `DialogReply`), empty 200 default (never 404/202/5xx), 10 s deadline then
+  ack-and-continue with `ReplyAlreadySent`; `webhook_app(bot) -> ASGIApp` as a bare ASGI callable
+  + `handle_callback`, no server in Core; authenticity default-on when the plugin is enabled
+  (explicit `off`, `strict|warn`), stdlib HMAC-SHA256 compact token (`v1.payload.mac`, `kid`,
+  `aud`, `act`, optional `exp`/`sub`/`jti`) behind `CallbackTokenCodec`, `pyseto` PASETO v4 as
+  `aiommbot[paseto]`; no expiry by default (posts live weeks), per-button TTL, nonce store opt-in,
+  typed `Verified|Missing|Invalid|Expired|Replayed|ActorMismatch`, `StaleAction` events; logging
+  rules. Mattermost facts: one attempt, no retries, 30 s shared with `trigger_id`, 1 MiB reply cap,
+  no signature towards external URLs. Evidence: `docs/research/11`, `16`.
+- Glossary: Reply channel, Callback token, StaleAction.
+
 Follow-ups routed: `ProcessProfile` fields and process roles → #40; plugin/adapter package layout
 and extras → #24; contract test kit and conformance suites → #25; transport Signals list → #19,
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
 CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
-middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25; `HTTPTransport` Protocol and httpx2 → #21; backfill plugin and `AuthLossDetector` → #41; gateway quality scenarios → #37.
+middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25; `HTTPTransport` Protocol and httpx2 → #21; backfill plugin and `AuthLossDetector` → #41; gateway quality scenarios → #37; button/dialog builders that embed Callback tokens → #21; webhook LLD, codec and nonce store → #41; ASGI-level tests → #25.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

@@ -57,7 +57,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | State/FSM, event isolation, storage contract, first-party backends, lifetime | #18 | 0022 | reviewed |
 | Declarative scenes on top of State | #48 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
-| Webhook ingress: interactive actions, dialogs, callback security | #20 | | — |
+| Webhook ingress: events + reply channel, bare ASGI, callback authenticity, replay policy | #20 | 0024 | reviewed |
 | Mattermost API layer: codegen, serialisation, HTTP client, error taxonomy | #21 | | — |
 | Execution model: async core, sync face mechanism | #22 | | — |
 | Python floor and support policy | #23 | 0008 | reviewed |
@@ -98,13 +98,13 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
 | Logging and redaction (no message text, tokens, PII) | #36 #29 | §8 | | — |
 | Observability hooks and naming | #29 | §8 | | — |
-| Security: callback signing, secrets, PII, replay | #20 | §8 | | — |
+| Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | wip |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | wip |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
 | Sync/async duality | ADR-0004 (boundary), #22 | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`) | §8, gateway LLD | | wip |
-| Idempotency and stale-action handling | ADR-0022 (`KeyValueStore` CAS + `LockProvider` shared with dedup), #20 | §8 | | wip |
+| Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | wip |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | wip |
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), #22 | §6, §8 | | wip |
 | Deprecation and public-API definition for semver | #28 | §8 | | — |
@@ -118,8 +118,8 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | 0.4.8 capability | Used by (of 11 bots) | Disposition | Decided in | Status |
 |---|---|---|---|---|
 | WebSocket channel (posts, events) | 11 | keep, redesigned as the resilient `WebSocketTransport` (ADR-0023) | #19 | reviewed |
-| Webhook channel + interactive actions/dialogs | 10 | keep as adapter-specific Transport plugin (ADR-0015); design in #20 | #20 | wip |
-| Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | | #20 | — |
+| Webhook channel + interactive actions/dialogs | 10 | keep, redesigned: events with reply channel, bare ASGI callable (ADR-0024) | #20 | reviewed |
+| Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | redesign: ~40-line stdlib HMAC-SHA256 token per Standard Webhooks/RFC 8725 behind a codec Protocol, PASETO extra; Fernet path segment dropped (ADR-0024) | #20 | reviewed |
 | Message / action / dialog handlers, `direct_added` | ≥8 | keep as first-class payloads (ADR-0012) | #15 | reviewed |
 | 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | drop as separate classes; reactions/group/user events stay first-class payloads, the rest via RawEvent (ADR-0012) | #15 | reviewed |
 | `external` events | 1 | not a platform event; revisit as a plugin-registered payload if a need appears (ADR-0012) | #15 | reviewed |

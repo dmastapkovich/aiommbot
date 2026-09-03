@@ -16,6 +16,7 @@ decisions — see `docs/adr/` for what was actually decided.
 | `08-peer-responsibility-boundaries.md` | Scheduling, observability, CLI, reliability: core, plugin, recipe or absent in peer frameworks? |
 | `09-usage-mining-0.4.x-bots.md` | Which aiommbot 0.4.x features do the eleven company bots actually use, and which workarounds recur? |
 | `10-plugin-systems.md` | What plugin models (Django apps, pluggy, entry points, Litestar, FastStream, Sphinx, Home Assistant) teach us? |
+| `16-webhook-callback-standards.md` | What do standards (RFC 9421, Standard Webhooks, RFC 8725, PASETO) and Mattermost itself say about callback reply timing, authenticity and replay protection? |
 | `15-mattermost-session-revocation.md` | What does the Mattermost server do to an open WebSocket when the session is revoked or expires, and how does a client detect it? |
 | `14-websocket-client-libraries.md` | Which WebSocket client library sits behind the gateway Protocol, and which HTTP client for REST? |
 | `13-conversation-state-lifetime.md` | How do bot frameworks and stateless designs bound the lifetime of per-conversation state? |

@@ -101,6 +101,16 @@ auth via `TokenProvider` and auth-loss detection through the `ping` reply and a 
 in `FatalError(AuthRevoked)`; `websockets` primary, `picows` optional behind one Protocol.
 → [ADR-0023](../adr/0023-websocket-gateway-resilience.md)
 
+## Callbacks as events with a reply channel; default-on callback authenticity
+
+Button clicks and dialog submissions are `Event[InteractiveAction]`/`Event[DialogSubmission]` in the
+same routers; the only difference is the payload-bound, single-use Reply channel with a 10 s
+deadline and an empty-200 default. The webhook plugin is a bare ASGI callable plus
+`handle_callback`. Authenticity is a self-issued HMAC-SHA256 Callback token behind
+`CallbackTokenCodec`, on by default with an explicit off, PASETO as an extra; no expiry unless
+configured, nonce store opt-in, `StaleAction` events for expired or replayed tokens.
+→ [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md)
+
 ## Still to be written here
 
-Execution-model mechanism (#22), webhook ingress (#20), API layer (#21), quality-by-mechanism toolchain (#23, #28).
+Execution-model mechanism (#22), API layer (#21), quality-by-mechanism toolchain (#23, #28).

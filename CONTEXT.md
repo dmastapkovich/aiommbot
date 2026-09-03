@@ -172,6 +172,23 @@ Core Protocol for a per-key asynchronous lock with a TTL and a wait timeout. Use
 isolation and dedup; separate from KeyValueStore.
 _Avoid_: event isolation (that is the middleware using it), mutex, semaphore
 
+**Reply channel**:
+The typed, single-use response slot in `meta.reply` of a webhook-delivered Event: `ActionReply` for
+an InteractiveAction, `DialogReply` for a DialogSubmission. Unused by the deadline, it sends an
+empty 200 and later sends yield `ReplyAlreadySent`.
+_Avoid_: response (bare), ack (that is the default reply), HTTP response
+
+**Callback token**:
+The self-issued signed credential the bot places in a button `context` or dialog `state` and verifies
+when the callback returns: versioned, keyed by `kid`, HMAC-SHA256 by default, with optional expiry,
+actor binding and nonce. The only authenticity primitive Mattermost leaves to an external bot.
+_Avoid_: signature (of the request), secret, cookie
+
+**StaleAction**:
+The routable Event produced when a Callback token is `Expired` or `Replayed`; its default handler
+tells the user the action has expired and disables the buttons.
+_Avoid_: stale callback, dead button, timeout (bare)
+
 **Resync**:
 The moment the server hands the gateway a fresh `connection_id` after an unrecoverable gap: buffered
 events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the loss window so a
