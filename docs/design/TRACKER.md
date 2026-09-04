@@ -56,6 +56,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Core error boundary | #17 | 0021 | reviewed |
 | State/FSM, event isolation, storage contract, first-party backends, lifetime | #18 | 0022 | reviewed |
 | Declarative scenes on top of State | #48 | | — |
+| Resync backfill: first-party plugin or documented recipe | #55 | | — |
 | WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
 | Webhook ingress: events + reply channel, bare ASGI, callback authenticity, replay policy | #20 | 0024 | reviewed |
 | Mattermost API layer: generated dataclass models, Codec Protocol, server version policy | #21 | 0025 | reviewed |
