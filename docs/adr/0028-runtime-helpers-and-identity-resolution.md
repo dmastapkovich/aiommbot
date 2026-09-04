@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#21"
+amended-by: ADR-0029
 ---
 
 # The Runtime is a thin Event-aware layer over the API client with a fixed helper set; user and channel resolution lives in the Runtime without a cache, and caching is an optional adapter-specific plugin
@@ -38,3 +39,11 @@ decided:
   blurs the stateless rule onto the Adapter.
 - *No resolution helpers* — rejected: six bots would return to copy-pasted lookups.
 - *Reactions and pins as helpers* — rejected: zero usage; one line over the API client when needed.
+
+## Consequences
+
+- The helper set is unchanged, but #22 split it along the Event boundary: the addressed helpers, the
+  file helpers and the resolvers moved into an independently constructible Event-free `Workspace`
+  that the Runtime composes and that carries the synchronous face, while the Event-bound helpers stay
+  asynchronous on the Runtime.
+  → [ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)

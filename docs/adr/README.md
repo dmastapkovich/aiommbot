@@ -10,7 +10,7 @@ which decision.
 | [0001](0001-fresh-start-as-a-public-package.md) | aiommbot 0.5.0 is a from-scratch public rewrite with no compatibility with 0.4.x | accepted |
 | [0002](0002-core-scope-two-condition-test.md) | The core admits a capability only if every bot needs it identically or it is chat-specific with no library equivalent; stdlib-only core, one distribution, explicit composition | accepted |
 | [0003](0003-stateless-core-state-plugin-with-explicit-backend.md) | The core is stateless; conversation state is a plugin that cannot start without an explicit backend | accepted |
-| [0004](0004-async-engine-with-generated-sync-runtime.md) | One asyncio engine; the synchronous face is limited to the Runtime and generated from async | accepted |
+| [0004](0004-async-engine-with-generated-sync-runtime.md) | One asyncio engine; the synchronous face is limited to the Runtime and generated from async (amended by 0029, 0030, 0031) | accepted |
 | [0005](0005-one-ingress-many-workers.md) | A bot scales as one event ingress and many workers, never as identical replicas | accepted |
 | [0006](0006-architectural-tenets-of-the-core.md) | The core is built by composition over Protocols it owns, with named patterns and strict typing | accepted |
 | [0007](0007-tiny-public-root-with-explicit-subpackages.md) | The public API is a tiny root namespace plus explicit subpackages; everything else is internal | accepted |
@@ -34,4 +34,7 @@ which decision.
 | [0025](0025-generated-dataclass-models-with-a-codec-protocol.md) | Mattermost models are generated from a pinned, overlaid OpenAPI spec into standard-library dataclasses; serialisation goes through a Core-owned `Codec` Protocol with msgspec as the shipped implementation | accepted |
 | [0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md) | The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a generated `Sync` face | accepted |
 | [0027](0027-api-error-taxonomy.md) | API failures are exceptions in a typed hierarchy carrying Mattermost's `AppError` fields and a retryable classification | accepted |
-| [0028](0028-runtime-helpers-and-identity-resolution.md) | The Runtime is a thin Event-aware layer over the API client with a fixed helper set; resolution is uncached in the Runtime, caching is an optional plugin | accepted |
+| [0028](0028-runtime-helpers-and-identity-resolution.md) | The Runtime is a thin Event-aware layer over the API client with a fixed helper set; resolution is uncached in the Runtime, caching is an optional plugin (amended by 0029) | accepted |
+| [0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) | The synchronous face covers only the API client and an Event-free `Workspace`, and comes from a sans-I/O core with two thin drivers rather than code generation (amends 0004, 0028) | accepted |
+| [0030](0030-synchronous-callables-by-explicit-declaration.md) | A synchronous Handler or Provider is declared with `sync_to_thread` and runs in the Bot's own bounded executor, abandonable at drain; Filters and Extractors run inline; everything else is a coroutine function (amends 0004, 0023) | accepted |
+| [0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) | The Core runs on standard-library asyncio under a fixed structured-concurrency discipline, and the framework never chooses the event loop (amends 0004) | accepted |

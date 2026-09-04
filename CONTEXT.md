@@ -135,10 +135,18 @@ extractors as data, declared dependencies, docstring, location, metadata flags. 
 _Avoid_: route, handler object, observer
 
 **Runtime**:
-The Event-aware layer over the API client that a Handler or a process uses to act on the platform —
-answer, reply, update, open a dialog, send to a user, upload a file, resolve a user — available in an
-asynchronous face (`Runtime`) and a generated synchronous face (`SyncRuntime`).
-_Avoid_: client (that is the API client), API manager, bot runtime
+The Event-aware layer a Handler receives to act on the platform — answer, reply, update, delete,
+open a dialog. Asynchronous only, because every one of those helpers takes the channel, the thread
+root or the `trigger_id` from an Event. It composes a Workspace and re-exposes its helpers, so a
+Handler needs nothing besides the Runtime.
+_Avoid_: client (that is the API client), API manager, bot runtime, SyncRuntime (there is none)
+
+**Workspace**:
+The Event-free handle on one Mattermost server: send to a channel, send a direct message, an
+ephemeral post, upload and download a file, resolve a UserRef, open a direct channel. A script or a
+worker constructs it on its own; the Runtime composes it; together with the API client it is the only
+layer carrying a synchronous face (`SyncWorkspace`).
+_Avoid_: messaging, outbound, session, bot runtime
 
 **Handler**:
 A user function registered on a router for a kind of event. Declarative and thin: filters, state
@@ -208,9 +216,9 @@ isolation over an explicitly chosen storage backend.
 _Avoid_: FSM plugin, context storage, session
 
 **API client**:
-The typed, standalone Mattermost REST client of the Adapter — `MattermostClient` and the generated
-`SyncMattermostClient` — with one resource group per spec tag and one method per Operation. Knows
-nothing of Bot or Event; a script constructs it directly.
+The typed, standalone Mattermost REST client of the Adapter — `MattermostClient` and its
+synchronous twin `SyncMattermostClient` — with one resource group per spec tag and one method per
+Operation. Knows nothing of Bot or Event; a script constructs it directly.
 _Avoid_: SDK, driver, HTTP client (that is the transport), ApiManager
 
 **Operation**:
@@ -221,8 +229,9 @@ _Avoid_: endpoint (that is the server side), route, request spec
 
 **HTTPTransport**:
 Core Protocol at the level of raw HTTP — method, URL, headers, body or stream, multipart in; status,
-headers, body or stream out — behind which the API client runs. httpx2 is the shipped
-implementation; an in-memory one ships in the testing toolkit.
+headers, body or stream out — behind which the API client runs. Paired with `SyncHTTPTransport` for
+the synchronous face. httpx2 is the shipped implementation; the in-memory double in the testing
+toolkit implements both faces in one class.
 _Avoid_: session, connection pool, HTTP client (bare)
 
 **Codec**:

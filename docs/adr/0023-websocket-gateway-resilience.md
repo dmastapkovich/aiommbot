@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
+amended-by: ADR-0030
 ---
 
 # The WebSocket gateway is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
@@ -42,7 +43,10 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
 - **Graceful drain.** On stop: close the socket first (1000/1001) so the server stops queueing
   for us, drain the queue and in-flight handlers within a grace period (default 25 s inside the
   30 s Kubernetes budget), then cancel the rest with `DrainTimedOut(count)`. Plugins stop in
-  reverse topological order (ADR-0015).
+  reverse topological order (ADR-0015). A synchronous Handler running in the Bot's executor cannot
+  be cancelled by anyone: the drain drops the wait on the deadline, keeps the grace period, and
+  reports the abandoned thread with the `HandlerAbandoned` Signal —
+  see [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md).
 - **Single consumer.** The transport requires `ProcessProfile.websocket_consumer=True` (a check
   error otherwise — `aiommbot run` can no longer raise a socket in a worker by accident). With a
   distributed `LockProvider` configured it takes a renewed single-consumer lease; a second replica

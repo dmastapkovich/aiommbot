@@ -1,5 +1,10 @@
 # Research: how the eleven 0.4.x bots actually use aiommbot
 
+> **Extended.** The synchronous slice of this mining — `SyncBotRuntime` and its background-loop
+> bridge, the count of synchronous handlers, filters, middlewares and lifespans, and the `uvloop`
+> extra — was mined separately for ticket #22 and is recorded in
+> [`18-execution-model-in-practice.md`](18-execution-model-in-practice.md) §4.
+
 Resolves GitHub issue #11. Local code mining across
 `backoffice-portal/mattermost-bots` — 11 bots (`backoffice-bot`, `crq-bot`,
 `duty-bot`, `expenses-bot`, `incident-bot`, `mm-overtime-bot`, `office-bot`,

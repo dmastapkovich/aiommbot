@@ -64,7 +64,9 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Runtime helpers, identity resolution, IdentityCache plugin | #21 | 0028 | reviewed |
 | Message composition: attachment, button, select and dialog builders embedding Callback tokens | graduated from #21 (ticket pending) | | — |
 | File API ergonomics: limits, resumable uploads, streaming | graduated from #21 (ticket pending) | | — |
-| Execution model: async core, sync face mechanism | #22 | | — |
+| Execution model: sync face scope, `Workspace` split, thin drivers instead of codegen | #22 | 0029 | reviewed |
+| Synchronous callables: `sync_to_thread`, own executor, abandon at drain | #22 | 0030 | reviewed |
+| Concurrency discipline, event-loop ownership, process entry points | #22 | 0031 | reviewed |
 | Python floor and support policy | #23 | 0008 | reviewed |
 | Type checkers and typing tests | #23 | 0009 | reviewed |
 | Zero suppressions and quarantine | #23 | 0010 | reviewed |
@@ -99,19 +101,19 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 |---|---|---|---|---|
 | Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
 | Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`) | §8 | | wip |
-| Async, cancellation, timeouts, structured concurrency | #22 #19 | §8, style | | — |
+| Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | §8, style | | wip |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
 | Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 #29 | §8 | | wip |
 | Observability hooks and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | wip |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | wip |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | wip |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), #24 (layout) | §8 | | wip |
-| Sync/async duality | ADR-0004 (boundary), ADR-0026 (bare name async, `Sync` prefix), #22 | §8 | | wip |
+| Sync/async duality | ADR-0004 (boundary), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin drivers, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | wip |
 | Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
-| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`) | §8, gateway LLD | | wip |
+| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (own executor sized against the worker count, checked at start) | §8, gateway LLD | | wip |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | wip |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | wip |
-| Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), #22 | §6, §8 | | wip |
+| Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | wip |
 | Deprecation and public-API definition for semver | #28 | §8 | | — |
 
 ## E. Disposition of every 0.4.8 capability
@@ -140,7 +142,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | not core (ADR-0002); placement pending | #30 | — |
 | Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | keep the idea, redesigned: bounded queue, N workers, typed per-kind `OverflowPolicy` with `Dropped` Signal (ADR-0023) | #19 | reviewed |
 | `ObservabilityProvider` / Prometheus, Sentry middleware | some | not core (ADR-0002); placement pending | #29 | — |
-| `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep as Runtime with generated sync face (ADR-0004) | #22 | wip |
+| `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep `BotRuntime` as the Runtime; **drop `SyncBotRuntime`** — 0 of 11 bots used it, and its Event-free slice becomes the `Workspace` with a hand-written synchronous face (ADR-0029) | #22 | reviewed |
 | `EventPreparer` (user/channel resolution) | 6 | redesign: `runtime.users.resolve(UserRef)` and `runtime.channels.direct`, uncached; `IdentityCache` optional plugin (ADR-0028) | #21 | reviewed |
 | `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | redesign: standalone generated API client (ADR-0025, 0026) + Runtime helpers (ADR-0028); errors per ADR-0027 | #21 | reviewed |
 | Attachments, buttons, selects, dialog element builders | 10 | keep; models as dataclasses in the Adapter (ADR-0025), builders decided in the message-composition ticket graduated from #21 | pending | — |
@@ -148,7 +150,7 @@ the ticket in the *Decided in* column; evidence of real use is in `docs/research
 | CLI runner (`aiommbot run|websocket|webhook|worker|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
 | `aiommbot.testing` toolkit, mock Mattermost server | 2 | | #25 | — |
 | `extras.py` friendly missing-extra errors, nine extras | — | keep the idea: extras per first-party plugin with a friendly error (ADR-0015); count and names in #24 | #24 | wip |
-| uvloop/winloop switching | — | not core (ADR-0002); placement pending | #22 | — |
+| uvloop/winloop switching | 0 of 11 installed the extra | drop: no extra, no auto-installation, no policy API; the process entry point takes `loop_factory` and the documentation shows uvloop (ADR-0031) | #22 | reviewed |
 | Cache utilities | — | drop as utilities; `IdentityCache` optional plugin on `KeyValueStore` (ADR-0028) | #21 | reviewed |
 
 ## F. Fog and backlog

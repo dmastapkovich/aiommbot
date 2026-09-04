@@ -69,8 +69,9 @@ in user-facing documents. This phase produces the design catalogue; implementati
   pinned spec → overlay → generated models → one hand-written transport; WebSocket payload types
   come from the webapp's `websocket_messages.ts`.
 - **06 Dual sync/async API.** Hand-written twins (httpx, websockets) cost hundreds of duplicated
-  lines; code generation (httpcore, PyMongo's `synchro.py`) is the mature answer; runtime
-  bridging costs ~50 µs per call; sync face only for the REST client; greenlet rejected.
+  lines; code generation (httpcore, PyMongo's `synchro.py`) is the mature answer for a *wide*
+  surface; runtime bridging costs ~50 µs per call; greenlet rejected. Its §6.3 recommendation to
+  generate our REST client was **superseded by #22** — see 18.
 - **07 Durable bot state.** Redis + in-memory are the universal first-party pair; MongoDB is a
   later community add-on wherever it exists; no precedent for one "storage profile" binding
   state, locks and idempotency; recommend a minimal storage Protocol, a separate locking
@@ -90,6 +91,14 @@ in user-facing documents. This phase produces the design catalogue; implementati
   "installed ⇒ active" is the anti-pattern. Candidate: `Bot(plugins=[...])`, narrow `Plugin`
   Protocol, declare/act split, typed per-plugin settings, entry points only for third-party
   discovery, import-linter isolation, shipped contract tests.
+- **18 Execution model in practice.** Litestar demands an explicit `sync_to_thread` and warns both
+  ways; FastAPI/FastStream/aiogram thread silently on an invisible 40-token budget; PTB and Falcon
+  refuse; middleware is asynchronous in **all** of them. A threaded callable cannot be stopped by
+  anyone, and FastStream #1648 measured a handler outliving "shut down gracefully" by 77 s with the
+  message going UNACK→READY. Nobody generates the concurrency layer — every codegen adopter
+  hand-writes cancellation, primitives and I/O; `unasyncd --check` reports success against a stale
+  target and neither tool renames `TypeVar("AsyncX")`. 0.4.8's `SyncBotRuntime`: 0 of 11 consumers,
+  0 of 225 synchronous handlers, `uvloop` extra installed by nobody.
 
 ## The 0.4.8 codebase, for reference
 
@@ -304,6 +313,42 @@ and extras → #24; contract test kit and conformance suites → #25; transport 
 #20; settings-loading recipe → #26; contribution checklist and plugin template → #36 and
 CONTRIBUTING; dishka/wireup bridge plugins and `TestBot.override` → LLD inventory #41 and #25;
 middleware access to Event-scope dependencies → #17 (done: ADR-0020); transport reaction to `Failed` (ack/nack/HTTP) → #19, #20; `FatalError` in the error taxonomy → #21; reliability middleware as plugins → #30; `StateKeyProvider` in the Adapter and carry-in-message `context` → #20, #21; Redis backend and conformance suite LLDs → #41, #25; `HTTPTransport` Protocol and httpx2 → #21; backfill plugin and `AuthLossDetector` → #41; gateway quality scenarios → #37; button/dialog builders that embed Callback tokens → #21; webhook LLD, codec and nonce store → #41; ASGI-level tests → #25.
+
+## Decided in Execution model: async and sync without duplication (#22, 2026-09-04)
+
+- [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md): the synchronous
+  face is `SyncMattermostClient` + `SyncWorkspace` and nothing else; the Event-free helpers split out
+  of the Runtime into a `Workspace` (amends ADR-0028); **no async→sync tool** — the spec generator
+  emits both faces for the generated surface, the retry/error/pagination logic is sans-I/O, and each
+  face is a thin driver; `SyncHTTPTransport` pairs the Core Protocol and the in-memory double
+  implements both faces in one class; `str` or `SyncTokenProvider`, no `IdentityCache`; duality held
+  by `--check`, typing tests, one parametrised conformance suite and a typed name-parity test; one
+  client instance per thread.
+- [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md): `def` handlers are
+  accepted, Litestar-style — `sync_to_thread: bool | None = None`, `AiommbotWarning` in both
+  directions, `False` means inline; colour resolved at registration (`inspect.iscoroutinefunction`,
+  `partial` unwrapping, `__call__`, `TypeIs`), mismatch is a Check error; Handler and Provider may be
+  synchronous and run in **the Bot's own bounded executor** (Check: not smaller than ADR-0023's
+  worker count), Filter and Extractor run inline, Middleware/Signals/lifecycle/Observer/Codec are
+  coroutine functions only; at drain the wait is dropped and the thread abandoned with a
+  `HandlerAbandoned` Signal, so a synchronous Handler must be idempotent; blocking work inside an
+  async handler stays the application's `asyncio.to_thread` recipe.
+- [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md): stdlib asyncio only,
+  trio unsupported, `anyio` never a Core dependency; every task in a `TaskGroup` with a named owner,
+  no bare `create_task`; explicit `asyncio.timeout` on every I/O await and never around `__anext__`
+  (a bounded queue in between, PEP 789); `CancelledError` never caught, bounded cleanup, `shield`
+  only in the drain; solitary exceptions unwrapped from `BaseExceptionGroup` without losing
+  siblings; `run(*, loop_factory=None)` owning an `asyncio.Runner` plus `serve()`; **the framework
+  never chooses the event loop** — no uvloop extra, no auto-installation, no policy API.
+- Corrected in ADR-0004 while amending it: Litestar does **not** thread synchronous handlers
+  automatically, and DMR's two pipelines are hand-written with Django adapting through a single
+  serialised `thread_sensitive` thread.
+- Glossary: `Workspace` added; `Runtime`, `API client` and `HTTPTransport` amended (`SyncRuntime`
+  no longer exists).
+- Follow-ups routed: `Workspace` and the two drivers → LLD inventory #41; conformance and parity
+  suites → #25; executor size, `HandlerAbandoned` and the drain scenario → #40, #37; `ASYNC109` and
+  `RUF029` explained ignores → #32; two httpx2 free-threading risks → #42; graceful-shutdown budget
+  vs the drain deadline → #40.
 
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance

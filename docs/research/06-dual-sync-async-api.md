@@ -1,5 +1,16 @@
 # Dual sync/async API from one implementation: state of the art (Sep 2026)
 
+> **Superseded in part.** §6.3 below recommends generating the synchronous REST client with
+> `unasync`. Ticket #22 rejected that on later evidence — the tooling survey, the reference-set
+> comparison and the mining of 0.4.8's own synchronous surface in
+> [`18-execution-model-in-practice.md`](18-execution-model-in-practice.md) — and decided a sans-I/O
+> core with two thin hand-written drivers instead
+> ([ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)). The findings
+> in §1–§5 stand and are what that decision was argued from; only the recommendation in §6.3
+> changed. §6.1 (async-only WebSocket runtime), §6.2 (sans-I/O core) and §6.4 (accept both handler
+> colours) were adopted, the last one narrowed by
+> [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md).
+
 Research date: 2026-09-02. Primary sources only: library source (GitHub at the URLs in *Sources*, or the
 locally installed wheels named inline: httpcore 1.0.9, httpx 0.28.1, anyio 4.12.1, urllib3 2.6.3,
 starlette 0.51.0, h11 0.16.0, pymongo 4.17.0), official docs, PEPs. Values quoted from source are in
