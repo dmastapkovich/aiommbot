@@ -1,6 +1,6 @@
 # 4. Solution strategy
 
-_Status: in progress (#13 settled the core; #14 and #38 complete the section)._
+_Status: reviewed (#38 completed the section; open boundaries are named at the end)._
 
 The handful of decisions that shape everything else. Each item is one paragraph and links to the
 ADR that holds the decision.
@@ -137,6 +137,33 @@ observer.
 [ADR-0027](../adr/0027-api-error-taxonomy.md),
 [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md)
 
-## Still to be written here
+## Four layers and one direction of dependencies
 
-Execution-model mechanism (#22), quality-by-mechanism toolchain (#23, #28).
+Allowed imports run Core → (Adapter | generic plugins) → adapter-specific plugins → testing
+toolkit. The Adapter and the generic plugins are one rank rather than two, so a generic Plugin
+cannot import the Adapter and "generic" stays a checked property; plugins are independent of one
+another and collaborate only through Core-owned Protocols; the Core imports no third-party package;
+nothing imports the testing toolkit. The building-block view draws exactly this direction and the
+import-linter contract enforces it.
+→ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)
+
+## Quality by mechanism, not by memory
+
+Python `>=3.12` until each version's EOL, with `typing_extensions` as the Core's only runtime
+dependency and one compat module. Four type checkers — mypy, pyright, pyrefly, ty — all beyond
+strict and all blocking, with `tests/typing` asserting the public contract and negative cases. No
+suppression exists in the package outside Quarantine modules, whose baseline only decreases. ruff
+with every rule plus preview and explained ignores, wemake-python-styleguide, semgrep rules for
+banned patterns, import-linter for the layer contract above, slotscheck, and the supply-chain
+checks, driven by `just` and pre-commit.
+→ [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md),
+[ADR-0009](../adr/0009-four-strict-type-checkers.md),
+[ADR-0010](../adr/0010-zero-suppressions-with-a-quarantine.md),
+[ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md)
+
+## Boundaries still open
+
+Four questions of *responsibility* remain, each with its own ticket, and none of them changes the
+strategy above: the repository layout and extras that realise the layers (#24), the testing
+toolkit (#25), the observability boundary (#29), and where scheduling, reliability middlewares and
+the CLI live (#30).

@@ -50,10 +50,35 @@ callback endpoint. An adapter-specific Plugin implementing the Core-owned Transp
 delivers events and does not interpret them. A Bot may have none.
 _Avoid_: channel (reserved for the Mattermost channel), ingress, source, gateway, connection
 
+**WebSocketTransport**:
+The adapter-specific Plugin that holds the one long-lived Mattermost socket: a supervised reconnect
+loop, heartbeat and silence monitor, resume with sequence continuity, a reader that never stalls
+into a bounded queue, and a graceful drain. Exactly one per bot account.
+_Avoid_: gateway, socket client, listener, consumer (that is the process role)
+
+**Webhook**:
+The adapter-specific Plugin that turns an inbound interactive callback into an Event with a Reply
+channel. Exposes a bare ASGI callable and a host-free `handle_callback`; it starts no server.
+_Avoid_: HTTP transport (that is the seam), callback server, endpoint, ingress
+
 **Bot**:
 The composition root: it is configured with an Adapter, Plugins and routers, owns the lifecycle
 and runs the dispatch loop. One Bot per process is the documented model.
-_Avoid_: app, application, dispatcher (the dispatcher is a component inside the Bot)
+_Avoid_: app, application, dispatcher (the Dispatcher is a component inside the Bot)
+
+**Dispatcher**:
+The Core component the Bot feeds every Event to: it drives the Inbound middleware, walks the Router
+tree depth-first to the first match, drives the Handler middleware around it, resolves the
+Handler's parameters from its Resolution plan and returns the Outcome to the Transport. It owns no
+routing rules of its own.
+_Avoid_: engine, event loop, pipeline, handler runner
+
+**Sync executor**:
+The Bot's own bounded thread pool, the only place a declared synchronous Handler or Provider runs.
+Its size is a setting checked against the transport's worker count; at drain the wait is dropped
+and the thread abandoned with a `HandlerAbandoned` Signal, so such a Handler must be idempotent.
+_Avoid_: thread pool (bare), worker pool (workers are processes), executor (that is the API
+client's Operation executor), offloading
 
 **Event**:
 The immutable generic envelope `Event[P]` the Core dispatches: the platform event name (`kind`),
@@ -65,6 +90,12 @@ _Avoid_: request, update, message (as the generic term), incoming
 The typed body of an Event, defined by the Adapter for one platform event name and registered in
 the EventRegistry. `RawEvent` is the payload for any name without a registered type.
 _Avoid_: data, body, model (as the generic term)
+
+**EventRegistry**:
+The Adapter's declarative map from a platform event name to its Payload type, filled explicitly at
+composition and extensible by Plugins and applications. A duplicate name is a start-up error; a name
+with no entry decodes to `RawEvent`.
+_Avoid_: event map, payload registry, dispatch table, catalogue
 
 **Router**:
 A node in the handler tree. Holds handlers and child routers in registration order and may carry
@@ -80,6 +111,12 @@ _Avoid_: matcher, guard, check
 A typed parser that turns an Event into a value a handler receives by annotation, or reports
 `NoMatch` (skip this handler) or `Invalid` (the event is about this, the data is bad).
 _Avoid_: converter, parser (as the generic term), transformer
+
+**DependencyProvider**:
+The Core Protocol behind which dependencies are resolved, and the name of the Core's own small
+stdlib resolver that implements it. An external container serves dependencies through the same
+Protocol as a bridge Plugin.
+_Avoid_: container, IoC container, injector, DI framework
 
 **Provider**:
 A declaration that a dependency key (type plus optional Qualifier) is produced by a factory in a
@@ -159,6 +196,11 @@ The frozen identity of a conversation's state: channel, user, thread root and a 
 the Adapter from an Event according to the plugin's strategy (`USER_IN_CHANNEL` by default).
 _Avoid_: storage key, session id, chat id
 
+**StateKeyProvider**:
+The Core Protocol through which the Adapter builds a StateKey from an Event according to the
+strategy the State plugin is configured with. The State plugin consumes keys and never derives them.
+_Avoid_: key builder, key strategy (that is the setting), key factory
+
 **Flow**:
 A typed group of states with a typed, versioned data model — `class Order(Flow[OrderData])` —
 describing one multi-step dialogue. Its data is the draft of the current dialogue, never business
@@ -193,6 +235,17 @@ when the callback returns: versioned, keyed by `kid`, HMAC-SHA256 by default, wi
 actor binding and nonce. The only authenticity primitive Mattermost leaves to an external bot.
 _Avoid_: signature (of the request), secret, cookie
 
+**CallbackTokenCodec**:
+The Core Protocol that issues and verifies a Callback token, returning a typed union —
+`Verified`, `Missing`, `Invalid`, `Expired`, `Replayed`, `ActorMismatch`. The stdlib HMAC-SHA256
+codec is bundled; PASETO ships behind the same Protocol as an extra.
+_Avoid_: signer, token service, crypto layer
+
+**NonceStore**:
+The opt-in single-use enforcement for Callback tokens, keyed by `jti` on a KeyValueStore. Absent,
+a token may be presented more than once until it expires.
+_Avoid_: replay cache, dedup store (dedup is the transport's), jti store
+
 **StaleAction**:
 The routable Event produced when a Callback token is `Expired` or `Replayed`; its default handler
 tells the user the action has expired and disables the buttons.
@@ -203,6 +256,18 @@ The moment the server hands the gateway a fresh `connection_id` after an unrecov
 events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the loss window so a
 plugin or the application can backfill over REST.
 _Avoid_: reconnect (that may resume without loss), full sync, catch-up (bare)
+
+**WebSocketConnection**:
+The Core Protocol at the level of one socket — connect with headers, query, TLS and proxy;
+`receive(timeout)`; `send_text`; `ping`; `close(code)`; four typed error kinds — behind which the
+gateway logic runs. `websockets` is the shipped implementation, `picows` an extra.
+_Avoid_: socket, websocket client, connection (bare), transport (that is the Plugin)
+
+**AuthLossDetector**:
+The shared component that decides whether a silent socket means a network fault or a revoked
+credential: it parses every `ping` reply and probes `GET /users/me`, refreshes the token once, then
+raises `FatalError(AuthRevoked)`. It reports ids and a token digest, never the token.
+_Avoid_: auth checker, session monitor, token validator
 
 **Quarantine**:
 A module under `_internal/compat/` that adapts one third-party library with incomplete typing to a
@@ -226,6 +291,37 @@ The frozen, generated descriptor of one REST call — method, path template, par
 and response types, overlay flags — that a resource method executes and that an application may
 declare itself for an endpoint outside the spec.
 _Avoid_: endpoint (that is the server side), route, request spec
+
+**Generated model**:
+One of the frozen `dataclass(frozen, slots, kw_only)` types emitted from the overlaid Mattermost
+spec and committed to the repository, together with the hand-written models for what the spec
+leaves as a bare object. Responses carry `required` from the overlay, requests carry `UNSET`.
+_Avoid_: schema, DTO, entity, pydantic model
+
+**Model generator**:
+The build-time pipeline that applies the OpenAPI Overlay to the ESR-pinned spec and emits the
+Generated models and Operation descriptors for both Faces. Its output is committed and `--check`ed,
+so a hand edit fails the build; a nightly job reports upstream drift. It is not part of the running
+system.
+_Avoid_: codegen, generator (bare), build script, scaffolding
+
+**Exchange**:
+The sans-I/O heart of the API client, shared by both Faces: it builds a request from an Operation,
+classifies the response, decides whether to retry and advances a page. Pure functions with no
+network, tested once for both Faces.
+_Avoid_: sans-I/O core (Core is the framework's), state machine (bare), engine, protocol object
+
+**Face**:
+One of the two thin I/O layers over an Exchange — the asynchronous face under the bare name, the
+synchronous face under the `Sync` prefix. A Face only performs I/O; every decision belongs to the
+Exchange, which is why neither is generated from the other.
+_Avoid_: driver, twin, mirror, binding
+
+**TokenProvider**:
+The Core Protocol supplying the bot's credential on every connection and request, so rotation is
+the application's business. `SyncTokenProvider` is its synchronous pair; the token is never logged
+and never placed in a URL.
+_Avoid_: credential store, auth provider, secret source
 
 **HTTPTransport**:
 Core Protocol at the level of raw HTTP — method, URL, headers, body or stream, multipart in; status,
@@ -268,3 +364,9 @@ The Protocol an application implements to observe API calls — `on_request`, `o
 isolated from the others; an observer never changes the call. Modifying behaviour is done by
 decorating the HTTPTransport or by Middleware.
 _Avoid_: hook (that is a Signal subscriber), interceptor, tracer, instrumentation
+
+**Testing toolkit**:
+`aiommbot.testing`: the first-party doubles, conformance suites, event builders, typed dependency
+overrides and parity tests shipped with the framework. It may import every layer and no layer may
+import it, which is what keeps doubles out of the shipped runtime.
+_Avoid_: test utils, fixtures, mocks, test framework
