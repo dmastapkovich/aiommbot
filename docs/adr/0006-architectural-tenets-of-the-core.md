@@ -38,3 +38,24 @@ component document must argue against, in this order of authority:
 
 - `docs/design/engineering-style.md` (#36) turns these tenets into rules with examples; every LLD
   has a SOLID section that argues them for its component.
+
+## Amended by #36 on 2026-09-07: where inheritance is allowed
+
+Tenet 1 said what inheritance is not for and left open where it is still the right tool. The
+boundary, written as rules in [`engineering-style.md`](../design/engineering-style.md) §3:
+
+- **A Protocol expresses a seam**; the thirteen Core-owned Protocols of the building-block view
+  §5.4 are the only substitution points, and nothing in the Core imports an implementation.
+- **`abc.ABC` is a *restricted* pattern**: permitted inside a single component, for a family of
+  interchangeable implementations of that component's own concept, and only with an ADR naming the
+  rejected alternative. It never crosses a component boundary and is never a user extension point.
+- **Inheritance is otherwise for two purposes**: the error taxonomy (ADR-0027) and closed variant
+  types whose members are frozen dataclasses.
+- **A mixin is permitted only as a private `_Base…` class inside one component, and only to share
+  behaviour between an asynchronous and a synchronous pair** (ADR-0029).
+- **Template Method is banned as a user extension point** and restricted inside a component.
+- **`@final` is the default** on every class the component's document does not say who subclasses.
+
+The reference implementation we measured holds the mirror position — Protocols only for the shape
+of *foreign* objects, ABC grids for its own implementation families — which is why the boundary is
+worth stating rather than assuming.

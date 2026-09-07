@@ -149,6 +149,19 @@ The typed result of dispatching an Event: `Handled`, `Unhandled`, or `Failed(err
 ErrorBoundary. Returned by `call_next` and by the dispatcher to the Transport, which reacts to it.
 _Avoid_: result, response, status
 
+**Typed outcome**:
+The general shape the Outcome is one instance of: a closed union of frozen, domain-named values a
+component returns when its immediate caller must branch on the result in normal operation — an
+Extractor's `Value | NoMatch | Invalid`, a compare-and-set `Conflict`, a Callback token's
+`Verified | Invalid | Expired`. A broken contract or a failed dependency is an exception instead.
+_Avoid_: result object, `Result`/`Either`, error code, status tuple
+
+**Public surface**:
+The set of names the semantic-versioning promise covers: no leading underscore, outside
+`_internal`, explicitly re-exported by its subpackage, and present in the reference documentation —
+all four at once. Everything else may change in a patch release.
+_Avoid_: public API (as the file-level thing), exports, `__all__` (that is one mechanism for it)
+
 **Flag**:
 A typed object attached to a Handler at its subscription to parametrise a Middleware (a timeout, a
 required role, a rate limit); stored in the HandlerSpec by type. A Flag with no consuming

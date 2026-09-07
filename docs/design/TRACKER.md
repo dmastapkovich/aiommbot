@@ -22,8 +22,8 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 9 | `docs/adr/` | rolling | every grilling ticket | — |
 | 10 | `10-quality-requirements.md` | — | #37 | #13 |
 | 11 | `11-risks-and-technical-debt.md` | — | #42 | #40 #41 |
-| 12 | `CONTEXT.md` | rolling (17 terms added by #38) | every ticket | — |
-| — | `engineering-style.md` | — | #36 | #23 #13 |
+| 12 | `CONTEXT.md` | rolling (2 terms added by #36) | every ticket | — |
+| — | `engineering-style.md` | reviewed | #36 | #23 #13 |
 | — | `diagrams.md` | reviewed | #35 | — |
 | — | `components/_template.md` | reviewed | #35 | — |
 | — | `docs/documentation-style.md` | reviewed | #35 | — |
@@ -41,8 +41,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Stateless core; State plugin with mandatory backend | #13 (→ #18) | 0003 | reviewed |
 | Execution model boundary: async engine, generated sync Runtime | #13 (→ #22) | 0004 | reviewed |
 | Scaling model: one ingress, many workers | #13 (→ #19, #40) | 0005 | reviewed |
-| Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed |
-| Public API surface: tiny root + explicit subpackages | #13 (→ #24) | 0007 | reviewed |
+| Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed (amended by #36) |
+| Public API surface: tiny root + explicit subpackages | #13 (→ #24, #36) | 0007 | reviewed (amended by #36) |
 | Plugin contract, adapter role, ordering, settings, discovery, stability | #14 | 0015 | reviewed |
 | Three-phase start, checks framework, ProcessProfile | #14 | 0016 | reviewed |
 | Lifecycle Signals | #14 | 0017 | reviewed |
@@ -70,7 +70,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Concurrency discipline, event-loop ownership, process entry points | #22 | 0031 | reviewed |
 | Python floor and support policy | #23 | 0008 | reviewed |
 | Type checkers and typing tests | #23 | 0009 | reviewed |
-| Zero suppressions and quarantine | #23 | 0010 | reviewed |
+| Zero suppressions and quarantine | #23 (→ #36) | 0010 | reviewed (amended by #36) |
 | Lint, format, architecture toolchain, task runner | #23 | 0011 | reviewed |
 | Layer model and the direction of allowed dependencies | #38 | 0032 | reviewed |
 | Repository layout, public/internal boundary, extras | #24 | | — |
@@ -80,7 +80,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | CI, release, versioning, changelog, deprecation | #28 | | — |
 | Observability boundary | #29 | | — |
 | Scheduling, reliability middlewares, CLI boundaries | #30 | | — |
-| Engineering style and ideology | #36 | | — |
+| Engineering style and ideology: rule form, pattern tiers, derived review checklist | #36 | 0033 | reviewed |
+| Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | | — |
 | Public API shape (prototype) | #31 | | — |
 | Toolchain skeleton verified (prototype) | #32 | | — |
@@ -104,22 +105,22 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|
-| Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), #36 (rules) | §8, style | | wip |
-| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`) | §8 | | wip |
-| Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | §8, style | | wip |
+| Typing discipline and banned patterns | ADR-0009, ADR-0010 (amended by #36), ADR-0011 (mechanics), ADR-0033 (rule form) | style §4, §3.3; §8 | | wip (§10 scenario pending #37) |
+| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`), ADR-0034 (which mechanism) | style §6; §8 | | wip (§10 scenario pending #37) |
+| Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | style §5; §8 | | wip (§10 scenario pending #37) |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | wip |
-| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 #29 | §8 | | wip |
+| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 (framework-wide rule, no content switch, one redaction list), #29 (observer record) | style §9; §8 | | wip (list finalised by #29) |
 | Observability hooks and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | wip |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | wip |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | wip |
-| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), #24 (layout) | §5, §8 | | wip |
+| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), #24 (layout) | style §8; §5, §8 | | wip |
 | Sync/async duality | ADR-0004 (boundary), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin drivers, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | wip |
-| Testing strategy (unit / contract / integration / typing / property) | #25 | §8 | | — |
+| Testing strategy (unit / contract / integration / typing / property) | #36 (how tests are written), #25 (toolkit shape) | style §11; §8 | | wip |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (own executor sized against the worker count, checked at start) | §8, gateway LLD | | wip |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | wip |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | wip |
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | wip |
-| Deprecation and public-API definition for semver | #28 | §8 | | — |
+| Deprecation and public-API definition for semver | ADR-0007 (amended by #36: the four criteria of public), #28 (semver and deprecation window) | style §8, §10 | | wip |
 
 ## E. Disposition of every 0.4.8 capability
 

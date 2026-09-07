@@ -36,3 +36,25 @@ the first line:
   themselves unchecked code.
 - *Targeted suppressions anywhere with a budget* — rejected by the maintainer: any suppression in
   our own code is technical debt, and a project designed from scratch starts with none.
+
+## Amended by #36 on 2026-09-07: `tests/typing/` is the second named exception
+
+Writing the rulebook surfaced a contradiction between this ADR and
+[ADR-0009](0009-four-strict-type-checkers.md). The rule above forbids inline suppressions even in
+tests; ADR-0009 requires them in exactly one place, because a negative typing case ("this must not
+type-check") *is* "a targeted suppression with a rule code on the offending line", and it works
+only because every checker reports an unnecessary suppression as an error. Both statements stand;
+the exception list was incomplete. `tests/typing/` is therefore the **second named exception**
+alongside Quarantine, under three conditions:
+
+- only a suppression that carries the rule code, and only as the assertion of a negative case —
+  never to make a positive case pass;
+- **no baseline**: unlike Quarantine, the count is not tracked, because such a suppression is not a
+  concession but the subject of the test, and it is *required* to turn red the day the checker stops
+  reporting the error;
+- the directory is checked by all four checkers and never imported by pytest (ADR-0009), so a
+  suppression here cannot mask anything at runtime.
+
+Everything else is unchanged: `aiommbot/` carries none, Quarantine's carry a rule code and an
+upstream link against a baseline that only decreases, and tests and documentation examples relax
+rules by directory in `pyproject.toml` with reasons rather than inline.

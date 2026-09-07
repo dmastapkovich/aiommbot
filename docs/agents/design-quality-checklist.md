@@ -37,15 +37,20 @@ step of the playbook and again in the hand-off ticket.
 - Every applied pattern is named as on refactoring.guru, with the problem it solves here and the
   rejected alternative; considered-and-unused patterns are listed.
 - SOLID: one argued paragraph per principle; a bent principle says where and why.
-- Failure modes cover timeout, cancellation, dependency outage, bad input, concurrent use; states
-  what is logged (never message text, tokens, PII) and what reaches observability.
-- Typing and async rules: no `Any`, `cast`, `getattr`; cancellation-safe; timeouts explicit; sync
-  face, if any, produced by the mechanism the execution-model ADR fixed.
-- Testing: unit, contract suite for pluggable implementations, integration path, typing tests.
+- Failure modes cover timeout, cancellation, dependency outage, bad input, concurrent use; each one
+  says whether it is a typed outcome or an exception and which boundary converts it.
+- Typing, async, error, naming, layout, logging, documentation and testing rules: the document
+  passes §12.1 of [`../design/engineering-style.md`](../design/engineering-style.md), which is the
+  single source for those rules. Do not restate them here.
 - Interactions agree with §6 runtime views and with the neighbouring component documents.
 
 ## Engineering style rulebook
 
 - Every rule is positive ("do X"), has a one-line reason, and at least one do/don't example.
-- Pattern catalogue names welcome and discouraged patterns with the reason and the place.
-- Review checklist at the end is derivable from the rules above it and nothing else.
+- Every rule carries a stable `ST-<AREA>-NN` identifier, its limitations (or the words "no
+  exceptions"), its enforcement tier, where it is checked, and the ADR it descends from.
+- Pattern catalogue names welcome, restricted and banned patterns with the reason and the place.
+- Review checklist at the end is derivable from the rules above it and nothing else, in two blocks
+  — design review over every `LLD`-tagged rule, code review over `review`-tier rules only — and
+  every checklist line names the identifiers it covers.
+- Tool configuration is not restated: the tier names it, [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md) owns it.

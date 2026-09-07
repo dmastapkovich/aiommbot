@@ -56,3 +56,6 @@ Readiness of every document, decision area, component and cross-cutting concern 
   principle for that component or says honestly where it is bent and why.
 - **Diagrams are code.** Mermaid only, following [`diagrams.md`](diagrams.md). No screenshots, no
   binary diagram files.
+- **Rules are cited, not paraphrased.** Every component document, and later every pull request, is
+  checked against [`engineering-style.md`](engineering-style.md), whose rules carry stable
+  `ST-<AREA>-NN` identifiers. Cite the identifier; do not restate the rule.

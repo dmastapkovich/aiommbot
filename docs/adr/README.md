@@ -12,11 +12,11 @@ which decision.
 | [0003](0003-stateless-core-state-plugin-with-explicit-backend.md) | The core is stateless; conversation state is a plugin that cannot start without an explicit backend | accepted |
 | [0004](0004-async-engine-with-generated-sync-runtime.md) | One asyncio engine; the synchronous face is limited to the Runtime and generated from async (amended by 0029, 0030, 0031) | accepted |
 | [0005](0005-one-ingress-many-workers.md) | A bot scales as one event ingress and many workers, never as identical replicas | accepted |
-| [0006](0006-architectural-tenets-of-the-core.md) | The core is built by composition over Protocols it owns, with named patterns and strict typing | accepted |
-| [0007](0007-tiny-public-root-with-explicit-subpackages.md) | The public API is a tiny root namespace plus explicit subpackages; everything else is internal | accepted |
+| [0006](0006-architectural-tenets-of-the-core.md) | The core is built by composition over Protocols it owns, with named patterns and strict typing (amended by #36: where inheritance is allowed) | accepted |
+| [0007](0007-tiny-public-root-with-explicit-subpackages.md) | The public API is a tiny root namespace plus explicit subpackages; everything else is internal (amended by #36: the four criteria of public) | accepted |
 | [0008](0008-python-floor-3-12-with-typing-extensions.md) | Python 3.12 is the floor, supported until EOL, with typing_extensions as the Core's only runtime dependency (amends 0002) | accepted |
 | [0009](0009-four-strict-type-checkers.md) | Four type checkers run at maximum strictness and all of them block | accepted |
-| [0010](0010-zero-suppressions-with-a-quarantine.md) | Zero lint and type suppressions in the package; foreign types wrapped in quarantine modules | accepted |
+| [0010](0010-zero-suppressions-with-a-quarantine.md) | Zero lint and type suppressions in the package; foreign types wrapped in quarantine modules (amended by #36: `tests/typing/` is the second exception) | accepted |
 | [0011](0011-lint-format-and-architecture-toolchain.md) | One toolchain enforces style, complexity, architecture and dependencies; just is the entry point | accepted |
 | [0012](0012-generic-event-envelope-with-adapter-payloads.md) | Inbound events are one generic envelope `Event[P]`; payload types and their registry belong to the Adapter | accepted |
 | [0013](0013-type-driven-routing-with-a-typed-dispatch-outcome.md) | Handlers subscribe by annotation on a router tree walked depth-first to the first match, with a typed outcome and reachability checks | accepted |
@@ -39,3 +39,5 @@ which decision.
 | [0030](0030-synchronous-callables-by-explicit-declaration.md) | A synchronous Handler or Provider is declared with `sync_to_thread` and runs in the Bot's own bounded executor, abandonable at drain; Filters and Extractors run inline; everything else is a coroutine function (amends 0004, 0023) | accepted |
 | [0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) | The Core runs on standard-library asyncio under a fixed structured-concurrency discipline, and the framework never chooses the event loop (amends 0004) | accepted |
 | [0032](0032-layer-model-and-direction-of-allowed-dependencies.md) | Allowed dependencies run Core → (Adapter \| generic plugins) → adapter-specific plugins → testing toolkit, and a generic Plugin may never import the Adapter | accepted |
+| [0033](0033-identified-tiered-rules-with-a-derived-review-checklist.md) | A style rule is an identified, tiered statement carrying a reason, an example and its limits, and the review checklist is derived from the rules and nothing else | accepted |
+| [0034](0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md) | A typed outcome expresses a branch the immediate caller must take; an exception expresses a broken contract or a failed dependency | accepted |
