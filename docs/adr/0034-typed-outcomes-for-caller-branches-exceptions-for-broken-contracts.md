@@ -46,8 +46,9 @@ Evidence from the reference implementation we measured: its authentication chain
 this split in the participant's own contract — return `Self` on success, return `None` when this
 participant declines and the chain must continue, raise to fail the whole login immediately — and
 the chain runner, not the participant, is what raises once every participant has declined. The same
-codebase carries exactly one result object, and its docstring says why: unlike the exception, which
-reports the first failing throttle, the report collects the stats of all of them.
+codebase returns a value rather than raising in exactly one place, and its docstring says why:
+unlike the exception, which reports the first failing throttle, the report collects the stats of
+all of them.
 
 ## Considered options
 
