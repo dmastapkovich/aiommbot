@@ -350,8 +350,69 @@ middleware access to Event-scope dependencies → #17 (done: ADR-0020); transpor
   `RUF029` explained ignores → #32; two httpx2 free-threading risks → #42; graceful-shutdown budget
   vs the drain deadline → #40.
 
+## Decided in HLD: context, containers and components (#38, 2026-09-06)
+
+- [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md): allowed imports run
+  Core → (Adapter | generic plugins) → adapter-specific plugins → testing toolkit. The Adapter and
+  the generic plugins are **one rank**, so a generic Plugin may never import the Adapter; plugins are
+  independent of each other in both directions; the Core imports no third-party package; nothing
+  imports the testing toolkit.
+- arc42 §3, §4 and §5 are `reviewed`. §5 introduced **three ranks of block**: *component* (gets an
+  LLD), *part* (described inside its component), *seam* (a Core Protocol, described in the document
+  of the component that **consumes** it, all listed in §5.4). Inventory: **28 components, ~40 parts,
+  13 Protocols on 11 seams** → 27 `LLD:` tickets for #41 plus the testing toolkit once #25 lands.
+- 17 `CONTEXT.md` terms. Three were born from collisions with an existing `_Avoid_` list: **Face**
+  (not "driver", taken by Adapter), **Exchange** (not "sans-I/O core", collides with Core), **Sync
+  executor** (not bare "executor", spent by ADR-0026 on the Operation executor). That rule is now
+  `ST-NAM-02`.
+- Where §5 meets #24: the layer names and their direction are §5's line; the package paths, the
+  `__all__` policy and the extras are #24's.
+
+## Decided in Engineering style and ideology (#36, 2026-09-07)
+
+The rulebook every LLD and later every PR is checked against:
+[`docs/design/engineering-style.md`](../design/engineering-style.md), **92 rules over ten areas**
+(`SOL`, `PAT`, `TYP`, `ASY`, `ERR`, `NAM`, `MOD`, `LOG`, `DOC`, `TST`) plus a one-page ideology.
+
+- [ADR-0033](../adr/0033-identified-tiered-rules-with-a-derived-review-checklist.md): a rule is
+  `ST-<AREA>-NN` — never renumbered — carrying the rule as a positive sentence, a one-line reason, a
+  do/don't example, **its limitations** (or "no exceptions"), an enforcement tier (`tool` 44 ·
+  `review` 48), where it is checked (`LLD` / `PR`) and its source ADR. Three pattern tiers: welcome
+  (argued once, cited after), restricted (needs an ADR naming the rejected alternative), banned (no
+  exception). The final checklist is derived from the rules and nothing else, in two blocks — design
+  review over every `LLD`-tagged rule, code review over `review`-tier rules only.
+- [ADR-0034](../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md): a
+  **typed outcome** when the immediate caller must branch in normal operation; an **exception** when
+  a contract broke or a dependency failed. "Every alternative declined" converts to an exception **at
+  the chain boundary, never inside a participant**; an exception reports the **first** failure, an
+  outcome reports **all** of them; one failure has one representation; expose both only as an
+  overload on a `Literal`.
+- Amendments: **ADR-0006** — Protocol at every seam, `abc.ABC` restricted to one component with an
+  ADR, mixins only as a private `_Base…` for an async/sync pair, Template Method banned as a user
+  extension point, `@final` by default. **ADR-0007** — a name is public only if all four hold: no
+  leading underscore, outside `_internal`, explicitly re-exported, **and documented**. **ADR-0010** —
+  `tests/typing/` is the second named suppression exception beside Quarantine (rule code mandatory,
+  negative cases only, no baseline), resolving a real contradiction with ADR-0009.
+- Boundaries: paths/`__all__`/extras → #24; testing toolkit shape → #25; documentation stack → #26;
+  observer record and the final redaction list → #29; **all** tool configuration → ADR-0011.
+  `design-quality-checklist.md` now delegates its LLD typing/async/testing lines to §12.1.
+- `CONTEXT.md`: `Typed outcome`, `Public surface`.
+- **The maintainer's reference for strictness is `django-modern-rest`**, local at
+  `/Users/dsastapkovich/workspace/django-modern-rest` (ADR-0007 and ADR-0010 already measure it).
+  Taken from it: the `Limitations` slot, the four conjunctive criteria of public, `ST-TYP-16` (state
+  stashed on a foreign object is the largest source of its 100 `type: ignore`), `ST-TST-01` (two
+  files use `unittest.mock`, both at a third-party seam, against ~18 conforming doubles).
+  Deliberately **not** taken: scattered `typing_extensions` imports (62 sites, one name of ten
+  protected — evidence *for* ADR-0008's single compat module), bare `: Final =` (99/99 — we keep
+  `Final[<type>]`), and a flat exception hierarchy with a duck-typed `status_code` kept in step by
+  `NOTE:` comments.
+- Its split AI policy (agent contributions banned, agent consumption invested in) was routed to #27,
+  not designed here.
+- Suggested order for #41's 27 LLDs, derived from `ST-MOD-05` and §5.4: bottom-up along the ADR-0032
+  layer table, and within a rank the seam-owning consumer before the implementations of that seam.
+
 Follow-ups routed (from #13): single-process declaration and checks framework → #14 (done: ADR-0016); process roles and the
 single-consumer guard → #19, #40; sync generation mechanism → #22; State backends and conformance
-suite → #18; tenets into rules → #36; layout and `__all__` guard → #24; toolchain config verified on a stub → #32;
-CI matrix and free-threaded job → #28; banned-pattern rules with examples → #36; quarantine
+suite → #18; tenets into rules → #36 (done: `engineering-style.md`, ADR-0033); layout and `__all__` guard → #24; toolchain config verified on a stub → #32;
+CI matrix and free-threaded job → #28; banned-pattern rules with examples → #36 (done: §3.3, semgrep ids = rule ids); quarantine
 location in the layout → #24.
