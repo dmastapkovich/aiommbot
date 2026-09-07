@@ -41,3 +41,4 @@ which decision.
 | [0032](0032-layer-model-and-direction-of-allowed-dependencies.md) | Allowed dependencies run Core → (Adapter \| generic plugins) → adapter-specific plugins → testing toolkit, and a generic Plugin may never import the Adapter | accepted |
 | [0033](0033-identified-tiered-rules-with-a-derived-review-checklist.md) | A style rule is an identified, tiered statement carrying a reason, an example and its limits, and the review checklist is derived from the rules and nothing else | accepted |
 | [0034](0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md) | A typed outcome expresses a branch the immediate caller must take; an exception expresses a broken contract or a failed dependency | accepted |
+| [0035](0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md) | The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table | accepted |
