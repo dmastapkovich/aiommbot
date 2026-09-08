@@ -1,4 +1,4 @@
-# Resilient long-lived WebSocket consumer patterns (chat-bot gateway)
+# Resilient long-lived WebSocket consumer patterns (chat-bot WebSocketTransport)
 
 Research date: 2026-09-02. Sources are primary (library source at pinned URLs, vendor docs, RFCs).
 Values quoted from source are marked with backticks; anything I could not open is marked **[unverified]**.
@@ -102,8 +102,6 @@ Take-away: Slack pushes the reconnect burden to the server (`disconnect` with wa
   `_handle_update_tasks` with `add_done_callback(discard)`; optional `tasks_concurrency_limit` (`asyncio.Semaphore`).
   Shutdown: `_running_lock`, `_stop_signal`/`_stopped_signal` events, `_signal_stop_polling` on SIGINT/SIGTERM.
   `polling_timeout` default `10` (`30` inside `_listen_updates`).
-
-## 4. Home Assistant — skipped (optional, not researched).
 
 ## 5. Message brokers: NATS, Centrifugo, Redis
 
@@ -215,10 +213,11 @@ loop decides resume/identify/backoff.
 - Kubernetes: SIGTERM, then SIGKILL after `terminationGracePeriodSeconds` (default 30 s); endpoint removal runs in parallel
   with SIGTERM — a bot should stop pulling new events, finish/ack in-flight ones, and close with `1000/1001` inside that window.
 
-## Distilled design rules for our gateway
+## Distilled design rules for our WebSocketTransport
 
 1. **One outer reconnect loop, one TaskGroup per connection** ({reader, heartbeat, writer}); any task failing cancels the
-   siblings and the loop decides what next (anyio TaskGroup; `websockets` `async for` iterator).
+   siblings and the loop decides what next (`asyncio.TaskGroup`, ADR-0031; `websockets` `async for`
+   iterator).
 2. **Classify every exit** into *transient* (retry), *resumable* (retry keeping session), *fatal* (raise) using a
    `process_exception`-style hook and an explicit close-code table (websockets; Discord 4004/4010–4014 fatal; Centrifugo
    3500–3999/4500–4999 terminal; discord.py "1000 is not trustworthy — rely on `is_closed`").
@@ -255,7 +254,8 @@ loop decides resume/identify/backoff.
 17. **Run handlers as tasks with a concurrency limit and tracked set** (aiogram `handle_as_tasks` + `tasks_concurrency_limit`)
     so a slow handler never blocks the read loop or the heartbeat.
 18. **Pick the transport by need**: `websockets` (reconnect iterator, flow control, deflate) or `picows` (raw speed, no
-    deflate); wrap it behind a Protocol so the gateway logic is transport-agnostic (sans-io mindset of wsproto).
+    deflate); wrap it behind a Protocol so the WebSocketTransport logic does not depend on the
+    library (sans-io mindset of wsproto).
 
 ## Sources
 

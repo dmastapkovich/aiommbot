@@ -1,4 +1,4 @@
-# WebSocket client libraries for the Mattermost gateway — what goes behind `WebSocketConnection`
+# WebSocket client libraries for the Mattermost WebSocketTransport — what goes behind `WebSocketConnection`
 
 Status: complete (2026-09-03). Primary sources only (library source on GitHub, official docs, PyPI
 release history); versions and dates are as observed on 2026-09-03. **[unverified]** marks anything I
@@ -57,8 +57,9 @@ query-string helper — the URL is passed whole, which suits `?connection_id=&se
 60 s). `enable_auto_ping` is a *stale-link detector*: `PING_WHEN_IDLE` pings after
 `auto_ping_idle_timeout` s of silence, `PING_PERIODICALLY` every N s; no PONG within
 `auto_ping_reply_timeout` → disconnect. `send_user_specific_ping`/`is_user_specific_pong` let the
-application substitute its own probe — this is exactly the hook for Mattermost's JSON `{"action":"ping"}`
-instead of a frame ping, so the gateway's 30 s heartbeat can be delegated to the library timer if we want.
+application substitute its own probe — this is exactly the hook for Mattermost's JSON
+`{"action":"ping"}` instead of a frame ping, so the WebSocketTransport's 30 s heartbeat can be
+delegated to the library timer if we want.
 
 **Backpressure.** Write side: `pause_writing`/`resume_writing` are the asyncio flow-control callbacks
 forwarded to the listener (1.19.0 stopped logging them when overridden). Read side: nothing built in —
@@ -142,7 +143,7 @@ proxy_auth, ssl=True, fingerprint, ssl_context, proxy_headers, compress=0, max_m
 as `WSMsgType.ERROR`/`CLOSED` on the next `receive()` — the error itself via `exception()`. 3.14.0
 finally resets the heartbeat timer on inbound data; 3.14.2 fixed decompressing frames when deflate was not
 negotiated and control frames breaking fragmented messages — bug classes that matter for a long-lived
-gateway and that were still being found in 2026. Proxies: "plain HTTP proxies and HTTP proxies that can
+socket and that were still being found in 2026. Proxies: "plain HTTP proxies and HTTP proxies that can
 be upgraded to HTTPS via the HTTP CONNECT method", `trust_env=True` reads `HTTP_PROXY`/`HTTPS_PROXY`/
 `WS_PROXY`/`WSS_PROXY`/`no_proxy` via `getproxies()`; HTTPS (TLS-to-proxy) proxies are described as
 limited by asyncio TLS-in-TLS. Pinning: `ssl=aiohttp.Fingerprint(sha256_der)`. aiohttp 4.0 remains a
@@ -191,8 +192,7 @@ maintained by Pydantic. Forked from httpx 0.28.1"; README: HTTPX "seeing limited
 3.15; runtime deps `anyio>=4.10`, `httpcore2`, `idna`, `truststore>=0.10` (2.3.0 switched SSL
 verification to the OS trust store), extras `http2` (h2), `socks` (socksio), `ws` (wsproto), `brotli`,
 `zstd`. Upstream `httpx` meanwhile: last stable 0.28.1 (2024-12-06); `1.0.dev4–dev6` appeared
-2026-08-19…31, so encode is stirring again but has shipped no stable release in 21 months. The 0.4.x
-stack's `httpx2>=2.5` therefore pointed at this Pydantic fork.
+2026-08-19…31, so encode is stirring again but has shipped no stable release in 21 months.
 
 **WebSocket in httpx2.** 2.6.0 (2026-07-14): "Native WebSocket support by vendoring `httpx-ws`",
 `httpx2[ws]`; 2.7.0 synced to httpx-ws 0.9.0; 2.10.0 fixed max-message-size enforcement across fragments
@@ -236,10 +236,10 @@ Every library that builds `ssl.create_default_context()` inherits OpenSSL's `SSL
 env handling from the stdlib; httpx2 with `truststore` reads the OS store instead — whether it still
 honours `SSL_CERT_FILE` after 2.3.0 is **[unverified]**. Practical consequence: env-var discovery and CA
 policy must live in *our* connector (one place, tested once), and be passed down explicitly; then the
-only real per-library gap is picows' missing `https://` proxy scheme, which no company bot has needed so
-far (0.4.x used httpx2 with plain `HTTPS_PROXY=http://…`) — **[unverified for all eleven bots]**.
+only real per-library gap is picows' missing `https://` proxy scheme, which a plain
+`HTTPS_PROXY=http://…` deployment never exercises.
 
-## 7. The Protocol surface the gateway needs
+## 7. The Protocol surface the WebSocketTransport needs
 
 Everything reconnect-, heartbeat-, resume- and queue-related is ours (doc 01/02); the Protocol is only
 "one open socket". Minimal surface, expressed as two Protocols plus a frozen event union:
@@ -263,8 +263,9 @@ class WebSocketConnection(Protocol):
 
 Design notes: `receive` returns whole messages (the adapter reassembles fragments — gorilla's
 `WriteMessage`/`WriteJSON` normally emit one unfragmented frame, but nothing guarantees it); query
-parameters are part of `url` (built by the gateway); `ping()` returns an awaitable so the gateway can
-measure RTT without owning pong matching; the exception taxonomy is *ours* and every adapter translates.
+parameters are part of `url` (built by the WebSocketTransport); `ping()` returns an awaitable so the
+WebSocketTransport can measure RTT without owning pong matching; the exception taxonomy is *ours*
+and every adapter translates.
 
 How each library maps:
 
@@ -330,6 +331,10 @@ suite, not the adapters, is what makes the library swappable in practice.
 
 ## 10. Recommendation
 
+The decision is [ADR-0023](../adr/0023-websocket-gateway-resilience.md): `websockets` 17.x is the
+shipped implementation and `picows` an optional extra; `CONTEXT.md` folds the `WebSocketConnector`
+and `WebSocketConnection` of section 7 into the one Protocol `WebSocketConnection`.
+
 **Primary WebSocket implementation: picows (Core API), pinned `picows>=2.1,<3`.** It is the only
 candidate that does exactly what the maintainer asked the library to do and nothing more — framing,
 TLS, ping/pong frames, close handshake — with a synchronous, zero-copy data path that feeds our bounded
@@ -353,15 +358,14 @@ behind it — it comes free with the REST dependency but is two months old as a 
 **Minimal Protocol surface:** section 7 — `connect(url, headers, timeout, tls, proxy)`;
 `receive(timeout) -> Text | Binary | Closed(code, reason, clean)`; `send_text`; `ping() -> Awaitable[float]`;
 `close(code, reason)`; `close_code`; four exception kinds (`ConnectError` with `kind`/`status`,
-`NetworkError`, `ProtocolError`, `Timeout`), plus `Closed` as a value, not an exception, so the gateway's
-resume/backoff decision reads the code without `except` ladders.
+`NetworkError`, `ProtocolError`, `Timeout`), plus `Closed` as a value, not an exception, so the
+WebSocketTransport's resume/backoff decision reads the code without `except` ladders.
 
 **HTTP client for REST: httpx2, pinned `httpx2>=2.12,<3`, behind our own thin transport Protocol.**
 It is the only candidate that satisfies ADR-0004's dual sync/async face from one codebase, is fully
 typed, uses the OS trust store by default (the corporate-CA problem disappears), offers HTTP/2 as an
-extra, and is where the 0.4.x bots already are. aiohttp is async-only (the generated sync face would need
-a second HTTP stack), niquests would rewrite the host application's `urllib3`, and urllib3 has no async
-API. The fork risk of httpx2 is real — twelve minor versions in four months, deprecations already in
+extra. aiohttp is async-only (the sync Face would need a second HTTP stack), niquests would rewrite
+the host application's `urllib3`, and urllib3 has no async API. The fork risk of httpx2 is real — twelve minor versions in four months, deprecations already in
 flight — so the REST layer should depend on a `HTTPTransport` Protocol of our own (send request model →
 response model, streaming body, multipart) with httpx2 as the sole shipped implementation, exactly
 mirroring the WebSocket decision.

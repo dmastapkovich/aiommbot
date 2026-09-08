@@ -19,17 +19,6 @@ meant to fail?" — is legitimate, so the survey asks every framework three thin
 boundary and where**, **what does its default do** (log / respond / re-raise / crash), and **who
 may override it**.
 
-The historical baseline matters too. In aiommbot ≤0.4.5 the built-in
-`SafeErrorNotificationMiddleware.dispatch` logged `logger.exception(...)` with
-`"event_details": request.event.model_dump(mode="json")` and returned on the error path (no
-re-raise) — full payload in the log, exception swallowed before Sentry/metrics. Commit `2d61ff3`
-(2026-06-30, shipped in 0.4.6–0.4.8) rewrote it to log only the exception class plus an
-allow-listed identifier context and to `raise` unconditionally
-(`aiommbot/middlewares/safe_error_notification.py` in the 0.4.x repository). The usage-mining note
-(`09-usage-mining-0.4.x-bots.md` §9) found 8/11 bots register the default unmodified, so whichever
-version they pin decides whether their logs contain message text. That is the design smell this
-document evaluates against the field.
-
 ## 1. aiogram 3: error observer, then a swallowing dispatcher loop
 
 aiogram has two layers. `ErrorsMiddleware` is installed as an outer middleware on the `update`
@@ -144,7 +133,7 @@ re-raise"; the server owns logging; the application owns the 500 body and `debug
 
 ## 4. Litestar: convert to a response and swallow; logging is opt-in
 
-Source: litestar 2.14.0 (identical to `main`).
+Source: litestar `main` as of 2026-09-03 (latest release 2.24.0, 2026-06-11).
 
 **Boundary.** `ExceptionHandlerMiddleware.__call__`
 (https://github.com/litestar-org/litestar/blob/main/litestar/middleware/_internal/exceptions/middleware.py):
@@ -483,18 +472,6 @@ DLQ (FastStream's #1161 lesson: in-memory retry counters do not scale across rep
 transport/broker concern or an explicit plugin, never a Core default), and error classification
 (`throws`-style "expected" exceptions that should not page anyone).
 
-**What 0.4.x got wrong against this evidence.** `SafeErrorNotificationMiddleware` ≤0.4.5 (§0)
-(a) logged `event.model_dump()` — no surveyed framework does that by default, and the two that
-log any payload are the ones flagged here as leaks; (b) swallowed the exception *inside* the
-middleware chain, so Sentry/OTel-style hooks that sit above it never saw an unhandled error — the
-opposite of the Starlette and Sentry contract "re-raise all the way up"; (c) made the middleware,
-not the transport, decide the outcome, so a webhook still returned 200 and a queue would have
-acked a failed message; (d) was opt-out by registration rather than a Core guarantee, so 8/11
-bots' behaviour depended on which patch version they pinned. The 0.4.6 fix (log class + ids,
-always re-raise) repaired (a) and (b) and moved the problem to (c): re-raising into a transport
-loop with no defined consumer is the aiogram-webhook `# TODO: handle exceptions` situation. The
-0.5.0 design closes it by making the boundary produce a value the transport must handle.
-
 ## Sources
 
 - aiogram: https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/dispatcher/middlewares/error.py ·
@@ -556,5 +533,3 @@ loop with no defined consumer is the aiogram-webhook `# TODO: handle exceptions`
   https://opentelemetry.io/docs/specs/otel/trace/api/ ·
   https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/ ·
   https://opentelemetry-python.readthedocs.io/en/latest/api/trace.html
-- aiommbot 0.4.x: `aiommbot/middlewares/safe_error_notification.py` (0.4.x repository, commit `2d61ff3`) ·
-  `docs/research/09-usage-mining-0.4.x-bots.md` §9

@@ -1,6 +1,6 @@
 # Lifetime and expiry of conversation state — how bot frameworks and stateless designs bound it
 
-Status: complete (2026-09-03). Primary sources only: framework source on the default branch and official docs, quoted verbatim where it matters; "unverified" marks anything not confirmed from a primary source. Builds on `docs/research/07-durable-bot-state-storage.md` (storage shapes) and ADR-0003/ADR-0022 (stateless Core, State plugin with `KeyValueStore` + `LockProvider`, typed `Flow[Data]`, `StaleState`). ADR-0022 left "Lifetime" open pending this ticket.
+Status: complete (2026-09-03). Primary sources only: framework source on the default branch and official docs, quoted verbatim where it matters; "unverified" marks anything not confirmed from a primary source. Builds on `docs/research/07-durable-bot-state-storage.md` (storage shapes) and ADR-0003/ADR-0022 (stateless Core, State plugin with `KeyValueStore` + `LockProvider`, typed `Flow[Data]`, `StaleState`). ADR-0022 records the lifetime decided from this note.
 
 ## 1. aiogram 3
 
@@ -82,4 +82,48 @@ Where they break: size caps (Slack 3000/2000/255 chars), confidentiality (dialog
 
 **What must never be persisted.** The Flow's `Data` is "the draft of the current dialogue" (ADR-0022); business results, message history/transcripts, tokens and user profiles belong to the application's own store with its own retention. Concretely: no `UserState`-style bucket without a TTL (the Bot Framework sample deliberately leaves `UserState` un-expired — that is precisely the unbounded growth the maintainer is uneasy about), no event log (Rasa's tracker is an NLU training artefact, not a dialogue need), and `Data` bounded in size the way Slack bounds `private_metadata`.
 
-**Keeping the stateless stance honest.** State = bounded, disposable draft, addressable by `StateKey`, dead after one hour of silence, reset with a typed outcome. Prefer carrying state in the message where the platform does it for us: Mattermost `context` is server-held and encrypted, dialog `state` is echoed (sign it if it must be trusted), `trigger_id` already expires. Reach for the State plugin only for the residual case — free-text replies and multi-step accumulation — and document that rule in the plugin's guide. Record the amendment to ADR-0022: `ttl` plugin default 1 h sliding-on-write, per-Flow override, `None` explicit, `StaleState(Expired)` outcome, lock TTL separate and short.
+**Keeping the stateless stance honest.** State = bounded, disposable draft, addressable by `StateKey`, dead after one hour of silence, reset with a typed outcome. Prefer carrying state in the message where the platform does it for us: Mattermost `context` is server-held and encrypted, dialog `state` is echoed (sign it if it must be trusted), `trigger_id` already expires. Reach for the State plugin only for the residual case — free-text replies and multi-step accumulation — and document that rule in the plugin's guide. The decision is [ADR-0022](../adr/0022-state-plugin-model.md): `ttl` plugin default 1 h sliding-on-write, per-Flow override, `None` explicit, `StaleState(Expired)` outcome, lock TTL separate and short.
+
+## Sources
+
+The links cited inline above, one row per URL:
+
+- [`aiogram/fsm/storage/redis.py`](https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/fsm/storage/redis.py)
+- [`base.py`](https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/fsm/storage/base.py)
+- [`context.py`](https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/fsm/context.py)
+- [`memory.py`](https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/fsm/storage/memory.py)
+- [`pymongo.py`](https://github.com/aiogram/aiogram/blob/dev-3.x/aiogram/fsm/storage/pymongo.py)
+- [`storages.rst`](https://github.com/aiogram/aiogram/blob/dev-3.x/docs/dispatcher/finite_state_machine/storages.rst)
+- [`docs/docs/domain.mdx`](https://github.com/RasaHQ/rasa/blob/main/docs/docs/domain.mdx)
+- [`rasa/shared/constants.py`](https://github.com/RasaHQ/rasa/blob/main/rasa/shared/constants.py)
+- [`rasa/core/processor.py`](https://github.com/RasaHQ/rasa/blob/main/rasa/core/processor.py)
+- [`tracker-stores.mdx`](https://github.com/RasaHQ/rasa/blob/main/docs/docs/tracker-stores.mdx)
+- [`rasa/core/tracker_store.py`](https://github.com/RasaHQ/rasa/blob/main/rasa/core/tracker_store.py)
+- [`rasa/core/constants.py`](https://github.com/RasaHQ/rasa/blob/main/rasa/core/constants.py)
+- [`lock_store.py`](https://github.com/RasaHQ/rasa/blob/main/rasa/core/lock_store.py)
+- [bot-builder-concept-state](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-state)
+- [bot-builder-concept-dialog](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-concept-dialog)
+- [botframework-activity spec §End of conversation](https://github.com/microsoft/botframework-sdk/blob/main/specs/botframework-activity/botframework-activity.md)
+- [bot-builder-howto-expire-conversation](https://learn.microsoft.com/en-us/azure/bot-service/bot-builder-howto-expire-conversation)
+- [source](https://github.com/microsoft/botbuilder-python/blob/main/libraries/botbuilder-azure/botbuilder/azure/cosmosdb_partitioned_storage.py)
+- [CX session concept](https://docs.cloud.google.com/dialogflow/cx/docs/concept/session)
+- [ES input/output contexts](https://docs.cloud.google.com/dialogflow/es/docs/contexts-input-output)
+- [CreateBot](https://docs.aws.amazon.com/lexv2/latest/APIReference/API_CreateBot.html)
+- [Setting the session timeout](https://docs.aws.amazon.com/lexv2/latest/dg/context-mgmt-session-timeout.html)
+- [OutputContext](https://docs.aws.amazon.com/lexv2/latest/APIReference/API_OutputContext.html)
+- [`state_utils`](https://github.com/slackapi/python-slack-sdk/blob/main/slack_sdk/oauth/state_utils/__init__.py)
+- [`oauth_settings.py`](https://github.com/slackapi/bolt-python/blob/main/slack_bolt/oauth/oauth_settings.py)
+- [`state_store/sqlite3`](https://github.com/slackapi/python-slack-sdk/blob/main/slack_sdk/oauth/state_store/sqlite3/__init__.py)
+- [modal views reference](https://docs.slack.dev/reference/views/modal-views)
+- [button element](https://docs.slack.dev/reference/block-kit/block-elements/button-element)
+- [modals](https://docs.slack.dev/surfaces/modals)
+- [`global_settings.py`](https://github.com/django/django/blob/main/django/conf/global_settings.py)
+- [`sessions/middleware.py`](https://github.com/django/django/blob/main/django/contrib/sessions/middleware.py)
+- [`backends/cache.py`](https://github.com/django/django/blob/main/django/contrib/sessions/backends/cache.py)
+- [sessions topic](https://docs.djangoproject.com/en/5.2/topics/http/sessions/)
+- [`starlette/middleware/sessions.py`](https://github.com/encode/starlette/blob/master/starlette/middleware/sessions.py)
+- [`server/public/model/integration_action.go`](https://github.com/mattermost/mattermost/blob/master/server/public/model/integration_action.go)
+- [interactive messages](https://developers.mattermost.com/integrate/plugins/interactive-messages/)
+- [interactive dialogs](https://developers.mattermost.com/integrate/plugins/interactive-dialogs/)
+- [`app/integration_action.go`](https://github.com/mattermost/mattermost/blob/master/server/channels/app/integration_action.go)
+- [RFC 7519 §4.1.4](https://www.rfc-editor.org/rfc/rfc7519#section-4.1.4)

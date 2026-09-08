@@ -2,8 +2,8 @@
 
 Research date: 2026-09-02. Resolves issue #7. Primary sources only: mattermost/mattermost `api/v4/source/*.yaml`
 at commit `f6f2719` (master, 2026-09-02), the server Go `model` package and webapp TypeScript client, generator
-repos/docs, PyPI metadata. Items marked **[unverified]** could not be confirmed against a primary source during this
-session. Spec metrics and generator results come from a throwaway script and actual generator runs in this session
+repos/docs, PyPI metadata. Items marked **[unverified]** could not be confirmed against a primary source on 2026-09-02.
+Spec metrics and generator results come from a throwaway script and actual generator runs on 2026-09-02
 (spec merged in `api/Makefile` order; the published artifact was also downloaded and run through the generators).
 
 Question: can a typed Mattermost REST client layer for aiommbot 0.5.0 be *generated* rather than hand-written, and
@@ -151,10 +151,17 @@ Keeping hand-written event models honest:
 4. Operation table: a second small generator (or `openapi-python-client` with `--meta none` restricted to
    `models`+`api` templates) emitting `Final` operation descriptors — method, path template, param names, body
    model, response model — consumed by **one hand-written transport** (`Protocol`-backed, sync/async without
-   duplication per CLAUDE.md), not 2,400 generated functions.
+   duplication), not 2,400 generated functions.
 5. Conformance tests: (a) generated models round-trip against the *overlayed* spec with `hypothesis-jsonschema`
    (last release 2024-02, still functional) or schemathesis' `schema.parametrize()`; (b) recorded fixtures from a real
    server decoded with `forbid_unknown_fields`; (c) WebSocket parity test against `websocket_events.ts`.
+
+The decision on steps 3–4 is
+[ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md): frozen stdlib
+dataclasses with a `Codec` Protocol, not `msgspec.Struct`;
+[ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md): target Python 3.12;
+[ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md): thin Faces over
+a sans-I/O Exchange.
 
 **Hand-written surface that remains (estimate):** transport + auth + retries (~400 lines), overlay script
 (~100), WebSocket frame structs and ~15-20 event `data` structs from `websocket_messages.ts` (~300-400),

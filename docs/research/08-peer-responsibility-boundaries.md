@@ -4,12 +4,12 @@ Research date: 2026-09-02. Sources are primary (framework source on GitHub, offi
 `pyproject.toml`/`setup.cfg` extras). Claims I could not confirm from a primary source are marked
 **[unverified]**.
 
-Question: aiommbot 0.4.8 shipped, inside the bot framework itself, a taskiq-based cron/interval
-scheduler, Prometheus metrics for every subsystem, a CLI runner, retry/idempotency/dead-letter
-middlewares, a circuit breaker (purgatory), a bounded backpressure queue with drop policies,
-storage profiles, Sentry middleware, and uvloop switching. 0.5.0 wants a small core and as few
-dependencies as possible. Where do comparable frameworks draw the core/extra/recipe/absent line
-for the same capabilities, and what do they point users at instead of owning it themselves?
+Question: a bot framework can ship, inside itself, a cron/interval scheduler, Prometheus metrics
+for every subsystem, a CLI runner, retry/idempotency/dead-letter middlewares, a circuit breaker, a
+bounded backpressure queue with drop policies, storage profiles, Sentry middleware and event-loop
+switching. 0.5.0 wants a small core and as few dependencies as possible. Where do comparable
+frameworks draw the core/extra/recipe/absent line for the same capabilities, and what do they point
+users at instead of owning it themselves?
 
 ## 1. Capability × framework matrix
 
@@ -169,7 +169,7 @@ correctness bug (GH #396) where the semaphore isn't applied on every code path³
 ### 3.1 Scheduling: APScheduler 4, taskiq, arq
 
 **APScheduler 4 is still pre-release**: latest tag `4.0.0a6` (Apr 2025), the project's own docs say
-"do NOT use this release in production," stable is 3.x (3.11.3, Jun 2026)⁹ — not yet a safe
+"do NOT use this release in production," stable is 3.x (3.11.3, Jun 2026)³³ — not yet a safe
 recommendation over taskiq/arq. taskiq's `LabelScheduleSource` (`@broker.task(schedule=[{"cron":
 "*/5 * * * *"}])`, one scheduler process, `preserve_all`/`only_unique` merge functions) is a clean
 declarative primitive and closest to aiommbot's own stack³⁰. arq is the lightest-weight (Redis-only,
@@ -188,7 +188,7 @@ story without owning one, stamina's small-and-typed shape maps directly onto "re
 
 `prometheus-client`'s multiprocess mode (`PROMETHEUS_MULTIPROC_DIR`, a request-scoped
 `MultiProcessCollector` to avoid duplicate registration, `remove()`/`clear()` unsupported) is already
-solved generically upstream²²; a framework only needs to expose the DI/lifecycle seam, not reimplement
+solved generically upstream³⁷; a framework only needs to expose the DI/lifecycle seam, not reimplement
 it. OpenTelemetry's answer is `opentelemetry-python-contrib` — one `opentelemetry-instrumentation-
 <lib>` package per library — plus a genuinely code-free path: `opentelemetry-bootstrap` auto-detects
 dependencies and `opentelemetry-instrument <cmd>` activates them with zero application changes²⁴.
@@ -203,9 +203,9 @@ existing toolkit, and Litestar adds an entry-point extension mechanism (`CLIPlug
 ### 3.5 Circuit breaking: purgatory, aiobreaker, pybreaker
 
 **pybreaker** (the original, Nygard's pattern) is the most actively maintained per Snyk³³.
-**aiobreaker** (asyncio fork) shows minimal recent activity³³. **purgatory** — what aiommbot 0.4.8
-already used — was built specifically to fix limitations its author hit in aiobreaker, and is the
-only one of the three with a pluggable Redis backend so circuit state can be shared across
+**aiobreaker** (asyncio fork) shows minimal recent activity³³. **purgatory** was built
+specifically to fix limitations its author hit in aiobreaker, and is the only one of the three with
+a pluggable Redis backend so circuit state can be shared across
 replicas³³. That Redis option is why purgatory remains defensible to keep recommending even if
 demoted from core to a documented plugin/extra — an in-memory-only breaker is near-useless across
 more than one replica, the same hazard as the scheduler.
@@ -222,11 +222,10 @@ available if multi-replica sharing is later needed.
 Sentry's SDK auto-enables integrations purely by import detection for Django, Flask, FastAPI,
 AIOHTTP, Bottle, Falcon, Pyramid, Quart, Sanic, Starlette, Starlite/Litestar, and Tornado²⁵ ²⁶.
 **aiogram is not on that list** — no official Sentry↔aiogram integration exists, so any bot wanting
-structured Sentry capture already has to wire it manually today, which is exactly the "Sentry
-middleware" aiommbot 0.4.8 shipped in-framework. That's evidence Sentry support for a *chat-bot*
-framework specifically isn't solved upstream the way it is for ASGI web frameworks — a thin
-first-party adapter remains defensible, but it should be a narrow Protocol-shaped wrapper around
-`sentry_sdk`, not a bespoke redaction pipeline.
+structured Sentry capture already has to wire it manually today. That is evidence Sentry support
+for a *chat-bot* framework specifically isn't solved upstream the way it is for ASGI web
+frameworks — a thin first-party adapter remains defensible, but it should be a narrow
+Protocol-shaped wrapper around `sentry_sdk`, not a bespoke redaction pipeline.
 
 ## 4. What "small core + extras" looks like in practice (FastStream, Litestar)
 
@@ -271,18 +270,21 @@ prometheus-client, error reporting via sentry-sdk)."
 | (e) idempotency/dedup | **Recipe**, bot-specific guidance only | Peers treat this as a precondition of `acks_late`/at-least-once delivery, never automated³² — but aiommbot's specific dedup case (Mattermost webhook replay, duplicate action callbacks) is a domain concern, see §6. |
 | (f) dead-letter | **Recipe** (broker-native DLQ/DLX, or a documented "terminal-failure handler task" pattern) | No peer — not Celery, not taskiq, not FastStream — implements this as generic framework code; it is universally pushed to the broker or hand-rolled³²·²². |
 | (g) circuit breaker | **Plugin/extra**, keep `purgatory` as the recommended library, not framework-owned | purgatory's own value (Redis-backed shared state across replicas) only matters if wired consistently; keeping it a documented DI-injected dependency rather than framework code lets it be swapped/upgraded independently, matching how *every* peer treats circuit breaking (absent from framework core, always a separate library)³³. |
-| (h) rate limiting — outbound (Mattermost API) | **Recipe** (`aiolimiter` + adapter) | Same shape as Slack's `RateLimitErrorRetryHandler`⁴ — an SDK-adjacent concern, not a framework concern; wrap `AsyncLimiter` in the HTTP client mixin aiommbot already has for outbound instrumentation. |
+| (h) rate limiting — outbound (Mattermost API) | **Recipe** (`aiolimiter` + adapter) | Same shape as Slack's `RateLimitErrorRetryHandler`⁴ — an SDK-adjacent concern, not a framework concern; wrap `AsyncLimiter` around the API client's `HTTPTransport`. |
 | (h) rate limiting — inbound (chat flood control) | **Recipe**, but consider a thin optional middleware | This is closer to Litestar's `RateLimitConfig` case²³ — genuinely bot-specific (per-user/per-channel cooldown, not per-IP) — see §6 for why it isn't a clean "just extra a library" case. |
 | (i) backpressure/bounded queues | **Core (thin cap only)** | PTB's `max_concurrent_updates` and aiogram's `tasks_concurrency_limit` show the right-sized version: a single concurrency-limit knob in the dispatch loop⁸·⁷ — not a full bounded-queue-with-drop-policies subsystem, which duplicates what the broker/taskiq layer already owns. |
 | (i) worker concurrency (taskiq side) | **Delegate to taskiq's own knobs**, document the known bug | taskiq's `max_async_tasks` has a live correctness bug (GH #396)³³ — don't reimplement backpressure in aiommbot on top of a taskiq feature that isn't reliable yet; track upstream or pin a version where it's fixed. |
-| (j) error reporting (Sentry) | **Extra**, thin adapter only | No peer bot framework (aiogram, Bolt, discord.py, hikari, PTB) has an official Sentry integration — this is BO-specific value, but it should be a narrow Protocol-shaped adapter around `sentry_sdk`, not the redaction/formatting pipeline 0.4.8 built in-house. |
+| (j) error reporting (Sentry) | **Extra**, thin adapter only | No peer bot framework (aiogram, Bolt, discord.py, hikari, PTB) has an official Sentry integration — a thin first-party adapter is defensible, but it should be a narrow Protocol-shaped adapter around `sentry_sdk`, not a redaction/formatting pipeline of its own. |
 | (k) event-loop selection (uvloop) | **Recipe** (one line in the composition root, or delegate entirely like Uvicorn's `--loop auto`) | Every peer either delegates this to the ASGI server (`uvicorn --loop`)²⁷ or leaves it to the user (`uvloop.install()`); none of the bot frameworks switch loops themselves. |
 | (l) graceful shutdown/lifespan | **Core** | Universal: every framework surveyed, without exception, owns this in core²⁸·¹⁰·¹¹ — it's the one true "wiring" concern with no safe delegation target. |
 | (m) health endpoints | **Core (helper), not a plugin** | FastStream's `make_ping_asgi` is the right size — a tiny helper that pings what the framework already knows how to ping (broker/Mongo/Mattermost connectivity), left for the app to mount¹⁸; a bespoke health *subsystem* would be over-scoped for what every peer treats as "a plain route." |
 
+The decision on row (c) is [ADR-0002](../adr/0002-core-scope-two-condition-test.md): the CLI is an
+extra on typer, not Core.
+
 ## 6. Bot-specific vs. generic-infrastructure capabilities
 
-None of the eleven peers is a chat-bot framework with durable per-user state and webhook callbacks
+None of the 11 peers is a chat-bot framework with durable per-user state and webhook callbacks
 the way aiommbot is, so this split is argued from first principles, not read off a peer's docs.
 
 **Genuinely bot-specific — keep as first-class framework concepts, not delegable to a generic
@@ -290,12 +292,14 @@ library:**
 
 - **Per-user/event isolation and FSM admission.** aiogram's `StorageKey(bot_id, chat_id, user_id,
   thread_id)`/`FSMStrategy`/`BaseEventIsolation` lock has no generic-library equivalent — it's domain
-  logic about how a chat protocol's identifiers compose into a state key. aiommbot's own
-  `Context.state`/FSM belongs here, not in any "small core" trim.
+  logic about how a chat protocol's identifiers compose into a state key. The State plugin
+  (`Flow`, `StateContext`) belongs here, not in any "small core" trim.
 - **Webhook callback signing/verification.** Bolt's `RequestVerification`/`UrlVerification`
   middlewares are the closest precedent: protocol-specific signature schemes are core to every
-  framework that has webhooks, never delegated to a generic library. aiommbot's protected-hook-segment
-  and callback enforcement is the same category and should stay core.
+  framework that has webhooks, never delegated to a generic library. Callback-token issuance and
+  verification is the same category and stays first-party. The decision is
+  [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md): the Webhook is an
+  adapter-specific Plugin and the Core owns only the `CallbackTokenCodec` Protocol.
 - **Stale-action/duplicate-callback handling** (double-clicked dialog button, action replay). Dedup,
   but keyed on chat-protocol semantics (post id, action id, dialog submission id) no generic
   idempotency library knows about — needs a protocol-aware compare-and-set in the repository layer.
@@ -311,14 +315,14 @@ scheduling (identical problem for any consumer, solved by taskiq/arq/Celery); me
 label); CLI runner, graceful shutdown, event-loop selection (process-lifecycle, zero chat-protocol
 content).
 
-Practical implication: trim the generic-infrastructure list aggressively (where 0.4.8's
-Prometheus-for-every-subsystem, purgatory-in-core, and Sentry-middleware-in-core sit) while treating
+Practical implication: trim the generic-infrastructure list aggressively (Prometheus for
+every subsystem, a circuit breaker in core, Sentry middleware in core) while treating
 the bot-specific list as protected surface — cutting FSM/webhook-signing/stale-action handling to
 "save dependencies" would cut the actual product, not trim bloat.
 
 ## Sources
 
-1. aiogram + APScheduler community recipes (middleware injection, `asyncio.gather` pattern) — <https://nztcoder.com/2022/10/24/kak-ispolzovat-apscheduler-v-aiogram/>
+1. APScheduler 3.x user guide (the library the aiogram scheduling recipes wire in) — <https://apscheduler.readthedocs.io/en/3.x/userguide.html>
 2. discord.py `ext.tasks` — <https://discordpy.readthedocs.io/en/stable/ext/tasks/index.html>
 3. python-telegram-bot `JobQueue` (`[job-queue]` extra) — <https://docs.python-telegram-bot.org/en/stable/telegram.ext.jobqueue.html>
 4. `slack_sdk.http_retry.builtin_handlers.RateLimitErrorRetryHandler` — <https://docs.slack.dev/tools/python-slack-sdk/reference/http_retry/builtin_handlers.html>
@@ -327,7 +331,7 @@ the bot-specific list as protected surface — cutting FSM/webhook-signing/stale
 7. aiogram `Dispatcher`/`Router` internals (`handle_as_tasks`, `tasks_concurrency_limit`, `emit_startup`/`emit_shutdown`) — prior in-repo research, `docs/research/03-bot-framework-architectures.md`, citing `aiogram` source `dispatcher/dispatcher.py`, `dispatcher/router.py` — <https://github.com/aiogram/aiogram>
 8. PTB `BaseUpdateProcessor`/`concurrent_updates` — <https://docs.python-telegram-bot.org/en/stable/telegram.ext.baseupdateprocessor.html>
 9. Sentry Python integrations overview (aiogram absent from the list) — <https://docs.sentry.io/platforms/python/integrations/>
-10. discord.py `setup_hook()`/lifecycle (`migrating.html`) — <https://discordpy.readthedocs.io/en/stable/ext/tasks/index.html>; Sanic background tasks (`app.add_task`, listeners) — <https://sanic.dev/en/guide/basics/tasks.html>
+10. discord.py `setup_hook()`/lifecycle (`migrating.html`) — <https://discordpy.readthedocs.io/en/stable/migrating.html>; Sanic background tasks (`app.add_task`, listeners) — <https://sanic.dev/en/guide/basics/tasks.html>
 11. hikari `GatewayBot` lifecycle (`run()`/`start()`/`join()`, `enable_signal_handlers`) — prior in-repo research, `docs/research/03-bot-framework-architectures.md`, citing `hikari` source — <https://github.com/hikari-py/hikari>
 12. `taskiq-faststream` companion package — <https://github.com/taskiq-python/taskiq-faststream>
 13. `litestar-saq` official SAQ plugin — <https://github.com/litestar-org/litestar-saq>
@@ -354,3 +358,4 @@ the bot-specific list as protected surface — cutting FSM/webhook-signing/stale
 34. `aiolimiter` (`AsyncLimiter` leaky bucket) — <https://github.com/mjpieters/aiolimiter>
 35. `stamina` (opinionated wrapper over tenacity) — <https://github.com/hynek/stamina>, <https://stamina.hynek.me/>
 36. `tenacity` — <https://github.com/jd/tenacity>
+37. `prometheus-client` multiprocess mode (`PROMETHEUS_MULTIPROC_DIR`, `MultiProcessCollector`) — <https://prometheus.github.io/client_python/multiprocess/>

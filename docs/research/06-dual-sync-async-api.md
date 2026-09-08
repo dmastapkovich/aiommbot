@@ -1,15 +1,13 @@
 # Dual sync/async API from one implementation: state of the art (Sep 2026)
 
-> **Superseded in part.** §6.3 below recommends generating the synchronous REST client with
-> `unasync`. Ticket #22 rejected that on later evidence — the tooling survey, the reference-set
-> comparison and the mining of 0.4.8's own synchronous surface in
-> [`18-execution-model-in-practice.md`](18-execution-model-in-practice.md) — and decided a sans-I/O
-> core with two thin hand-written drivers instead
-> ([ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)). The findings
-> in §1–§5 stand and are what that decision was argued from; only the recommendation in §6.3
-> changed. §6.1 (async-only WebSocket runtime), §6.2 (sans-I/O core) and §6.4 (accept both handler
-> colours) were adopted, the last one narrowed by
-> [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md).
+> The decision is
+> [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md): two thin
+> hand-written Faces over a sans-I/O Exchange, not the `unasync` generation §6.3 recommends;
+> [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md): httpx2
+> behind the `HTTPTransport` Protocol, not `httpx`;
+> [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md): synchronous callables
+> run only by explicit declaration (§6.4). The evidence is in
+> [`18-execution-model-in-practice.md`](18-execution-model-in-practice.md).
 
 Research date: 2026-09-02. Primary sources only: library source (GitHub at the URLs in *Sources*, or the
 locally installed wheels named inline: httpcore 1.0.9, httpx 0.28.1, anyio 4.12.1, urllib3 2.6.3,
@@ -19,8 +17,7 @@ installed wheels unless stated otherwise.
 
 Question: how do modern Python libraries expose BOTH a sync and an async API from ONE implementation
 without two hand-maintained code paths, and what should a bot framework whose hot path is an async
-WebSocket consumer do? (Context: the aiommbot README promises "Async and sync, without copy-paste. One
-implementation, two faces.")
+WebSocket consumer do?
 
 Short answer: nobody has a free lunch. The field has converged on three real mechanisms — (1) a
 sans-I/O protocol core with thin I/O drivers, (2) async-as-source-of-truth plus token-level code
@@ -332,5 +329,5 @@ that both `MattermostApi` and `AsyncMattermostApi` satisfy their `Protocol`s.
   tasks — https://docs.python.org/3.14/library/asyncio-task.html ; What's New 3.14 —
   https://docs.python.org/3.14/whatsnew/3.14.html ; pending removal in 3.16 —
   https://docs.python.org/3.14/deprecations/pending-removal-in-3.16.html
-- Micro-benchmark: `bench.py` run in this session (Python 3.14.7, anyio 4.12.1, macOS); numbers are
+- Micro-benchmark: `bench.py` run on 2026-09-02 (Python 3.14.7, anyio 4.12.1, macOS); numbers are
   single-run, order-of-magnitude only.

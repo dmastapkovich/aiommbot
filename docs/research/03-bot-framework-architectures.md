@@ -92,7 +92,7 @@ Zulip `zulip_bots`: minimal contract (`usage()`, `handle_message(message, bot_ha
 | | aiogram 3 | discord.py 2 | hikari (+arc/lightbulb) | Bolt Python | PTB 20+ |
 |---|---|---|---|---|---|
 | API shape | `Dispatcher` root `Router`, nested `include_router`, first-match DFS | `Bot` + `Cog` classes, `CogMeta` | `GatewayBot` + type-driven `listen`; class commands | `App`/`AsyncApp`, flat listener list | `Application.builder()`, handler groups |
-| Filters | callables/`MagicFilter` returning `bool|dict`, `&|~` | converters/`Transformer` from annotations, checks | `Annotated` options, hooks | `matchers=[...]`, str/regex constraints | `filters.TEXT & ~filters.COMMAND` |
+| Filters | callables/`MagicFilter` returning `bool\|dict`, `&\|~` | converters/`Transformer` from annotations, checks | `Annotated` options, hooks | `matchers=[...]`, str/regex constraints | `filters.TEXT & ~filters.COMMAND` |
 | DI | kwargs by name (+dishka) | `Context` only | Alluka/linkd type-keyed | kwargs by name, fail-open `None` | `CallbackContext` |
 | FSM | `StorageKey`+`FSMStrategy`+`EventIsolation`, Scenes | none | none | none | `ConversationHandler` returns states |
 | Middleware | outer/inner `BaseMiddleware.__call__(handler, event, data)` | hooks only | hooks only | global + per-listener `next()` | none (handler `block`) |
@@ -116,6 +116,13 @@ Zulip `zulip_bots`: minimal contract (`usage()`, `handle_message(message, bot_ha
 12. **Immutable incoming models** (aiogram frozen pydantic, discord.py "no in-place edit", PTB tuples) and keyword-only constructors.
 13. **Agent-facing docs**: `AGENTS.md` (aiogram, Bolt), `llms.txt`/`.md` mirrors (Slack), `CHANGES/` fragments (towncrier).
 
+The decision on item 5 is [ADR-0022](../adr/0022-state-plugin-model.md): `KeyValueStore` plus
+`LockProvider` with in-memory and Redis first-party, no first-party Mongo; on item 8
+[ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md): a Core-owned resolver behind
+the `DependencyProvider` Protocol, external containers as bridge Plugins; on item 11
+[ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md): frozen dataclasses
+from the overlaid spec with a `Codec` Protocol.
+
 ## Patterns to avoid
 
 - **Implicit default filters** (aiogram v2 `state=None`, `content_types=TEXT`) — removed in v3 as a silent-behaviour trap.
@@ -128,6 +135,11 @@ Zulip `zulip_bots`: minimal contract (`usage()`, `handle_message(message, bot_ha
 - **FSM without isolation** and locks that never get cleaned (aiogram TODO).
 - **Returning state ints from callbacks with `per_*` key flags** (PTB `ConversationHandler` footguns).
 - **Shipping test doubles only in `tests/`** (aiogram) or not at all (Bolt, PTB).
+
+The decision on "go async-only" is
+[ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md): the Core and
+the Transports are asynchronous only, and the API client and Workspace keep a synchronous Face over
+a sans-I/O Exchange.
 
 ## Sources
 

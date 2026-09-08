@@ -301,6 +301,6 @@ through the plugin abstraction. Litestar's own restraint (six narrow protocols, 
 - Sphinx: [Extension API overview](https://www.sphinx-doc.org/en/master/extdev/index.html)
 - django-modern-rest: [repo](https://github.com/wemake-services/django-modern-rest), [`.importlinter`](https://github.com/wemake-services/django-modern-rest/blob/master/.importlinter)
 
-**Not independently verified in this pass:** the exact Hypothesis environment variable name that
+**Not independently verified on 2026-09-02:** the exact Hypothesis environment variable name that
 disables all plugin auto-loading; Litestar's and Home Assistant's own plugin contract-test tooling;
 Sphinx's own testing harness for extensions.

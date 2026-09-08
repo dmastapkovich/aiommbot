@@ -1,12 +1,10 @@
 # Execution model in practice: synchronous callables, dual faces and async→sync tooling (Sep 2026)
 
 Research date: 2026-09-04, for ticket #22. Primary sources only: library source at the cited paths,
-official docs, upstream issues and PRs, PyPI metadata, and a read-only survey of the frozen
-`aiommbot` 0.4.8 tree with the eleven company bots beside it. It extends two earlier files rather
-than repeating them: `06-dual-sync-async-api.md` (the mechanisms of a dual API — note that its
-recommendation to generate the sync client with `unasync` was **rejected** in #22 on the evidence
-below) and `09-usage-mining-0.4.x-bots.md` (§4 here is the synchronous slice of the same mining).
-Anything not confirmed is marked **[unverified]**.
+official docs, upstream issues and PRs and PyPI metadata. It extends `06-dual-sync-async-api.md`
+(the mechanisms of a dual API) rather than repeating it; the decision on the synchronous face is
+[ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md): thin Faces over
+a sans-I/O Exchange, no generator. Anything not confirmed is marked **[unverified]**.
 
 **Re-verified directly on 2026-09-04**, after the surveys and before the ADRs were written:
 PyPI metadata for `unasync` (0.6.0, 2024-05-03, `>=3.8`, one release in the preceding six years),
@@ -26,9 +24,6 @@ Three questions:
 1. Do high-quality async Python frameworks accept synchronous user callables, and exactly how?
 2. How do they, and mature clients, expose a dual synchronous/asynchronous public API?
 3. What is the state of async→sync code generation tooling, and what does it cost?
-
-Plus the local question the decision turned on: what did 0.4.8's synchronous surface consist of, and
-who used it?
 
 ## 1. Synchronous callables in the reference set
 
@@ -162,7 +157,7 @@ Invariants across all of them:
    working, but *"making each test to pass in async was going to be yet another slog… It was
    becoming lonely and urllib3 was continuing to move fast."*
 
-httpx2 specifics that make thin drivers cheap for us: 2.12.0 (2026-08-18), `requires-python >=3.10`,
+httpx2 specifics that make thin Faces cheap for us: 2.12.0 (2026-08-18), `requires-python >=3.10`,
 depends on `httpcore2==2.12.0`, `anyio>=4.10`, `idna`, `truststore`, `typing_extensions`. `Client`
 (~834 lines) and `AsyncClient` (~836) are hand-written over a shared `BaseClient` in one
 `_client.py`; `unasync` is applied only to `httpcore2`. `BaseTransport.handle_request` /
@@ -216,40 +211,6 @@ Reproduced warts (run against CPython 3.12/3.13/3.14):
   on. New modules also drift out of the map by default — AA PR #722 notes a file *"intentionally
   async-only and… not picked up."*
 
-## 4. The 0.4.8 synchronous surface, and who used it
-
-- **`SyncBotRuntime`** (`aiommbot/runtime/bot_runtime.py:816`) is a hand-written facade — 14 mirrored
-  methods, one line each — over `_SyncRuntimeLoop` (`:769-813`): a daemon thread running
-  `asyncio.new_event_loop()` + `run_forever()`, driven by `asyncio.run_coroutine_threadsafe` and a
-  blocking `future.result()` **with no timeout**. Kept honest by one reflection test
-  (`tests/test_runtime.py:523-531`) and by a release chore ("Все методы зеркалированы в
-  `SyncBotRuntime`", `CHANGELOG.md:214`).
-- **Its documented hazard is `fork()`**: `docs/reference/runtime.md:135`,
-  `docs/how-to/distributed-processing.md:310-312, 784`, `llms.txt:67` and
-  `examples/distributed_bot/sync_worker_runtime.py:1-12` all repeat that the thread must be opened
-  after the fork or every prefork child gets a dead loop. It also never receives the optimised event
-  loop, because `install_event_loop_policy` is reachable only from `Bot.run()`.
-- ⭐ **Zero consumers.** `SyncBotRuntime`, `bot.connect()`, `runtime_context(`,
-  `run_until_complete`, `nest_asyncio`, `BlockingPortal`, `anyio.from_thread` — no hits in any of
-  the eleven bots, including tests and scripts. No Celery and no Django anywhere, which was the
-  stated justification. The only in-repo consumer is the framework's own example.
-- **The need it served is real and served asynchronously**: backoffice-bot, duty-bot and
-  postmortem-bot all message users from outside a handler, all through the async `bot.runtime`.
-- **Sync handlers: zero of ~225**, and the dispatcher could not have run one —
-  `build_handler_invoker` is typed `Callable[..., Awaitable[R]]` and `Observer.handle` awaits
-  unconditionally (`dispatcher/injection.py:47`, `dispatcher/base.py:85-87`). Filters, middlewares
-  and lifespans are structurally async-only; the two sync tolerances in use are
-  `TransitionGuardFilter`'s `isawaitable` normalisation and Starlette's `run_in_threadpool` for
-  FastAPI exception handlers, which duty-bot exercises.
-- **The demand is the opposite direction**: expenses-bot pushes blocking QR/PDF decoding off the loop
-  with `asyncio.to_thread` (`src/services/receipt_processor.py:299-346`).
-- **uvloop was a dormant capability**: `runtime/event_loop.py` installs it automatically with an
-  opt-out and skips free-threaded builds, but **no bot installs the extra** — zero hits for
-  `uvloop|winloop|use_optimized_event_loop|prefer_uvloop` across all eleven.
-- What a runtime-only process loses is documented at `docs/reference/runtime.md:145-148`: state and
-  FSM, filters, `matched_params`, `answer()`/`reply()`, every middleware and `send_dialog()`. The
-  sync face was never a smaller async face; it was a 14-method outbound-only slice.
-
 ## Recommendation
 
 1. **Accept synchronous handlers, but require the declaration** — Litestar's tri-state
@@ -260,7 +221,7 @@ Reproduced warts (run against CPython 3.12/3.13/3.14):
    invisible and unrelated.
 3. **Make the drain honest about threads.** Cancel the wait, abandon the thread, signal it, and
    document idempotency — FastStream #1648 is what waiting looks like.
-4. **Build the dual face from thin drivers over a sans-I/O core, not from a generator.** Every
+4. **Build the dual face from thin Faces over a sans-I/O Exchange, not from a generator.** Every
    precedent hand-writes exactly the layer a bot framework cares about, both tools mangle typed
    `Protocol`/`TypeVar` code, `unasyncd --check` cannot be trusted, and the surface here is a few
    dozen lines per face.
@@ -332,11 +293,3 @@ Reproduced warts (run against CPython 3.12/3.13/3.14):
   pquentin 2022-04-14)
 - redis-py — `redis/asyncio/client.py`, PR #3991
 - uvicorn — `uvicorn/config.py:231`, `uvicorn/server.py:288-302`, `uvicorn/loops/auto.py`
-- aiommbot 0.4.8 (local, frozen) — `aiommbot/runtime/bot_runtime.py:123-1068`,
-  `aiommbot/runtime/event_loop.py`, `aiommbot/bot.py:195-366`, `aiommbot/cli/main.py:64-113`,
-  `aiommbot/channels/webhook.py:186-199`, `aiommbot/filters/transition_guard.py:11-37`,
-  `aiommbot/dispatcher/injection.py:47-84`, `aiommbot/dispatcher/base.py:70-87`,
-  `tests/test_runtime.py:523-531`, `docs/reference/runtime.md:135, 145-148, 212`,
-  `docs/how-to/distributed-processing.md:310-312, 784, 790-792`, `CHANGELOG.md:214`,
-  `examples/distributed_bot/sync_worker_runtime.py`; the eleven bots' `src/`, `tests/`, `scripts/`
-  and `pyproject.toml`

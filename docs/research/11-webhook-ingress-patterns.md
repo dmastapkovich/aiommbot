@@ -1,4 +1,4 @@
-# Webhook and callback ingress patterns in peer frameworks: how HTTP callbacks join an event-driven core
+# Webhook and callback patterns in peer frameworks: how HTTP callbacks join an event-driven core
 
 Research date: 2026-09-03. Ticket #44, input to #20 (webhook callbacks: same event model or separate
 request/response model; plugin boundary). Sources are primary (official docs, framework source on
@@ -11,7 +11,7 @@ ADR-0012 already reserves a seat for callbacks: `Event[P].meta` carries "an opti
 channel** with a deadline so request/response transports (webhook callbacks) can join the same
 model if #20 decides so", and `InteractiveAction` / `DialogSubmission` are listed as first-class
 payloads "from the webhook path". ADR-0013 makes dispatch first-match with a typed
-`Handled | Unhandled` outcome. ADR-0005 makes the webhook ingress the *horizontally replicable*
+`Handled | Unhandled` outcome. ADR-0005 makes the Webhook the *horizontally replicable*
 half of the deployment. So the question is not "can a callback be an event" but: what does the
 peer field do about the **HTTP answer** (who produces it, by when, with what shape), where
 **verification** sits, whether the HTTP side is a **separate package**, and how it is **tested**.
@@ -178,8 +178,7 @@ are intentional". **FastAPI** does the same with `app.mount("/subapi", subapi)` 
 prefix as ASGI `root_path`. **Starlette `TestClient`** "allows you to make requests against your
 ASGI application, using the `httpx2` library" — the documented example is a bare
 `async def app(scope, receive, send)`, so any ASGI callable is testable with synchronous calls and
-no socket. The 0.4.x repo already depends on `httpx2` for exactly this ("ASGI test transport for
-the webhook surface; the framework itself runs on aiohttp", `pyproject.toml`).
+no socket.
 
 The shared lesson: an event framework exposes an **ASGI callable** (or a function `bytes,
 headers -> response`, like hikari's `on_interaction`) and leaves server, TLS, port, and process
@@ -237,15 +236,6 @@ Handlers reply with `driver.respond_to_web(event, response)`. This is "callback 
 channel keyed by request id" in its rawest form, failure mode included: a handler that never
 replies hangs the request until Mattermost's 30 s timeout.
 
-**aiommbot 0.4.x** (`aiommbot/channels/webhook.py`, `aiommbot/webhook/*`). A FastAPI
-`WebhookChannel` decodes a Fernet-encrypted hook path segment, verifies signed tokens carried in
-`context`/`state` with a max age and `strict | warn | ignore` enforcement, redacts before logging,
-masks every failure as an empty **404**, awaits `dispatch_event(EventType.ACTION | DIALOG |
-EXTERNAL, data)` inline and then **always** returns `JSONResponse({"status": "Ok"})`. The body is
-never derived from the handler: 0.4.x cannot express `update`, `ephemeral_text` or dialog
-`errors` — consistent with research 09, where all 11 bots reach for `update_post` and manual
-`submission[...]` parsing instead — and it holds the request open with no deadline of its own.
-
 ## 7. "Queue reading": Slack Socket Mode as the analogue, and what Mattermost offers (nothing)
 
 **Slack Socket Mode** is a callback queue over WebSocket. The app calls `apps.connections.open`
@@ -269,7 +259,7 @@ server POSTing to the registered URL (in-process for plugins, HTTP otherwise). C
 absence in the constant list and by `DoActionRequest`'s two code paths.
 
 **What a broker-backed callback queue would look like.** Because the answer must be in the HTTP
-response, a queue can only sit *behind* the ingress: the replicable webhook process verifies,
+response, a queue can only sit *behind* the Webhook: the replicable webhook process verifies,
 decodes to `Event[InteractiveAction | DialogSubmission]`, publishes it with a reply address
 (correlation id + reply topic), **waits** for the reply under a deadline < 30 s, then writes the
 body — mmpy_bot's `response_handlers` future over a broker. It buys nothing for the HTTP response
@@ -288,7 +278,6 @@ queue. A recipe at most, not a Core feature.
 | Bot Framework | Yes — one `TurnContext` pipeline for inbound and proactive | Default empty 200/201; `invoke` → `InvokeResponse` from `turn_state` (501 if missing); `expect_replies` buffers activities into the body | 15 s (504 otherwise) | JWT in adapter (`authenticate_request`), 401 | Core + `botbuilder-integration-aiohttp` as a **separate distribution** | Not examined [unverified] |
 | FastStream | n/a (HTTP is auxiliary) | `AsgiResponse` from route | — | — | ASGI callable, mountable in any host | Any ASGI `TestClient` |
 | mmpy_bot | Yes — `ActionEvent`/`WebHookEvent` on the same queue | Future keyed by `request_id`; `NoResponse` → empty 200 | **None** (hangs until MM's 30 s) | Fixed path only [no signature check seen — unverified beyond the file read] | Own aiohttp server in the bot process | Not examined |
-| aiommbot 0.4.x | Yes — same dispatchers | **Fixed** `{"status": "Ok"}`; `update`/`ephemeral_text`/`errors` impossible | None of its own | Fernet hook segment + signed tokens in `context`, max age, strict/warn/ignore, masked 404 | FastAPI in core extras | httpx2 ASGI transport |
 
 ## 9. Recommendation for the Mattermost adapter
 
@@ -312,18 +301,19 @@ the precedents). `Unhandled` must **not** become 404 as in Bolt: Mattermost turn
 visible client error, and the masked 404 is reserved for unauthenticated callers. **Deadline**:
 `meta.reply.deadline` comes from a configured budget well under `OutgoingIntegrationRequestsTimeout`
 (default 30 s; propose 10 s). As in aiogram, when it passes the transport writes the default ack and
-lets the handler continue, its later `reply.send` raising `ReplyClosed` so the bug is observable; as
-in Bolt, long work acks first and continues through the Runtime/workers (ADR-0005). Dialog field
-validation is the one case where the body *must* carry content, so `DialogReply.errors` is the
-load-bearing type.
+lets the handler continue, its later `reply.send` yielding `ReplyAlreadySent` so the bug is
+observable; as in Bolt, long work acks first and continues through the Runtime/workers (ADR-0005).
+Dialog field validation is the one case where the body *must* carry content, so
+`DialogReply.errors` is the load-bearing type.
 
 **3. Verification is the transport's job; replay protection is a payload-level claim.** Mattermost
 sends no signature and no timestamp to external URLs, so a generic middleware has nothing to check;
-the credential is what *we* put in `context`/`state` when creating the button or dialog, as 0.4.x
-already does (signed token with max age). Keep it inside the webhook transport, fail closed with the
+the credential is what *we* put in `context`/`state` when creating the button or dialog (a signed
+token with a max age). Keep it inside the webhook transport, fail closed with the
 masked empty 404 *before* decoding to an event, never log the body, and expose one policy setting
-(`strict | warn`) owned by the Adapter — research 09 counts seven differently named settings for
-this concept today. The Core never sees `trigger_id`; the Adapter documents its 30 s default
+owned by the Adapter; the decision is
+[ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md): authenticity is on by default,
+with an explicit `off`. The Core never sees `trigger_id`; the Adapter documents its 30 s default
 lifetime for handlers that open dialogs. Bolt's "skip verification when `mode == socket_mode`"
 states the general rule: the transport that authenticated the carrier decides, not the router.
 
@@ -331,7 +321,7 @@ states the general rule: the transport that authenticated the carrier decides, n
 Bolt/FastStream/hikari, not mmpy_bot: the adapter exposes `webhook_app(bot) -> ASGIApp` plus a
 lower-level `handle_callback(body: bytes, headers) -> CallbackResponse` for non-ASGI hosts; the
 application mounts it (`app.mount("/mm", ...)`, Litestar `@asgi(is_mount=True)`) or hands it to
-uvicorn. The Core stays free of HTTP vocabulary (ADR-0002/0006), the ingress stays replicable
+uvicorn. The Core stays free of HTTP vocabulary (ADR-0002/0006), the Webhook stays replicable
 (ADR-0005), and the host framework is the application's choice. A hand-written ASGI callable adds
 zero dependencies (Bolt's precedent), so a separate distribution or `aiommbot[webhook]` extra is
 warranted only if we pull in Starlette/FastAPI for routing — I recommend not doing so.
@@ -353,9 +343,9 @@ Property tests on `ActionReply`/`DialogReply` serialisation against `PostActionI
 - ASGI hosting: FastStream [ASGI](https://faststream.ag2.ai/latest/getting-started/asgi/), [`faststream/asgi/app.py`](https://raw.githubusercontent.com/ag2ai/faststream/main/faststream/asgi/app.py), [Testing lifespan](https://faststream.ag2.ai/latest/getting-started/lifespan/test/); Litestar [handlers reference (`asgi`, `is_mount`, `copy_scope`)](https://docs.litestar.dev/latest/reference/handlers.html); FastAPI [Sub Applications - Mounts](https://fastapi.tiangolo.com/advanced/sub-applications/); Starlette [`docs/testclient.md`](https://raw.githubusercontent.com/encode/starlette/master/docs/testclient.md)
 - Mattermost: [`server/channels/app/integration_action.go`](https://raw.githubusercontent.com/mattermost/mattermost/master/server/channels/app/integration_action.go), [`server/public/model/integration_action.go`](https://raw.githubusercontent.com/mattermost/mattermost/master/server/public/model/integration_action.go), [`server/public/model/config.go`](https://raw.githubusercontent.com/mattermost/mattermost/master/server/public/model/config.go) (`OutgoingIntegrationRequestsDefaultTimeout = 30`), [`server/public/model/websocket_message.go`](https://raw.githubusercontent.com/mattermost/mattermost/master/server/public/model/websocket_message.go), docs: [Interactive messages](https://developers.mattermost.com/integrate/plugins/interactive-messages/), [Interactive dialogs](https://developers.mattermost.com/integrate/plugins/interactive-dialogs/), [Plugin server best practices (authentic HTTP requests)](https://developers.mattermost.com/integrate/plugins/components/server/best-practices/), [mattermost-plugin-starter-template `server/api.go`](https://raw.githubusercontent.com/mattermost/mattermost-plugin-starter-template/master/server/api.go)
 - mmpy_bot: [`mmpy_bot/webhook_server.py`](https://raw.githubusercontent.com/attzonko/mmpy_bot/main/mmpy_bot/webhook_server.py), [`mmpy_bot/event_handler.py`](https://raw.githubusercontent.com/attzonko/mmpy_bot/main/mmpy_bot/event_handler.py)
-- aiommbot 0.4.x (local checkout): `aiommbot/channels/webhook.py`, `aiommbot/webhook/{config,verifier,security,runtime}.py`, `pyproject.toml`; this repo: `docs/adr/0005`, `0012`, `0013`, `docs/research/09-usage-mining-0.4.x-bots.md`
+- this repo: `docs/adr/0005`, `0012`, `0013`
 
-**Not independently verified in this pass:** hikari's and botbuilder's own test harnesses for the
+**Not independently verified on 2026-09-03:** hikari's and botbuilder's own test harnesses for the
 HTTP surface; whether mmpy_bot performs any authenticity check on `/hooks/{webhook_id}` beyond the
 path; matterbridge (not examined — it bridges messages over the WebSocket/REST API and, as far as
 this pass could tell, has no interactive-callback surface); Mattermost Apps framework call

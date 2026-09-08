@@ -318,7 +318,7 @@ Constants: `ClusterEventClearSessionCacheForUser = "clear_session_user"`, `Clust
 | Telegram Bot API | Long polling; any failure is `{"ok":false,"error_code":…,"description":…}` ("An Integer 'error_code' field is also returned, but its contents are subject to change") (https://core.telegram.org/bots/api#making-requests). The `401 Unauthorized` on a revoked token is not spelled out in the docs — unverified from primary sources, known from practice. | Clients treat 401 as fatal, 409 (another `getUpdates`) as configuration conflict, 5xx/429 as retry. |
 | Mattermost | Nothing on the socket. Silent + `not_authenticated` on any request; REST 401 `api.context.session_expired.app_error`. | Must be synthesised client-side (§11). |
 
-Mattermost is the outlier: it has no fatal close code and no auth-loss event, so the gateway has to build the Discord-style "fatal vs retry" classification from the JSON `ping` reply and a REST probe.
+Mattermost is the outlier: it has no fatal close code and no auth-loss event, so the WebSocketTransport has to build the Discord-style "fatal vs retry" classification from the JSON `ping` reply and a REST probe.
 
 ## 9. Timeline per cause
 
@@ -345,7 +345,7 @@ Assumes the bot authenticates with a **personal access token** (the aiommbot cas
 4. **Silence** (no event, no pong for > pong deadline) — weakest and slowest; overlaps with proxy idle drops (doc 01 §7). Only a hint to run signals 2–3 sooner.
 5. **`user_updated` with `delete_at != 0` for our own user id** — theoretically instant, but **not delivered** to the affected connection (§6); useful only if a second, differently authenticated observer exists. Do not design for it.
 
-## 11. Recommendation for the gateway
+## 11. Recommendation for the WebSocketTransport
 
 **Probe loop.** Keep the 30 s JSON `ping` (doc 01 §3) but treat the reply by content, not by arrival: `status == "OK"` → healthy; `status == "FAIL"` with `error.id == not_authenticated` → *auth-lost*; no reply within the next tick → *pong-timeout* (existing `4000` path). Run a REST liveness probe `GET /api/v4/users/me` with the same token on a slower cadence (e.g. every 60–120 s, and immediately on *auth-lost* or *pong-timeout*). This bounds detection at **≤ 30 s + RTT** for every cause in §9, including HA nodes that only received the reliable `clear_session_user` late, and at one REST period for the cache-miss backstop from §7.
 
@@ -360,7 +360,7 @@ Assumes the bot authenticates with a **personal access token** (the aiommbot cas
 
 Do **not** attempt in-place `authentication_challenge` after `not_authenticated` even though the router would accept it (§4): it re-registers the connection with the hub, which is untested territory. Reconnect instead.
 
-**Idempotency and ordering.** A self-healing PAT revoke costs nothing on the socket, so the gateway must not tear down on the *first* `not_authenticated` if the immediate REST probe returns 200 and a retry ping returns OK — allow one ping retry (≤ 1 s) before reconnecting, to absorb the hub-invalidation → re-read window.
+**Idempotency and ordering.** A self-healing PAT revoke costs nothing on the socket, so the WebSocketTransport must not tear down on the *first* `not_authenticated` if the immediate REST probe returns 200 and a retry ping returns OK — allow one ping retry (≤ 1 s) before reconnecting, to absorb the hub-invalidation → re-read window.
 
 **Logging (never the token).** Log `connection_id`, last `seq`, probe kind, `status`, `error.id`, `status_code`, `X-Request-Id` from the REST response, and — safe by construction — the server's `detailed_error` `token_sha256=<hex>` (it is a digest the server already logs; still do not compute or log our own digest of the raw token, and never log `Authorization`). Redact `message` if it ever contains `{{.Token}}` interpolation (`api.context.invalid_token.error` does; it is not exposed by handlers today but do not trust that).
 
