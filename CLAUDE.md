@@ -4,7 +4,7 @@ Read `AGENTS.md` first — it is the canonical entry point and this file adds on
 to Claude Code.
 
 - Ask the maintainer through `AskUserQuestion`, following the rounds rule of
-  `docs/agents/session-playbook.md` (at most four questions, recommended option first and labelled
+  `.agents/session-playbook.md` (at most four questions, recommended option first and labelled
   `(Recommended)`, wording in Russian, one round at a time). Free-text answers are common — read
   them fully; they often reshape the question.
 - Project skills are in `.claude/skills/` (symlinks into `.agents/skills/`). `design-session` runs

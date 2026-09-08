@@ -48,7 +48,7 @@ deferral in the ticket, not silently skipped.
   exist; each missing neighbour is a recorded deferral.
 - Patterns, SOLID, failure modes, typing, async, error, naming, layout, logging, documentation and
   testing: the document passes §12.1 of
-  [`../design/engineering-style.md`](../design/engineering-style.md), the single source for those
+  [`../design/engineering-style.md`](../docs/design/engineering-style.md), the single source for those
   rules. Cite rule identifiers; do not restate the rules.
 
 ## Engineering style rulebook
@@ -62,4 +62,4 @@ deferral in the ticket, not silently skipped.
   — design review over every `LLD`-tagged rule, code review over `review`-tier rules only — and
   every checklist line names the identifiers it covers.
 - Tool configuration is not restated: the tier names the tool,
-  [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md) owns the configuration.
+  [ADR-0011](../docs/adr/0011-lint-format-and-architecture-toolchain.md) owns the configuration.

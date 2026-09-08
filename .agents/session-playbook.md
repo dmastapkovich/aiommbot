@@ -8,10 +8,10 @@ label; the `design-session` skill runs these steps.
 
 1. **Warm up** in the order `AGENTS.md` gives. *Done when you can state, in three sentences, the
    question, the inputs, and the settled decisions it must not contradict.*
-2. **Claim.** Assign the ticket to yourself (`docs/agents/issue-tracker.md`, *Writes*). *Done when
+2. **Claim.** Assign the ticket to yourself (`.agents/issue-tracker.md`, *Writes*). *Done when
    the assignee shows.*
 3. **Resolve** — see the type-specific section below.
-4. **Verify.** Walk `docs/agents/design-quality-checklist.md` for every document touched; fix
+4. **Verify.** Walk `.agents/design-quality-checklist.md` for every document touched; fix
    before anything is committed. Where the decision changes an accepted ADR, rewrite that ADR so it
    states the current decision and link the two (`amends` / `amended-by`). *Done when every
    checklist line for the touched documents is true or recorded as a deferral in the ticket.*

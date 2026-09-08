@@ -9,7 +9,6 @@ each with its own `README.md` index. Start here, pick the type, follow its index
 | [`design/components/`](design/components/README.md) | Component design documents (LLD) | How is one component built, and why that way? | `design/components/_template.md` |
 | [`adr/`](adr/README.md) | Architecture decision records | What did we decide and what did we reject? | Nygard ADRs, one decision per file |
 | [`research/`](research/README.md) | Research notes | What do primary sources say about a question? | Sources per claim, unverified marked |
-| [`agents/`](agents/README.md) | Process documents for AI coding agents | How does a session work in this repository? | One process question per file |
 | [`../CONTEXT.md`](../CONTEXT.md) | Glossary | What do our words mean? | Ubiquitous language, one canonical term per concept |
 | _(later)_ `tutorials/`, `how-to/`, `reference/`, `explanation/` | User documentation | How do I use the library? | [Diátaxis](https://diataxis.fr), decided by ticket #26 |
 

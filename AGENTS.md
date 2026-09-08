@@ -12,14 +12,12 @@ one node richer. The deliverable of this phase is documentation; code starts on 
 
 ## Warm-up, in order
 
-1. `docs/agents/context-brief.md` — what is settled and how the maintainer works. Everything a
-   fresh session needs to sound like the previous one.
-2. `gh issue view 1` — the map: Destination, Notes, Decisions so far, fog, out of scope.
-3. `docs/design/TRACKER.md` — readiness of every document the catalogue must contain. Nothing is
+1. `gh issue view 1` — the map: Destination, Notes, Decisions so far, fog, out of scope.
+2. `docs/design/TRACKER.md` — readiness of every document the catalogue must contain. Nothing is
    done until its row says so.
-4. `docs/agents/session-playbook.md` — the steps for the ticket type you are about to work.
-5. `docs/agents/design-quality-checklist.md` — the bar a reviewed document must clear.
-6. The ticket (`gh issue view N --comments`) and the resolution comments of every closed ticket it
+3. `.agents/session-playbook.md` — the steps for the ticket type you are about to work.
+4. `.agents/design-quality-checklist.md` — the bar a reviewed document must clear.
+5. The ticket (`gh issue view N --comments`) and the resolution comments of every closed ticket it
    was blocked by, then the ADRs and research notes those resolutions name.
 
 Every other document that describes the warm-up points here instead of repeating the list.
@@ -38,7 +36,7 @@ Every other document that describes the warm-up points here instead of repeating
 | Documentation standard (types, naming, status, linking, target-state rule, discovery protocol) | `docs/documentation-style.md` | fixed |
 | Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
-| Tracker conventions | `docs/agents/issue-tracker.md`, `docs/agents/domain.md` | fixed |
+| Tracker conventions | `.agents/issue-tracker.md`, `.agents/domain.md` | fixed |
 | Backlog ideas that are not decisions | GitHub issues labelled `enhancement` + a fog line in #1 | maintainer |
 
 ## Standing rules
@@ -73,9 +71,9 @@ Every other document that describes the warm-up points here instead of repeating
 - Never commit secrets or personal data; never paste tokens, cookies, private URLs or local paths
   into documents or issues.
 - GitHub writes go through `gh api`, one command per call; the exact forms are in
-  `docs/agents/issue-tracker.md`. If a write is blocked, hand the maintainer the exact command.
+  `.agents/issue-tracker.md`. If a write is blocked, hand the maintainer the exact command.
 - Anything the design did not foresee goes through the discovery protocol in
-  `docs/agents/session-playbook.md` — one home per finding, current ticket unchanged.
+  `.agents/session-playbook.md` — one home per finding, current ticket unchanged.
 
 ## Skills in this repository
 

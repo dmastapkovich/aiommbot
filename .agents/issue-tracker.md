@@ -33,7 +33,7 @@ drafted into a file first.
   `prototype`, `task` or `lld`. An `lld` ticket is titled `LLD: <component>`, one per component of
   §5.10 of the building-block view; it writes `docs/design/components/<term>.md` and its
   `blocked_by` edges are the writing order of
-  [ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
+  [ADR-0035](../docs/adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
   from which the *Wave* column of `docs/design/components/README.md` is derived.
 - **Blocking**: GitHub's native issue dependencies. `issue_dependencies_summary.blocked_by` counts
   open blockers; a ticket is unblocked when it is zero.
