@@ -99,6 +99,17 @@ in user-facing documents. This phase produces the design catalogue; implementati
   hand-writes cancellation, primitives and I/O; `unasyncd --check` reports success against a stale
   target and neither tool renames `TypeVar("AsyncX")`. 0.4.8's `SyncBotRuntime`: 0 of 11 consumers,
   0 of 225 synchronous handlers, `uvloop` extra installed by nobody.
+- **19 Provided and required Protocol inventories.** Every doctrine that distinguishes an interface
+  the framework calls out through from one it hands to user code uses the **same** discriminator —
+  direction of the call (Cockburn's primary/secondary, UML's provided/required, Martin's
+  Input/Output Port, DDD's Open Host Service); **none** discriminates on who supplies the
+  implementation. UML keeps both as two derived properties of one port, Cockburn both flavours in
+  one hexagon. C4, Feathers' "seam" and arc42's templates flatten or abstain, and C4's FAQ sends
+  framework documentation to UML. In twelve Python libraries, `Protocol`/ABC tracks *the framework
+  calls you*; every handed-out capability — Bolt's `say`/`ack`, `InteractionResponse`,
+  `CallbackContext`, `FSMContext`, `Request`, `MonkeyPatch` — is a **concrete class**, and no
+  project puts one in the same inventory as its pluggable backends. Trio's `SendChannel` is the lone
+  interface-typed case, justified by many transports rather than by the handing-out.
 
 ## The 0.4.8 codebase, for reference
 
@@ -358,9 +369,10 @@ middleware access to Event-scope dependencies → #17 (done: ADR-0020); transpor
   independent of each other in both directions; the Core imports no third-party package; nothing
   imports the testing toolkit.
 - arc42 §3, §4 and §5 are `reviewed`. §5 introduced **three ranks of block**: *component* (gets an
-  LLD), *part* (described inside its component), *seam* (a Core Protocol, described in the document
-  of the component that **consumes** it, all listed in §5.4). Inventory: **28 components, ~40 parts,
-  13 Protocols on 11 seams** → 27 `LLD:` tickets for #41 plus the testing toolkit once #25 lands.
+  LLD), *part* (described inside its component), *seam* (a Core Protocol that is neither, described
+  in the document §5.4's ***Specified in*** column names — **not** necessarily the consumer's).
+  Inventory: **28 components, ~40 parts, 14 Protocols on 12 seams** → 27 `LLD:` tickets for #41 plus
+  the testing toolkit once #25 lands. The seam figure and the rank prose were amended by #84.
 - 17 `CONTEXT.md` terms. Three were born from collisions with an existing `_Avoid_` list: **Face**
   (not "driver", taken by Adapter), **Exchange** (not "sans-I/O core", collides with Core), **Sync
   executor** (not bare "executor", spent by ADR-0026 on the Operation executor). That rule is now
@@ -416,3 +428,29 @@ single-consumer guard → #19, #40; sync generation mechanism → #22; State bac
 suite → #18; tenets into rules → #36 (done: `engineering-style.md`, ADR-0033); layout and `__all__` guard → #24; toolchain config verified on a stub → #32;
 CI matrix and free-threaded job → #28; banned-pattern rules with examples → #36 (done: §3.3, semgrep ids = rule ids); quarantine
 location in the layout → #24.
+
+## Decided in Seam inventory: the direction of the call (#84, 2026-09-08)
+
+- [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md): §5.4 carries a
+  **Direction** column in UML's vocabulary — **required** (the Core calls out, an outsider
+  implements; eleven rows) and **provided** (the Core hands user code a typed capability it calls;
+  `ReplyChannel[R]`, and the design expects no second). One table, not two, because UML keeps both
+  directions on one port and Cockburn both flavours in one hexagon. `seam` stays a single rank in
+  §5.0 — direction is an attribute, so there are still three ranks. The count is now **fourteen
+  Protocols on twelve seams — eleven required, one provided**, and it carries the split everywhere
+  it is repeated (§5.10, `TRACKER.md` §C, `engineering-style.md` §1, ADR-0006).
+- §5.4's membership rule is stated positively at last: a Core-owned Protocol is a row when it is
+  ranked `seam`, i.e. neither a component (`Filter`, `Extractor`, `Middleware`) nor a part
+  (`Provider`, `Check`); the IdentityCache Protocol stays out because it is the **Adapter's**. The
+  old promise "every Protocol the Core owns" was never true.
+- ADR-0035's ruling — the ***Specified in*** column beats the prose — is **lifted into §5.0 and
+  §5.4** rather than recorded in a third ADR. `ReplyChannel` broke that prose a third way (its
+  document is neither the consumer's nor the implementation's; the consumer is user code and has no
+  document). ADR-0035's own "six of the eleven rows" is deliberately left as a dated record.
+- Evidence: [`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md).
+- Discovery, not designed here: the six `Contributes*`/`HasLifecycle` Protocols of ADR-0015 are
+  Core-owned public API under semver and have **no rank anywhere in §5** — routed to #85, naturally
+  answered by `bot.md` (#82).
+- Errata fixed in passing: §5.0 said "Two ranks" over a table of three, and ADR-0036 and `event.md`
+  called `ReplyChannel` "the twelfth **Protocol**" when it is the fourteenth Protocol on the twelfth
+  seam row. Rows and Protocols differ because two rows pair an async and a sync Protocol.

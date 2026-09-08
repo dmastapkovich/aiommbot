@@ -9,8 +9,10 @@ _ADRs: [ADR-0012](../../adr/0012-generic-event-envelope-with-adapter-payloads.md
 [ADR-0032](../../adr/0032-layer-model-and-direction-of-allowed-dependencies.md),
 [ADR-0034](../../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md),
 [ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md),
-[ADR-0037](../../adr/0037-derive-is-the-only-enrichment-path-for-an-event.md).
-Research: [`docs/research/11`](../../research/11-webhook-ingress-patterns.md)._
+[ADR-0037](../../adr/0037-derive-is-the-only-enrichment-path-for-an-event.md),
+[ADR-0038](../../adr/0038-seam-inventory-records-the-direction-of-the-call.md).
+Research: [`docs/research/11`](../../research/11-webhook-ingress-patterns.md),
+[`docs/research/19`](../../research/19-provided-and-required-protocol-inventories.md)._
 
 ## 1. Purpose and boundaries
 
@@ -118,8 +120,11 @@ type-keyed resolver ([ADR-0018](../../adr/0018-core-owned-type-keyed-dependency-
 delivery by the Transport, is the identifier every Core log record carries (`ST-LOG-06`), and is
 what a user-visible failure quotes.
 
-**`ReplyChannel[R]`** — the Core-owned Protocol that types `meta.reply`, the Core's twelfth
-([ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md)):
+**`ReplyChannel[R]`** — the Core-owned Protocol that types `meta.reply`. It is the twelfth seam row
+of the building-block view §5.4 and its fourteenth Protocol, and the only **provided** one: the Core
+hands it to a Handler to call rather than calling out through it
+([ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md),
+[ADR-0038](../../adr/0038-seam-inventory-records-the-direction-of-the-call.md)):
 
 - `async def send(self, reply: R) -> None | ReplyAlreadySent` — accepted at most once. "Already
   answered" is a branch the immediate caller takes in normal operation, so it is a typed outcome
@@ -464,4 +469,3 @@ name and never its content.
 | The home, shape and fixtures of the `ReplyChannel` conformance suite, and the event builders a hand-built envelope is validated by | #25 (testing toolkit) |
 | The final contents of the single redaction list that must name `payload` and `raw`, and the observer record that carries `correlation_id` | #29 (observability boundary) |
 | Whether the `RawEvent` payload re-decodes `meta.raw` or receives the parsed mapping from the Adapter's own decode | #69 (`event-registry.md`) |
-| Reconciling the seam count — §5.4 and §5.10 of the building-block view, ADR-0006 and `engineering-style.md` §1 all say eleven seams and thirteen Protocols; [ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) adds the twelfth | #84 |

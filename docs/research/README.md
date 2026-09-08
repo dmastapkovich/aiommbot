@@ -24,3 +24,4 @@ decisions — see `docs/adr/` for what was actually decided.
 | `12-error-boundary-conventions.md` | What do frameworks and task systems do by default when a handler raises, who owns the decision, and should the Core have a boundary? |
 | `11-webhook-ingress-patterns.md` | How do peer frameworks bring HTTP callbacks into an event-driven core, and what does Mattermost's callback contract actually look like? |
 | `18-execution-model-in-practice.md` | Do reference frameworks accept synchronous callables and how, how do they expose dual faces, what does async→sync tooling cost, and what was 0.4.8's synchronous surface worth? |
+| `19-provided-and-required-protocol-inventories.md` | Is a Protocol the framework hands to user code the same kind of thing as one it calls out through, and does an inventory of such Protocols mark the difference? |

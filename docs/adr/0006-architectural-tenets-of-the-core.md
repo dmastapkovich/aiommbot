@@ -44,8 +44,11 @@ component document must argue against, in this order of authority:
 Tenet 1 said what inheritance is not for and left open where it is still the right tool. The
 boundary, written as rules in [`engineering-style.md`](../design/engineering-style.md) §3:
 
-- **A Protocol expresses a seam**; the thirteen Core-owned Protocols of the building-block view
-  §5.4 are the only substitution points, and nothing in the Core imports an implementation.
+- **A Protocol expresses a seam**; the fourteen Protocols on the twelve seam rows of the
+  building-block view §5.4 are the only substitution points, and nothing in the Core imports an
+  implementation. Eleven of those rows are *required* — the Core calls out through them — and one is
+  *provided*, handed to a Handler to call
+  ([ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md)).
 - **`abc.ABC` is a *restricted* pattern**: permitted inside a single component, for a family of
   interchangeable implementations of that component's own concept, and only with an ADR naming the
   rejected alternative. It never crosses a component boundary and is never a user extension point.

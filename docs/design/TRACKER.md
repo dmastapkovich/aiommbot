@@ -15,7 +15,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 2 | `02-constraints.md` | wip (#23 → #37) | #37 | #13 |
 | 3 | `03-context-and-scope.md` | reviewed | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
 | 4 | `04-solution-strategy.md` | reviewed | #38 | same |
-| 5 | `05-building-block-view.md` | reviewed | #38 | same |
+| 5 | `05-building-block-view.md` | reviewed (§5.0, §5.4, §5.9, §5.10 amended by #84) | #38 | same |
 | 6 | `06-runtime-view.md` | — | #39 | #38 #16 #17 |
 | 7 | `07-deployment-view.md` | wip (hosting shapes and topology inputs from #19, #20; #40 completes) | #40 | #38 #24 #29 #30 |
 | 8 | `08-cross-cutting-concepts.md` | — | #40 | same |
@@ -23,7 +23,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 10 | `10-quality-requirements.md` | — | #37 | #13 |
 | 11 | `11-risks-and-technical-debt.md` | — | #42 | #40 #41 |
 | 12 | `CONTEXT.md` | rolling (2 terms added by #36, 2 by #57) | every ticket | — |
-| — | `engineering-style.md` | reviewed | #36 | #23 #13 |
+| — | `engineering-style.md` | reviewed (§1 amended by #84) | #36 | #23 #13 |
 | — | `diagrams.md` | reviewed | #35 | — |
 | — | `components/_template.md` | reviewed | #35 | #56 — restates rules §12.1 now owns |
 | — | `docs/documentation-style.md` | reviewed | #35 | — |
@@ -41,7 +41,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Stateless core; State plugin with mandatory backend | #13 (→ #18) | 0003 | reviewed |
 | Execution model boundary: async engine, generated sync Runtime | #13 (→ #22) | 0004 | reviewed |
 | Scaling model: one ingress, many workers | #13 (→ #19, #40) | 0005 | reviewed |
-| Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed (amended by #36) |
+| Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed (amended by #36, count by #84) |
 | Public API surface: tiny root + explicit subpackages | #13 (→ #24, #36) | 0007 | reviewed (amended by #36) |
 | Plugin contract, adapter role, ordering, settings, discovery, stability | #14 | 0015 | reviewed |
 | Three-phase start, checks framework, ProcessProfile | #14 | 0016 | reviewed |
@@ -86,7 +86,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | LLD writing order and parallelism | #41 | 0035 | reviewed |
 | Reply-slot typing: second type parameter, `ReplyChannel` as the Core's twelfth seam | #57 | 0036 | reviewed |
 | Envelope enrichment: `derive` only, `dataclasses.replace` on an `Event` banned | #57 | 0037 | reviewed |
-| Seam count reconciliation across §5.4, §5.10, ADR-0006 and style §1 | #84 | | — |
+| Seam inventory: direction of the call recorded per row, `required` and `provided`, and the count reconciled | #84 | 0038 | reviewed |
+| Rank of the six `Contributes*`/`HasLifecycle` plugin Protocols in §5 | #85 | | — |
 | Public API shape (prototype) | #31 | | — |
 | Toolchain skeleton verified (prototype) | #32 | | — |
 | Risk register | #42 | | — |
@@ -94,8 +95,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 ## C. Component design documents (LLD)
 
 The inventory is settled: §5.10 of `05-building-block-view.md` lists **28 components** across four
-layers, with about forty *parts* and thirteen Protocols on eleven *seam* rows that deliberately get
-no document of their own. #41 turns that inventory into one row per component here and one
+layers, with about forty *parts* and fourteen Protocols on twelve *seam* rows — eleven required, one
+provided — that deliberately get no document of their own. #41 turns that inventory into one row per component here and one
 `LLD: <component>` ticket each — 27 now, plus the testing toolkit once #25 has decided its shape.
 The file name is the `CONTEXT.md` term in kebab-case.
 

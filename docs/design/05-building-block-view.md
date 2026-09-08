@@ -1,6 +1,7 @@
 # 5. Building block view
 
-_Status: reviewed (#38)._
+_Status: reviewed (#38). 5.0, 5.4, 5.9 and 5.10 amended by #84 —
+[ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)._
 
 The static decomposition, opened one level at a time. It is the **inventory** the
 `LLD: <component>` tickets are generated from (#41), and the direction of every arrow is the layer
@@ -14,13 +15,13 @@ Level 2 is the containers a deployment runs (5.2). Level 2 is opened once more i
 **layers** inside a process (5.3). Level 3 is the components inside each layer, one diagram per
 layer (5.5–5.9), because one diagram answers one question.
 
-**Two ranks of block.** Every row of every inventory table is one of:
+**Three ranks of block.** Every row of every inventory table is one of:
 
 | Kind | Meaning | Gets a design document |
 |---|---|---|
 | **component** | A designable unit with its own contract, failure modes and pattern story | yes — `components/<term>.md` |
 | **part** | A named piece that only makes sense inside one component | no — described inside that component's document |
-| **seam** | A Protocol the Core owns so implementations can be substituted | no — described inside the document of the component that consumes it; all of them listed in 5.4 |
+| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.4) | no — described inside the document 5.4's *Specified in* column names, which is authoritative; all of them listed in 5.4 |
 
 The distinction exists so that `RetryPolicy` and `NonceStore` are documented where they are used
 instead of becoming two-page documents of their own, while `Workspace` and the two Faces — which
@@ -109,24 +110,40 @@ paths, the `__all__` policy and the extras that realise them are #24's.
 
 ## 5.4 The seams of the Core
 
-The single point of dependency inversion ([ADR-0006](../adr/0006-architectural-tenets-of-the-core.md)
-tenet 2): every Protocol the Core owns, who implements it, and the document that specifies it.
-None of these rows is a component — a Protocol is specified inside the document of the component
-that consumes it, so that the contract and its reason stay in one place.
+The Protocols the Core owns that are ranked `seam` — neither a component nor a part of one — with
+the direction of the call through each, who implements it, and the document that specifies it.
+Two directions, in the vocabulary UML gives them
+([ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)):
 
-| Seam | Consumed by | Shipped implementations | Specified in | Decision |
-|---|---|---|---|---|
-| `Transport` | Dispatcher | WebSocketTransport, Webhook | `dispatcher.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md) |
-| `DependencyProvider` | Bot | the Core's own resolver; dishka and wireup bridges | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
-| `KeyValueStore` | State, Webhook, IdentityCache | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
-| `LockProvider` | State, WebSocketTransport | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
-| `Codec` | API client, Transports, State | `MsgspecCodec` | `codec.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
-| `HTTPTransport`, `SyncHTTPTransport` | Face | httpx2; the in-memory double implements both in one class | `face.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| `WebSocketConnection` | WebSocketTransport | `websockets` 17 primary, `picows` extra, in-memory connector | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| `StateKeyProvider` | State | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
-| `TokenProvider`, `SyncTokenProvider` | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| `CallbackTokenCodec` | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
-| `RequestObserver` | API client | none by default; a first-party extra | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
+- **required** — the Core calls out through the Protocol and an outside party implements it. This is
+  the single point of dependency inversion
+  ([ADR-0006](../adr/0006-architectural-tenets-of-the-core.md) tenet 2), and eleven of the twelve
+  rows are of this kind.
+- **provided** — the Core hands user code an object typed by the Protocol, and user code calls it.
+  One row today, and the design expects no second.
+
+A Core-owned Protocol that *is* a component or a part of one is not a row here: `Filter`,
+`Extractor` and `Middleware` are components, `Provider` and `Check` are parts, and the IdentityCache
+Protocol is the Adapter's rather than the Core's (5.8). The *Specified in* column is **authoritative**
+about where a contract lives — it is not always the consumer's document, and for a provided seam the
+consumer is user code and has no document
+([ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
+ADR-0038).
+
+| Seam | Direction | Consumed by | Shipped implementations | Specified in | Decision |
+|---|---|---|---|---|---|
+| `Transport` | required | Dispatcher | WebSocketTransport, Webhook | `dispatcher.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md) |
+| `DependencyProvider` | required | Bot | the Core's own resolver; dishka and wireup bridges | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
+| `KeyValueStore` | required | State, Webhook, IdentityCache | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| `LockProvider` | required | State, WebSocketTransport | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| `Codec` | required | API client, Transports, State | `MsgspecCodec` | `codec.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
+| `HTTPTransport`, `SyncHTTPTransport` | required | Face | httpx2; the in-memory double implements both in one class | `face.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
+| `WebSocketConnection` | required | WebSocketTransport | `websockets` 17 primary, `picows` extra, in-memory connector | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| `StateKeyProvider` | required | State | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| `TokenProvider`, `SyncTokenProvider` | required | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
+| `CallbackTokenCodec` | required | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
+| `RequestObserver` | required | API client | none by default; a first-party extra | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
+| `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
 
 ## 5.5 Level 3 — the Core
 
@@ -300,17 +317,19 @@ so #41 creates its design documents only after #25 closes.
 | **Testing toolkit** | component | — | #25 |
 | In-memory `HTTPTransport`/`SyncHTTPTransport` double, both faces in one class | part | the parametrised conformance suite of both client Faces | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | In-memory `WebSocketConnection` connector | part | the contract suite both gateway libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, plugin lifecycle | part | external storage backends and third-party plugins | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md) |
+| Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, `ReplyChannel`, plugin lifecycle | part | external storage backends, third-party plugins, and the one provided seam | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
+| Recording `ReplyChannel` slot | part | the second implementation of the provided seam, and the suite that is parametrised over both | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | `TestBot` with typed overrides by key | part | the only override API that exists — production has none | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |
 | The typed name-parity test of the two Faces | part | holding duality by mechanism rather than review | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `assert_matches(event, handler)` | part | shadowing between arbitrary filters, which start-up cannot decide | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
 
 ## 5.10 Inventory summary
 
-28 components, about forty parts, and thirteen Protocols on eleven seam rows. The count matters in
-one way only: **27 `LLD: <component>` tickets** for #41 to generate now, and a twenty-eighth — the
-testing toolkit — held until #25 decides its shape. Parts and seams generate nothing; they are
-specified inside the document of the component named beside them.
+28 components, about forty parts, and fourteen Protocols on twelve seam rows — eleven of those rows
+required and one provided (5.4). The count matters in one way only: **27 `LLD: <component>`
+tickets** for #41 to generate now, and a twenty-eighth — the testing toolkit — held until #25
+decides its shape. Parts and seams generate nothing; they are specified inside the document named
+beside them.
 
 | Layer | Components |
 |---|---|

@@ -24,7 +24,8 @@ Protocol the Core owns. We decided:
   is a fact the type checker enforces rather than a runtime `None` check somebody forgets.
   Because `R` appears only in an argument position, `Event` is contravariant in it, which is what
   lets a Handler that ignores the slot keep annotating `Event[InteractiveAction]`.
-- **`ReplyChannel[R]` is a Core Protocol, the twelfth**, sized to its single consumer, the Handler:
+- **`ReplyChannel[R]` is a Core Protocol — the fourteenth, on the twelfth seam row**, sized to its
+  single consumer, the Handler:
   `send`, `sent`, `deadline` and nothing else. It is specified in
   [`components/event.md`](../design/components/event.md); the Webhook plugin implements it and the
   testing toolkit doubles it. `send` returns `None | ReplyAlreadySent` — "already answered" is a

@@ -44,3 +44,4 @@ which decision.
 | [0035](0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md) | The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table | accepted |
 | [0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) | The reply slot is a second type parameter on `Event` typed by a Core-owned `ReplyChannel[R]` Protocol — the Core's twelfth seam | accepted |
 | [0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) | `Event.derive` is the only way to obtain an enriched envelope, and `dataclasses.replace` on an `Event` is banned | accepted |
+| [0038](0038-seam-inventory-records-the-direction-of-the-call.md) | The Core's seam inventory records the direction of the call — eleven required Protocols and one provided | accepted |

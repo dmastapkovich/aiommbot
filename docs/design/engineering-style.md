@@ -1,6 +1,7 @@
 # Engineering style and ideology
 
-_Status: reviewed (#36)._
+_Status: reviewed (#36). §1's substitution-surface statement amended by #84 —
+[ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)._
 
 The rules every component design document and, later, every pull request obeys. This document
 answers one question: **what does code in this repository have to look like, and what enforces
@@ -49,11 +50,12 @@ it, and the two places inheritance remains the right tool — the error taxonomy
 types — are named rather than assumed.
 _Held by:_ `ST-PAT-05`, `ST-PAT-07`, `ST-PAT-08`, `ST-TYP-08`, `ST-SOL-02`. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
 
-**The Core owns the Protocols; implementations arrive from outside.** Thirteen Protocols on eleven
-seams are the whole substitution surface, and the direction of every import is fixed: Core →
-(Adapter · generic plugins) → adapter-specific plugins → testing toolkit. A generic Plugin may not
-import the Adapter, which is what makes "generic" a checked property instead of a claim.
-_Held by:_ `ST-SOL-04`, `ST-SOL-05`, `ST-MOD-05`, `ST-MOD-10`. _From:_ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md).
+**The Core owns the Protocols; implementations arrive from outside.** Fourteen Protocols on twelve
+seams are the whole substitution surface: eleven seams the Core calls out through, and one it hands
+to a Handler to call. The direction of every import is fixed: Core → (Adapter · generic plugins) →
+adapter-specific plugins → testing toolkit. A generic Plugin may not import the Adapter, which is
+what makes "generic" a checked property instead of a claim.
+_Held by:_ `ST-SOL-04`, `ST-SOL-05`, `ST-MOD-05`, `ST-MOD-10`. _From:_ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md).
 
 **A pattern is named and argued, or it is not a pattern.** Every applied pattern is named as on
 [refactoring.guru](https://refactoring.guru/design-patterns), with the problem it solves *here* and
