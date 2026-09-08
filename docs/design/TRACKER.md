@@ -22,7 +22,7 @@ Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed`
 | 9 | `docs/adr/` | rolling | every grilling ticket | — |
 | 10 | `10-quality-requirements.md` | — | #37 | #13 |
 | 11 | `11-risks-and-technical-debt.md` | — | #42 | #40 #41 |
-| 12 | `CONTEXT.md` | rolling (2 terms added by #36) | every ticket | — |
+| 12 | `CONTEXT.md` | rolling (2 terms added by #36, 2 by #57) | every ticket | — |
 | — | `engineering-style.md` | reviewed | #36 | #23 #13 |
 | — | `diagrams.md` | reviewed | #35 | — |
 | — | `components/_template.md` | reviewed | #35 | #56 — restates rules §12.1 now owns |
@@ -84,6 +84,9 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | | — |
 | LLD writing order and parallelism | #41 | 0035 | reviewed |
+| Reply-slot typing: second type parameter, `ReplyChannel` as the Core's twelfth seam | #57 | 0036 | reviewed |
+| Envelope enrichment: `derive` only, `dataclasses.replace` on an `Event` banned | #57 | 0037 | reviewed |
+| Seam count reconciliation across §5.4, §5.10, ADR-0006 and style §1 | #84 | | — |
 | Public API shape (prototype) | #31 | | — |
 | Toolchain skeleton verified (prototype) | #32 | | — |
 | Risk register | #42 | | — |
@@ -98,7 +101,7 @@ The file name is the `CONTEXT.md` term in kebab-case.
 
 | Component | Layer | File | Status | Ticket |
 |---|---|---|---|---|
-| Event | Core | `components/event.md` | not started | #57 |
+| Event | Core | `components/event.md` | reviewed | #57 |
 | Signal | Core | `components/signal.md` | not started | #58 |
 | DependencyProvider | Core | `components/dependency-provider.md` | not started | #59 |
 | Generated model | Adapter | `components/generated-model.md` | not started | #60 |

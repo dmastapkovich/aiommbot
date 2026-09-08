@@ -12,7 +12,7 @@ the tickets and from nothing else — the tickets are the source of truth.
 
 | Component | File | Wave | Status | Ticket |
 |---|---|---|---|---|
-| Event | [`event.md`](event.md) | 1 | not started | #57 |
+| Event | [`event.md`](event.md) | 1 | reviewed | #57 |
 | Signal | [`signal.md`](signal.md) | 1 | not started | #58 |
 | DependencyProvider | [`dependency-provider.md`](dependency-provider.md) | 1 | not started | #59 |
 | Generated model | [`generated-model.md`](generated-model.md) | 1 | not started | #60 |

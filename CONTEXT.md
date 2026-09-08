@@ -86,6 +86,20 @@ a typed `payload`, and `meta` (transport, receive time, correlation id, sequence
 reply channel). The Core knows the envelope, never a concrete payload.
 _Avoid_: request, update, message (as the generic term), incoming
 
+**EventMeta**:
+The frozen record in `Event.meta` holding everything true about the *delivery* rather than about
+the event: the Transport's name, the receive time, the CorrelationId, the transport sequence, the
+undecoded frame, and the optional Reply channel. Injectable on its own, and the unit a Middleware
+replaces wholesale when it derives an enriched envelope.
+_Avoid_: metadata (bare), headers, envelope (that is the Event), context
+
+**CorrelationId**:
+The identity of **one delivery**, minted by the Transport when the event is received: a distinct
+type over a string, so it is a dependency key and cannot be confused with any other string. It is
+the identifier every Core log record and every user-visible failure carries. It does not identify a
+platform fact, so a redelivery is a second CorrelationId.
+_Avoid_: trace id, request id (that is Mattermost's field), event id, dedup key
+
 **Payload**:
 The typed body of an Event, defined by the Adapter for one platform event name and registered in
 the EventRegistry. `RawEvent` is the payload for any name without a registered type.
@@ -237,7 +251,8 @@ isolation and dedup; separate from KeyValueStore.
 _Avoid_: event isolation (that is the middleware using it), mutex, semaphore
 
 **Reply channel**:
-The typed, single-use response slot in `meta.reply` of a webhook-delivered Event: `ActionReply` for
+The typed, single-use response slot in `meta.reply` of a webhook-delivered Event, typed by the Core
+Protocol `ReplyChannel[R]` and parametrised by the Event's second type parameter: `ActionReply` for
 an InteractiveAction, `DialogReply` for a DialogSubmission. Unused by the deadline, it sends an
 empty 200 and later sends yield `ReplyAlreadySent`.
 _Avoid_: response (bare), ack (that is the default reply), HTTP response

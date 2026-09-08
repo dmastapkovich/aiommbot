@@ -42,3 +42,5 @@ which decision.
 | [0033](0033-identified-tiered-rules-with-a-derived-review-checklist.md) | A style rule is an identified, tiered statement carrying a reason, an example and its limits, and the review checklist is derived from the rules and nothing else | accepted |
 | [0034](0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md) | A typed outcome expresses a branch the immediate caller must take; an exception expresses a broken contract or a failed dependency | accepted |
 | [0035](0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md) | The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table | accepted |
+| [0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) | The reply slot is a second type parameter on `Event` typed by a Core-owned `ReplyChannel[R]` Protocol — the Core's twelfth seam | accepted |
+| [0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) | `Event.derive` is the only way to obtain an enriched envelope, and `dataclasses.replace` on an `Event` is banned | accepted |
