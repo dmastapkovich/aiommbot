@@ -3,7 +3,7 @@
 _Status: in progress (inputs settled by #19, #20, #24; #40 completes the section)._
 
 How a bot built on aiommbot runs: single process with WebSocket consumer, optional webhook server,
-runtime-only processes, the single-WebSocket-consumer constraint, storage backends, what scales and
+processes without a Transport, the single-WebSocket-consumer constraint, storage backends, what scales and
 what does not.
 
 ## Inputs settled so far

@@ -38,9 +38,7 @@ Litestar, Starlette and FastAPI do not, and Starlette 0.47.0 had to fix by hand 
 - **The loop belongs to the application.** No `uvloop`/`winloop` extra, no auto-installation, no
   event-loop policy — that API is deprecated for removal in 3.16. `loop_factory` takes a plain
   `Callable[[], AbstractEventLoop]`, so choosing uvloop costs the application one documented line
-  and costs us no dependency. Litestar and django-modern-rest hold the same position; 0.4.8 held the
-  opposite one and not one of the eleven bots ever installed the extra, so the capability was
-  dormant, never delivered.
+  and costs us no dependency. Litestar and django-modern-rest hold the same position.
 - **Free threading is claimed only where it is tested.** The blocking 3.14t job of ADR-0009 covers
   the Core and the sans-I/O parts. The synchronous face makes no thread-safety promise and documents
   one client instance per thread (ADR-0029).

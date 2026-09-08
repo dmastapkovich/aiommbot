@@ -6,8 +6,8 @@ ticket: "#21"
 
 # API failures are exceptions in a typed hierarchy that carries Mattermost's `AppError` fields and a retryable classification; expected outcomes stay values where earlier decisions put them
 
-0.4.8 raised bare `aiohttp.ClientResponseError`s with `raise_for_status=True` and never read the
-server's error body, so no bot could tell a revoked token from a missing channel (#21 resolution).
+A client that raises the HTTP library's bare status error and never reads the server's error body
+cannot tell a revoked token from a missing channel.
 Mattermost returns `AppError` JSON — `id`, `message`, `detailed_error`, `request_id`,
 `status_code`, `props` — for every application error, plain text for 429, and `X-Request-ID` and
 `X-Version-ID` on every response (`server/public/model/utils.go`, `client4.go`). We decided:

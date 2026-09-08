@@ -5,7 +5,7 @@ resolution updates its rows **in the same commit**. The hand-off ticket (#33) ma
 every row reads `reviewed` or has an explicit *deferred to implementation* note.
 
 Legend: `—` not started · `wip (#N)` in progress under ticket N · `reviewed` passes
-`docs/agents/design-quality-checklist.md` · `n/a` deliberately not applicable (say why).
+`.agents/design-quality-checklist.md` · `n/a` deliberately not applicable (say why).
 
 ## A. Architecture document (arc42)
 
@@ -36,7 +36,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 
 | Area | Ticket | ADR | Status |
 |---|---|---|---|
-| Fresh public start, no 0.4.x compatibility | charting | 0001 | reviewed |
+| Fresh public start, no compatibility promise toward any earlier release | charting | 0001 | reviewed |
 | Core scope: what the bare core owns and refuses | #13 | 0002 | reviewed |
 | Stateless core; State plugin with mandatory backend | #13 (→ #18) | 0003 | reviewed |
 | Execution model boundary: async engine, generated sync Runtime | #13 (→ #22) | 0004 | reviewed |
@@ -153,44 +153,7 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | wip |
 | Deprecation and public-API definition for semver | ADR-0007 (amended by #36: the four criteria of public), #28 (semver and deprecation window) | style §8, §10 | | wip |
 
-## E. Disposition of every 0.4.8 capability
-
-Each capability of the old framework gets an explicit decision: **keep** (re-designed in 0.5.0
-core or first-party plugin), **recipe** (documented with an external library), **drop**. Filled by
-the ticket in the *Decided in* column; evidence of real use is in `docs/research/09`.
-
-| 0.4.8 capability | Used by (of 11 bots) | Disposition | Decided in | Status |
-|---|---|---|---|---|
-| WebSocket channel (posts, events) | 11 | keep, redesigned as the resilient `WebSocketTransport` (ADR-0023) | #19 | reviewed |
-| Webhook channel + interactive actions/dialogs | 10 | keep, redesigned: events with reply channel, bare ASGI callable (ADR-0024) | #20 | reviewed |
-| Signed callback tokens (bespoke crypto, 2.1k lines) | 10 | redesign: ~40-line stdlib HMAC-SHA256 token per Standard Webhooks/RFC 8725 behind a codec Protocol, PASETO extra; Fernet path segment dropped (ADR-0024) | #20 | reviewed |
-| Message / action / dialog handlers, `direct_added` | ≥8 | keep as first-class payloads (ADR-0012) | #15 | reviewed |
-| 8 rarely used event kinds (reaction, group_added, post_lifecycle, channel/user/thread, websocket_event) | 0 | drop as separate classes; reactions/group/user events stay first-class payloads, the rest via RawEvent (ADR-0012) | #15 | reviewed |
-| `external` events | 1 | not a platform event; revisit as a plugin-registered payload if a need appears (ADR-0012) | #15 | reviewed |
-| Filters (`DIRECT_CHAT_TYPE_FILTER`, `StateFilter`, regex `matched_params`) | ≥8 | redesign: Filter predicates + typed Extractors (ADR-0014) | #15 | reviewed |
-| DI by handler signature, `**kwargs: Any` boilerplate | 11 | redesign: closed signature, type-keyed resolution with compiled plans (ADR-0014, 0018, 0019) | #16 | reviewed |
-| Inner/outer middleware, auto-wired reliability stack | 11 / 0 | redesign: Inbound/Handler layers, typed contract, no auto-wiring (ADR-0020); reliability as plugin middleware pending #30 | #17 #30 | wip |
-| Default error middleware (swallows exceptions, leaks PII) | 8 (unoverridden) | replace with Core ErrorBoundary: no payload, no swallow, typed `Failed` (ADR-0021) | #17 | reviewed |
-| FSM (`StatesGroup`, `Context`) | ≥8 | keep, redesigned as `Flow[Data]` + `StateContext` + `InState` filter (ADR-0022) | #18 | reviewed |
-| Storage backends: memory / Redis / Mongo | mixed | in-memory + Redis first-party behind `KeyValueStore`/`LockProvider`; Mongo/SQL external packages with the conformance suite (ADR-0022) | #18 | reviewed |
-| Storage profiles (one backend for state + broker + breaker) | 3 | drop: two separate Core Protocols instead, no profile (ADR-0022) | #18 | reviewed |
-| Taskiq scheduling (`@router.schedule`) | few, in-memory broker only | not core (ADR-0002); placement pending | #30 | — |
-| Retry / idempotency / dead-letter middlewares, `RetryableError` family | 0 | not core (ADR-0002); placement pending | #30 | — |
-| Circuit breaker (purgatory) | 0 (two bots vendor aiobreaker) | not core (ADR-0002); placement pending | #30 | — |
-| Backpressure queue, `QueuePolicy`, `worker_concurrency` | 0 explicit | keep the idea, redesigned: bounded queue, N workers, typed per-kind `OverflowPolicy` with `Dropped` Signal (ADR-0023) | #19 | reviewed |
-| `ObservabilityProvider` / Prometheus, Sentry middleware | some | not core (ADR-0002); placement pending | #29 | — |
-| `BotRuntime` / `SyncBotRuntime`, runtime-only processes | some | keep `BotRuntime` as the Runtime; **drop `SyncBotRuntime`** — 0 of 11 bots used it, and its Event-free slice becomes the `Workspace` with a hand-written synchronous face (ADR-0029) | #22 | reviewed |
-| `EventPreparer` (user/channel resolution) | 6 | redesign: `runtime.users.resolve(UserRef)` and `runtime.channels.direct`, uncached; `IdentityCache` optional plugin (ADR-0028) | #21 | reviewed |
-| `ApiManager` (answer, update, dialogs, files) and typed API modules | 11 | redesign: standalone generated API client (ADR-0025, 0026) + Runtime helpers (ADR-0028); errors per ADR-0027 | #21 | reviewed |
-| Attachments, buttons, selects, dialog element builders | 10 | keep; models as dataclasses in the Adapter (ADR-0025), builders decided in the message-composition ticket graduated from #21 | pending | — |
-| Lifespan, `combine_lifespans`, `bot.state` | ≥8 | redesign: plugin `HasLifecycle` + Signals replace lifespan composition (ADR-0015/0017); `bot.state` replaced by App-scoped Providers, Bot never injected (ADR-0019) | #16 | reviewed |
-| CLI runner (`aiommbot run\|websocket\|webhook\|worker\|scheduler`) | some | not core (ADR-0002); placement pending | #30 | — |
-| `aiommbot.testing` toolkit, mock Mattermost server | 2 | keep: the blocks earlier decisions already require by name are listed in §5.9; the toolkit's shape is #25's | #25 | wip |
-| `extras.py` friendly missing-extra errors, nine extras | — | keep the idea: extras per first-party plugin with a friendly error (ADR-0015); count and names in #24 | #24 | wip |
-| uvloop/winloop switching | 0 of 11 installed the extra | drop: no extra, no auto-installation, no policy API; the process entry point takes `loop_factory` and the documentation shows uvloop (ADR-0031) | #22 | reviewed |
-| Cache utilities | — | drop as utilities; `IdentityCache` optional plugin on `KeyValueStore` (ADR-0028) | #21 | reviewed |
-
-## F. Fog and backlog
+## E. Fog and backlog
 
 The map (#1) is the source of truth for *Not yet specified* and *Out of scope*; backlog ideas are
 `enhancement` issues (currently #34). This tracker does not mirror them — check the map.

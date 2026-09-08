@@ -6,8 +6,9 @@ ticket: "#13"
 
 # The core is built by composition over Protocols it owns, with named patterns and strict typing
 
-The 0.4.8 core inherited `Bot` from `Router`, resolved dependencies by introspecting untyped
-callables, carried ~555 `Any` and relied on module-level state. We decided the tenets every
+A core that inherits its composition root from its router, resolves dependencies by introspecting
+untyped callables, leans on `Any` and relies on module-level state can be neither replaced piecewise
+nor checked mechanically. We decided the tenets every
 component document must argue against, in this order of authority:
 
 1. **Composition over inheritance.** `Bot` *has* routers, plugins, a transport and an adapter; it

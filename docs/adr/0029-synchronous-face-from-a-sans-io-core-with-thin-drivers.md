@@ -6,14 +6,11 @@ ticket: "#22"
 
 # The synchronous face covers only the API client and an Event-free `Workspace`, and is produced by a sans-I/O core with two thin drivers instead of async-to-sync code generation
 
-ADR-0004 promised a synchronous face "generated from the async implementation" for the whole
-Runtime. Usage mining of the frozen 0.4.8 line kills the premise: `SyncBotRuntime` was 250 lines of
-hand-mirrored facade over a background thread owning its own event loop, with `future.result()` and
-no timeout, three separate `fork()` warnings in the documentation, one reflection test guarding the
-mirror, a recurring release chore to mirror every new method — and **zero consumers** across the
-eleven company bots, in source, tests or scripts (no Celery or Django anywhere). The need it was
-built for is real — three bots message users from outside a handler — and all three satisfy it with
-the *asynchronous* Runtime in-process. Meanwhile every reference library that generates a sync twin
+A synchronous mirror of the whole Runtime is a hand-mirrored facade over a background thread that
+owns its own event loop: `future.result()` without a timeout, no cancellation, a thread that does
+not survive `fork()`, a reflection test guarding the mirror and a release chore to mirror every new
+method. The need behind it is real — a process without an Event still messages users — and narrow:
+it never touches the Event-bound helpers. Meanwhile every reference library that generates a sync twin
 generates only the wide, boring surface and hand-writes concurrency, cancellation and I/O:
 httpcore's `_synchronization.py` and `_backends/`, psycopg's `_acompat.py`, and pymongo's
 never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancellation`,
@@ -47,8 +44,7 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 - **Duality is held by mechanism, not by review.** The committed-output `--check` of ADR-0025 covers
   both faces; typing tests assert that `MattermostClient` and `SyncMattermostClient` satisfy their
   Protocols; one parametrised conformance suite drives both faces through the shared in-memory
-  double; a typed parity test asserts the two faces expose the same method names — 0.4.8's single
-  reflection test, taken as far as the type checkers can carry it.
+  double; a typed parity test asserts the two faces expose the same method names.
 - **Threads.** The synchronous client documents *one instance per thread* rather than promising
   thread safety: httpx2 runs no free-threaded job in CI, states nothing about `Client` thread
   safety, and a shared `Client(http2=True)` corrupts the h2 state machine (upstream PR #1153, open).
@@ -56,8 +52,8 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 
 ## Considered options
 
-- *A full `SyncRuntime` mirroring the Runtime, as ADR-0004 wrote it* — rejected: it is the exact
-  artefact that scored 0/11 in production, and every new helper would be a mirroring chore.
+- *A full `SyncRuntime` mirroring the Runtime* — rejected: every new helper would be a mirroring
+  chore, and the Event-bound helpers are meaningless outside the loop.
 - *Only `SyncMattermostClient`, no helpers* — rejected: `send_direct` becomes resolve plus
   create-direct-channel plus create-post in every script, which is the copy-paste ADR-0028 removed.
 - *No synchronous face at all* — rejected: the requirement to serve scripts, migrations and
@@ -72,8 +68,8 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
   design by two years, it has no `--check`, it overwrote the source file on a `fromdir` mismatch, and
   neither it nor `unasyncd` rewrites `Coroutine[Any, Any, T]`; an AST rewriter makes the output
   interpreter-version-dependent, which is why psycopg pins one CPython for generation.
-- *Runtime bridging over a background loop thread* — rejected: that is 0.4.8's mechanism, and its
-  documented hazard is that the thread does not survive `fork()`.
+- *Runtime bridging over a background loop thread* — rejected: the thread does not survive
+  `fork()`, and `future.result()` cannot be cancelled.
 
 ## Consequences
 

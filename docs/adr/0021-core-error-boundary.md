@@ -14,8 +14,7 @@ worker alive; Starlette/FastAPI respond 500 and re-raise to a server that also k
 Erlang and Go "let it crash" works only because a supervisor restarts the crashed unit; an asyncio
 task that dies without a handler is silently lost until garbage collection. Almost all defaults log
 without payload; the exceptions (Sanic's full URL, Dramatiq's task arguments, Bolt's documentation
-example) are the leaks 0.4.x reproduced. The 0.4.x default swallowed the exception and logged the
-whole event.
+example) are exactly the leaks a default that logs the whole event produces.
 
 We decided:
 

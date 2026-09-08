@@ -18,9 +18,7 @@ ignoring cancellation in the host task *until the operation has completed*. Fast
 #1648 (reporter's comment of 2024-08-07) shows the price in production: `FastStream app shut down
 gracefully.` at 19:04:35, `Done processing message.` at 19:05:52 — seventy-seven seconds later, with
 the middleware chain cancelled mid-way and the message going UNACK → READY. The handler's side
-effect happened; its acknowledgement never did. Our own evidence: all 225 handlers across eleven
-bots are `async def`, and 0.4.8's dispatcher could not have called a synchronous one
-(`docs/research/18`). We decided:
+effect happened; its acknowledgement never did. We decided:
 
 - **Explicit declaration, Litestar's design.** `sync_to_thread: bool | None = None` at the
   subscription of a Handler and at the declaration of a Provider. `None` on a synchronous callable

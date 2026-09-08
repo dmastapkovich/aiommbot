@@ -18,7 +18,7 @@ decided to make the invariant a signature:
   accepts a replacement `EventMeta` and nothing else, so the ADR-0020 rule cannot be broken through
   the public API. `EventMeta` itself is enriched with `dataclasses.replace`, which is safe there:
   every field of `EventMeta` is metadata a Middleware is allowed to touch.
-- **`dataclasses.replace` on an `Event` is a banned spelling**, enforced as `semgrep:ST-EVT-01` and
+- **`dataclasses.replace` on an `Event` is a banned spelling**, enforced as `semgrep:ST-TYP-17` and
   listed in the pattern catalogue of `engineering-style.md` §3.3 when #36's rulebook next moves.
   The rule is narrow: it names `Event` and no other frozen type.
 
@@ -27,7 +27,7 @@ decided to make the invariant a signature:
 - *`dataclasses.replace` only, no method of our own* — rejected: it adds no public name and it is
   what `ST-TYP-16` already shows, but it leaves the one invariant nine downstream documents depend
   on to a review checklist. An immutable envelope whose payload can be swapped in flight is the
-  0.4.x defect ADR-0020 was written against, one indirection later.
+  defect ADR-0020 rules out, one indirection later.
 - *`derive(**meta_fields)`, flattening the metadata fields onto the call* — rejected: it reads
   better at the call site and it duplicates the field list of `EventMeta` in a second signature, so
   adding a metadata field becomes a two-file change and the two can disagree.

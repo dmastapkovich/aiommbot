@@ -18,9 +18,9 @@ and dependencies. The rules:
 - **Built-in dependencies** are minimal. Positionally: `Event[P]`. By type: `EventMeta`
   (transport, correlation id, reply channel), `Signals`, `ProcessProfile`, `CorrelationId` from
   the Core; `Runtime` and its client Protocols from the Adapter; plugins add theirs (State →
-  `StateContext`). **The Bot itself is never injected**: `bot.state`-style access was the god
-  object and hidden dependency of 0.4.8. Application services are ordinary providers, which
-  retires the forty-odd hand-written `_deps.py` accessors seen in the fleet.
+  `StateContext`). **The Bot itself is never injected**: reaching every dependency through one object
+  makes it a god object and a hidden dependency of every Handler. Application services are
+  ordinary providers.
 - **Overrides only in tests.** `aiommbot.testing` offers a typed override by key
   (`TestBot(bot).override(Storage, FakeStorage())`) that re-validates the graph; production code
   has no override API — a different implementation is composed with a different plugin.

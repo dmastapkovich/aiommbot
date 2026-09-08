@@ -6,8 +6,8 @@ ticket: "#15"
 
 # Inbound events are one generic envelope `Event[P]`; payload types and their registry belong to the Adapter
 
-0.4.8 modelled thirteen parallel request classes with a dispatcher per kind; eight of them had no
-user in eleven bots, and every new Mattermost event needed a new class and a new dispatch path.
+One class per platform event with a dispatcher per kind means a new class and a new dispatch path
+for every new Mattermost event, and most of those classes go unused.
 Mattermost itself emits over a hundred event names plus `custom_<plugin>_*`, so any closed list is
 wrong on arrival. We decided:
 
@@ -32,7 +32,7 @@ wrong on arrival. We decided:
 
 ## Considered options
 
-- *One class per event kind with its own dispatcher (0.4.8)* — rejected: O(kinds) code paths, the
+- *One class per event kind with its own dispatcher* — rejected: O(kinds) code paths, the
   Core learns platform vocabulary, and unused kinds still cost maintenance.
 - *Envelope with an untyped payload* — rejected: contradicts ADR-0006; typing the payload is the
   point.

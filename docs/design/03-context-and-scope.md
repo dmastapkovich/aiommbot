@@ -80,5 +80,5 @@ the line the rest of the catalogue is about.
 | Observability | Typed seams and a first-party extra | Its own conventions, names and backend ([ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md)) |
 | Scheduling, retries, breakers, DLQ, CLI, metrics | Nothing — refused by the admission test | A library, a recipe or a plugin ([ADR-0002](../adr/0002-core-scope-two-condition-test.md)) |
 
-Explicitly outside the whole catalogue: a second platform adapter, compatibility with the frozen
-0.4.x line, migrating its consumer bots, and the implementation itself — that is the next map.
+Explicitly outside the whole catalogue: a second platform adapter, compatibility with any earlier
+release, and the implementation itself — that is the next map.

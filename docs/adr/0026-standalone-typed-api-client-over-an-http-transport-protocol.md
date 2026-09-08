@@ -6,12 +6,12 @@ ticket: "#21"
 
 # The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a generated `Sync` face
 
-0.4.8's `ApiManager` was ~930 lines over aiohttp that only a Bot could construct, parsed no error
-body, handled no 429, and left one bot calling raw paths (`docs/research/09`, #21 resolution). The
-maintainer's requirement is a client good enough to use **without a bot**. The dual-face rule
-(ADR-0004) needs an HTTP library with a synchronous twin generated from one codebase; `httpx2`
-mirrors `Client`/`AsyncClient` token for token, aiohttp has no sync face and niquests rewrites the
-host application's `urllib3` (`docs/research/14`). We decided:
+A REST client that only a Bot can construct, parses no error body and handles no 429 leaves every
+script and worker calling raw paths. The requirement is a client good enough to use **without a
+bot**, with a synchronous face for processes that have no event loop (ADR-0029), which needs an
+HTTP library offering both faces from one code base: `httpx2` mirrors `Client`/`AsyncClient` token
+for token, aiohttp has no sync face and niquests rewrites the host application's `urllib3`
+(`docs/research/14`). We decided:
 
 - **A standalone API client.** `MattermostClient(base_url, token, *, transport=None, timeout=...,
   retry=..., codec=..., observers=())` is an async context manager that knows nothing of Bot or
@@ -25,8 +25,8 @@ host application's `urllib3` (`docs/research/14`). We decided:
   implementation**, mirroring `WebSocketConnection` (ADR-0023); the fork risk of httpx2 is real and
   the Protocol is the insurance. The **API client** and the **Runtime** (ADR-0028) are public.
 - **Naming.** The bare name is the asynchronous face — `MattermostClient`, `Runtime` — and the
-  synchronous face carries the `Sync` prefix (`SyncMattermostClient`, `SyncRuntime`), generated
-  under #22's mechanism with an explicit token map. Handlers are asynchronous by default and read
+  synchronous face carries the `Sync` prefix (`SyncMattermostClient`, `SyncWorkspace`) as
+  ADR-0029 decides. Handlers are asynchronous by default and read
   `Runtime` without a prefix.
 - **Operations are data.** The generator emits one frozen `Operation[Req, Resp]` descriptor per
   spec operation — method, path template, parameter names, request and response types, flags from
@@ -81,8 +81,8 @@ host application's `urllib3` (`docs/research/14`). We decided:
 - *httpx2 directly, no Protocol* — rejected: a young fork without insurance or an in-memory double.
 - *Publish only the Runtime* — rejected: every new need becomes a new helper, and the raw
   escape hatch returns.
-- *Allowlist of bot-relevant operations* — rejected: the client is meant to stand alone; 0.4.8
-  already had one bot outside the allowlist.
+- *Allowlist of bot-relevant operations* — rejected: the client is meant to stand alone, and
+  the first script outgrows any allowlist.
 - *Request objects as the only API* — rejected: unfamiliar for a standalone client and without
   resource-level completion; descriptors keep the sans-I/O core anyway.
 - *No retries, `RateLimited` plus a stamina recipe* — rejected: a standalone client that gives up

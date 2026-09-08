@@ -9,8 +9,7 @@ ticket: "#18"
 ADR-0003 made the Core stateless and put conversation state into the State plugin with an explicit
 backend. This decision fixes the model of that plugin. Evidence: aiogram's `StorageKey` /
 `FSMStrategy` / event-isolation design and Bot Framework's eTag storage are the tested precedents
-(`docs/research/03`, `07`); three of eleven company bots used state groups, most gated on plain
-strings and lost types (`docs/research/09`).
+(`docs/research/03`, `07`); state gated on plain strings loses its types at every step.
 
 - **Key.** `StateKey` is a frozen data class of platform identifiers — channel, user, thread root —
   plus a scope name so several independent flows can run for one user. A **strategy**
@@ -60,8 +59,8 @@ strings and lost types (`docs/research/09`).
 
 ## Considered options
 
-- *String keys assembled by the application* — rejected: eleven bots would assemble them eleven
-  ways.
+- *String keys assembled by the application* — rejected: every application would assemble them
+  differently.
 - *`State`/`StatesGroup` with `dict` data (aiogram)* — rejected: untyped data (ADR-0006).
 - *One wide `StateStorage` with `get_state`/`set_data`* — rejected: locks and dedup would need a
   second contract and backends would duplicate logic.
@@ -69,5 +68,5 @@ strings and lost types (`docs/research/09`).
   driver in the distribution; available as a conformant external package.
 - *Isolation off by default* — rejected: races on double clicks are the bug FSM exists to prevent.
 - *Last-write-wins* — rejected: lost updates in silence.
-- *Declarative scenes inside the State plugin now* — deferred to #48: Flow + Filter covers what
-  the bots do today; scenes are designed typed on top.
+- *Declarative scenes inside the State plugin now* — deferred to #48: Flow + Filter covers the
+  common case; scenes are designed typed on top.

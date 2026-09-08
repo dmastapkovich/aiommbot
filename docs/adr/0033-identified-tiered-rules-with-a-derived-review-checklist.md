@@ -19,8 +19,8 @@ from a rule that lives on a reviewer's attention. We decided the shape of
   reused: a retired rule keeps its number and is marked withdrawn. A semgrep rule written for
   ADR-0011 takes the identifier of the rule it enforces, so the linter message and the rulebook
   cannot drift apart.
-- **Every rule carries seven parts**: the identifier; the rule stated positively as an imperative
-  sentence; a one-line reason; at least one do/don't example; **limitations** — when the rule does
+- **Every rule carries eight parts**: the identifier; the rule stated positively as an imperative
+  sentence; a one-line reason; a *Wrong*/*Correct* example pair; **limitations** — when the rule does
   not apply, or the explicit words *no exceptions*; the enforcement tier; where it is checked; and
   the ADR or research note it comes from. The limitations slot is what stops a rule from being
   cargo-culted into a place it was never meant for, and its absence is what makes a *banned* rule

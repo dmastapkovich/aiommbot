@@ -7,16 +7,17 @@ amended-by: ADR-0029
 
 # The Runtime is a thin Event-aware layer over the API client with a fixed helper set; user and channel resolution lives in the Runtime without a cache, and caching is an optional adapter-specific plugin
 
-Usage mining shows what the eleven bots asked of 0.4.8's `ApiManager` and `BotRuntime`:
-`answer`, `update_post`, `send_dialog`, `get_post` and `get_user` in 11 of 11, direct messages in
-5, files in 3, and zero calls to `reply`, reactions, pins or ephemeral posts — the last because the
-API had none (`docs/research/09`, #21 resolution). `EventPreparer` resolved users by id, e-mail,
-username, nickname and full name for 6 bots over a cache with no TTL and no invalidation. We
-decided:
+A Handler reaches for the same few operations on every platform event — answer, update, delete,
+open a dialog, read the post or user behind the Event — and a script or worker without an Event
+needs to message a channel or a user. Each is one line over the API client, and a helper set that
+grows past that becomes a second API. Resolving a user by id, e-mail, username, nickname or full
+name is the one lookup every bot performs, and a cache for it — TTL, invalidation, sharing across
+replicas — is a policy the framework must not choose for the application. We decided:
 
 - **Helpers bound to the Event**: `answer`, `reply` (in thread), `update`, `delete`,
   `open_dialog` — channel, `root_id` and `trigger_id` come from the Event.
-- **Addressed helpers** for scripts and workers without an Event: `send(channel_id, ...)`,
+- **Addressed helpers**, on the Event-free `Workspace` (ADR-0029), for scripts and workers without
+  an Event: `send(channel_id, ...)`,
   `send_direct(UserRef, ...)` (resolves the user, creates the direct channel), `ephemeral`.
 - **File helpers**: `upload(...) -> file_ids` and `download(file_id)`, streaming, as thin wrappers
   over the files and uploads operations. Everything else — reactions, pins, teams, preferences —
@@ -37,13 +38,12 @@ decided:
 
 - *An always-on in-process cache inside the Adapter* — rejected: not shared across replicas and it
   blurs the stateless rule onto the Adapter.
-- *No resolution helpers* — rejected: six bots would return to copy-pasted lookups.
-- *Reactions and pins as helpers* — rejected: zero usage; one line over the API client when needed.
+- *No resolution helpers* — rejected: every application would copy-paste the same lookup.
+- *Reactions and pins as helpers* — rejected: one line over the API client when needed.
 
 ## Consequences
 
-- The helper set is unchanged, but #22 split it along the Event boundary: the addressed helpers, the
-  file helpers and the resolvers moved into an independently constructible Event-free `Workspace`
-  that the Runtime composes and that carries the synchronous face, while the Event-bound helpers stay
-  asynchronous on the Runtime.
-  → [ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)
+- The helper set splits along the Event boundary: the addressed helpers, the file helpers and the
+  resolvers live in the independently constructible Event-free `Workspace` that the Runtime composes
+  and that carries the synchronous face; the Event-bound helpers stay asynchronous on the Runtime
+  ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)).

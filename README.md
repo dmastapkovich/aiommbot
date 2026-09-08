@@ -26,12 +26,6 @@ of decision tickets, with the outcomes recorded in [`docs/adr/`](docs/adr/) and 
 - **Async and sync, without copy-paste.** One implementation, two faces, using the current state of
   the art rather than parallel code paths.
 - **Public from day one.** MIT licence, English everywhere, semantic versioning from 0.5.0.
-  This is a clean successor to the internal `aiommbot 0.4.x`, with no compatibility layer.
-
-## Lineage
-
-`aiommbot 0.4.x` lives on in a private GitLab and is frozen. This repository starts a fresh public
-history; ideas worth keeping from 0.4.x are re-decided here one ticket at a time.
 
 ## Licence
 

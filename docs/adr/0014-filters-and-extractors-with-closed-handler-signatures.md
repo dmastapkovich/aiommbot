@@ -8,8 +8,8 @@ ticket: "#15"
 
 aiogram lets a filter return `bool | dict` and merges the dict into handler kwargs, so the type
 checker cannot see which filter produced which parameter; its `MagicFilter` DSL is built on
-dynamic attribute access, which ADR-0006 forbids. Every 0.4.8 handler needed `**kwargs: Any` to
-survive middleware injection. We decided:
+dynamic attribute access, which ADR-0006 forbids. A handler that must accept `**kwargs: Any` to
+survive middleware injection has no checkable signature. We decided:
 
 - **`Filter[P]` is a pure predicate** over `Event[P]`, composable with `&`, `|`, `~`
   (Strategy + Composite). Filters are explicit, typed classes and factories

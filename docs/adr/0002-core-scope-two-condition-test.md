@@ -7,9 +7,9 @@ amended-by: ADR-0008
 
 # The core admits a capability only if every bot needs it identically or it is chat-specific with no library equivalent
 
-aiommbot 0.4.8 grew a `Bot(Router)` god object that owned scheduling, metrics, retries, a circuit
-breaker, storage profiles and a CLI; usage mining shows most of that surface had zero consumers,
-and no peer bot framework owns any of it in core (`docs/research/08`, `09`). We decided that the
+A core that owns scheduling, metrics, retries, a circuit breaker, storage profiles and a CLI
+becomes a god object nothing can replace piecewise, and no peer bot framework owns any of that in
+core ([`docs/research/08`](../research/08-peer-responsibility-boundaries.md)). We decided that the
 **Core** admits a capability only when it passes one of two tests: (1) *every* bot needs it and
 needs it identically — event envelope, routing and filters, middleware chain, dependency injection,
 lifecycle and graceful shutdown, the Transport seam, the error taxonomy, the Plugin registry, a
@@ -41,8 +41,8 @@ Consequences fixed with the same decision:
 
 ## Considered options
 
-- *Batteries included as first-party plugins for everything 0.4.8 had* — rejected: it keeps the
-  maintenance surface of 0.4.8 without evidence of use; a plugin can be added later when a bot
+- *Batteries included as first-party plugins for everything a bot might need* — rejected: it keeps
+  a maintenance surface without evidence of use; a plugin can be added later when a bot
   needs it, a shipped plugin can never be removed quietly.
 - *Wide core with redesigned reliability and observability* — rejected: contradicts every peer and
   the two-condition test; reliability primitives have mature libraries (stamina, purgatory,

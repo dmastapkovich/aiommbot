@@ -17,7 +17,7 @@ _Status: in progress (#23 settled the technical constraints below; #37 completes
 - **Toolchain**: ruff `ALL` + preview, WPS, semgrep, import-linter, slotscheck, deptry, uv audit,
   typos, pyproject-fmt, zizmor; `just` + pre-commit.
   → [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md)
-- **One distribution**, explicit composition, no compatibility with 0.4.x.
+- **One distribution**, explicit composition, no compatibility promise toward any earlier release.
   → [ADR-0001](../adr/0001-fresh-start-as-a-public-package.md), [ADR-0002](../adr/0002-core-scope-two-condition-test.md)
 
 ## Organisational and convention constraints

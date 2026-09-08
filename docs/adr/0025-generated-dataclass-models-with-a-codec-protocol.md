@@ -10,7 +10,7 @@ The Mattermost OpenAPI spec is complete in coverage — 600 operations, every en
 but weak in precision: 21 of 221 schemas declare `required`, `Post.props` and dialog `submission`
 are bare objects, `Post.type` and `Channel.type` have no enums, `hashtag` is misspelled against the
 wire, and the spec is published unversioned from `master` while the server releases monthly
-(`docs/research/05`). 0.4.8 hand-wrote 71 pydantic models and drifted. msgspec, the serialiser the
+(`docs/research/05`). Hand-written models drift from the spec. msgspec, the serialiser the
 earlier research recommended for the hot path, entered maintenance mode in February 2026 and has
 had no release since April (`docs/research/05`, fact pack in the #21 resolution). We decided:
 
@@ -31,8 +31,7 @@ had no release since April (`docs/research/05`, fact pack in the #21 resolution)
 - **Optionality has two rules.** Response models that handlers read (`Post`, `User`, `Channel`,
   `FileInfo`, `Team`, `AppError`, …) get `required` from the overlay and `T | None` elsewhere;
   `post.id` is a `str`, never `str | Unset`. Request models use `UNSET` with omit-on-encode so a
-  `PATCH` can tell "leave untouched" from "set to null" — the `exclude_none` shortcut of 0.4.8 could
-  not.
+  `PATCH` can tell "leave untouched" from "set to null" — an `exclude_none` shortcut cannot.
 - **Serialisation is a Core-owned Protocol.** `Codec` — `encode(obj) -> bytes`,
   `decode(data, type) -> T`, `convert(obj, type) -> T`, strict types (no `str`→`int` coercion),
   unknown fields ignored — lives in the Core so generic plugins (State's `Flow` data, dedup keys)
@@ -58,7 +57,7 @@ had no release since April (`docs/research/05`, fact pack in the #21 resolution)
 - *`msgspec.Struct` as the model type* — rejected: fastest and most ergonomic, but every public type
   would inherit from a library in declared maintenance mode, without 3.15 wheels and with a release
   pipeline broken since August 2026.
-- *pydantic v2 everywhere* — rejected: healthiest ecosystem and 0.4.8's choice, but `BaseModel` in
+- *pydantic v2 everywhere* — rejected: the healthiest ecosystem, but `BaseModel` in
   every public type, a heavy import, a checker plugin, and a heavy dependency for the generic State
   plugin.
 - *Hand-written models for the bot subset* — rejected: 40 spec commits in four months make a

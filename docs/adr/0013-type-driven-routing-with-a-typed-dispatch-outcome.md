@@ -36,7 +36,7 @@ the router, and introspectable as data (ADR-0006, idea #34). We decided:
 
 ## Considered options
 
-- *Per-kind decorators only (aiogram, 0.4.8)* — rejected: O(kinds) decorators and no seam for
+- *Per-kind decorators only (aiogram)* — rejected: O(kinds) decorators and no seam for
   plugin-defined kinds.
 - *Numeric priorities* — rejected: they make order non-local and are the usual source of "why
   did this handler fire" bugs.

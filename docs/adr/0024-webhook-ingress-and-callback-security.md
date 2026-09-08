@@ -9,9 +9,8 @@ ticket: "#20"
 Mattermost delivers button clicks and dialog submissions as one HTTP POST per interaction with
 no signature, no retry, a 30 s timeout shared with `trigger_id`, a 1 MiB reply cap, and turns any
 non-200 into a user-visible error; field errors of a dialog are expressible only in the reply body
-(`docs/research/11`, `16`). 0.4.x always answered `{"status":"Ok"}`, so `update`, `ephemeral_text`
-and dialog `errors` were impossible, and it carried 2,158 lines of bespoke cryptography. We
-decided:
+(`docs/research/11`, `16`). A transport that always answers `{"status":"Ok"}` makes `update`,
+`ephemeral_text` and dialog `errors` impossible. We decided:
 
 - **Same event model.** Callbacks are `Event[InteractiveAction]` and `Event[DialogSubmission]`
   dispatched through the same routers, filters, DI and middleware as WebSocket events
@@ -66,13 +65,13 @@ decided:
 ## Considered options
 
 - *Separate request/response model for webhook* — rejected: two programming models.
-- *Immediate 200 always, replies only via REST (0.4.x)* — rejected: dialog field errors become
+- *Immediate 200 always, replies only via REST* — rejected: dialog field errors become
   impossible.
 - *Deadline 3 s (Slack/Discord)* — rejected: one external call would already miss it, and
   Mattermost allows UI in the reply.
 - *Starlette app in an extra* — rejected: a dependency and a host framework for one route.
-- *Authenticity as an optional plugin, off by default* — rejected after research: it repeats the
-  0.4.x audit finding and violates secure-by-default; the explicit `off` switch preserves the
+- *Authenticity as an optional plugin, off by default* — rejected: it violates
+  secure-by-default; the explicit `off` switch preserves the
   choice.
 - *itsdangerous / Fernet / PASETO as the only codec* — rejected as above; PASETO stays optional.
 - *Mandatory nonce store* — rejected: a distributed backend for every bot and broken long-lived

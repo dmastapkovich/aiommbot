@@ -6,8 +6,9 @@ ticket: "#17"
 
 # Middleware is an asynchronous chain in two named layers with typed outcomes, typed Event-scope publication and typed handler flags
 
-aiogram's `(handler, event, data)` contract passes an untyped dictionary the checkers cannot see;
-0.4.8 auto-wired a reliability stack nobody used. We decided the following model
+aiogram's `(handler, event, data)` contract passes an untyped dictionary the checkers cannot see,
+and a reliability stack wired in by the framework is a decision the application cannot revisit. We
+decided the following model
 (Chain of Responsibility, ADR-0006):
 
 - **Two named layers.** **Inbound** middleware runs on every event before the router walk

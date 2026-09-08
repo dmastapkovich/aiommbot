@@ -69,9 +69,9 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
   (`GET /api/v4/users/me`) through a shared `AuthLossDetector`: 200 → network trouble, reconnect
   with the same token; 401 `session_expired` → one retry with a token from `TokenProvider`, else
   `FatalError(AuthRevoked)` carrying `error.id`, `request_id` and `token_sha256`, never the
-  token; 403 → fatal; 5xx/429 → backoff. Detection is bounded by one ping interval plus RTT. The
-  0.4.x behaviour — treating a mute socket as a network cut and reconnecting forever — is exactly
-  the silent-bot failure this rules out.
+  token; 403 → fatal; 5xx/429 → backoff. Detection is bounded by one ping interval plus RTT. Treating
+  a mute socket as a network cut and reconnecting forever is exactly the silent-bot failure this
+  rules out.
 - **Library.** The gateway logic depends only on the Core-owned `WebSocketConnection` Protocol —
   connect with headers/query/TLS/proxy, `receive(timeout)` returning `Text | Binary | Closed`,
   `send_text`, `ping`, `close(code)`, four typed error kinds — so the library is replaceable.
