@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#13"
-amended-by: ADR-0008
+amended-by: [ADR-0008]
 ---
 
 # The core admits a capability only if every bot needs it identically or it is chat-specific with no library equivalent
@@ -28,7 +28,7 @@ Consequences fixed with the same decision:
   `bot.run()`).
 - **Core runtime dependencies: standard library only**, with `typing_extensions` as the single
   exception admitted by ADR-0008 while Python 3.12 is supported. Core contracts are `dataclass(slots=True)`
-  and `Protocol`; serialisation (msgspec), HTTP/WebSocket (aiohttp), observability
+  and `Protocol`; serialisation (msgspec), HTTP and WebSocket clients (httpx2, websockets), observability
   (opentelemetry-api) live in the Adapter and in Plugins behind Core-owned Protocols. Enforced by
   an import-linter `forbidden` contract and a smoke import of the Core with no extras installed.
 - **One distribution**, `aiommbot`, with the Core, the Mattermost Adapter and first-party Plugins as

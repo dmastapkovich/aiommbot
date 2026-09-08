@@ -6,7 +6,9 @@ ticket: "#22"
 
 # The Core runs on standard-library asyncio under a fixed structured-concurrency discipline, and the framework never chooses the event loop
 
-ADR-0004 fixed an asyncio engine but neither the discipline inside it nor who owns the loop. Both
+The Core dispatches on one asynchronous engine — a second, synchronous engine as in Django's WSGI
+and ASGI pair would have no host, since the only Transports are asyncio-hosted, and would double
+every test — but the engine alone fixes neither the discipline inside it nor who owns the loop. Both
 gaps are where real frameworks bleed: Litestar has zero timeouts and no request-level timeout
 mechanism at all, Starlette and FastAPI together contain exactly one, uvicorn's default graceful
 shutdown waits forever and then loses `lifespan.shutdown()` to SIGKILL, and uvicorn silently prefers
@@ -32,8 +34,8 @@ Litestar, Starlette and FastAPI do not, and Starlette 0.47.0 had to fix by hand 
   API; sibling exceptions are never discarded, which is the shortcut Litestar takes and Starlette
   deliberately does not.
 - **Two entry points.** `run(*, loop_factory=None)` blocks, owns an `asyncio.Runner`, and is the
-  only synchronous `def` of the engine — a process boundary, not a face (it has no twin, so ADR-0029
-  does not apply to it). `serve()` is the coroutine for embedding a Bot in a loop the application
+  only synchronous `def` of the framework — a process boundary, not a Face (it has no synchronous
+  pair, so ADR-0029 does not apply to it). `serve()` is the coroutine for embedding a Bot in a loop the application
   already runs. Start-up remains compose → check → start (ADR-0016).
 - **The loop belongs to the application.** No `uvloop`/`winloop` extra, no auto-installation, no
   event-loop policy — that API is deprecated for removal in 3.16. `loop_factory` takes a plain

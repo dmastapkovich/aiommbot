@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#18"
+amends: [ADR-0003]
 ---
 
 # Conversation state is a typed `Flow[Data]` keyed by a `StateKey`, stored through two Core Protocols with compare-and-set, isolated per key by default

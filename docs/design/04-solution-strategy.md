@@ -18,16 +18,15 @@ The Core holds nothing between events. Conversation state, isolation and backend
 State Plugin, which cannot start without a backend; in-memory storage needs an explicit
 single-process declaration. → [ADR-0003](../adr/0003-stateless-core-state-plugin-with-explicit-backend.md)
 
-## One asyncio engine, a narrow synchronous face written as thin drivers
+## Asyncio only, with a narrow synchronous Face
 
 Dispatch is asyncio-only on the standard library, under a fixed structured-concurrency discipline,
 and the framework never chooses the event loop. A synchronous Handler or Provider is accepted only
-by an explicit `sync_to_thread` declaration, runs in the Bot's own bounded executor and may be
+by an explicit `sync_to_thread` declaration, runs in the Sync executor and may be
 abandoned at drain; Filters and Extractors run inline; everything else the framework calls is a
-coroutine function. The synchronous face covers the API client and the Event-free Workspace and is
-written as two thin drivers over a sans-I/O core, not generated.
-→ [ADR-0004](../adr/0004-async-engine-with-generated-sync-runtime.md),
-[ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md),
+coroutine function. The synchronous Face covers the API client and the Event-free Workspace and is
+a thin I/O layer over a sans-I/O Exchange, not generated.
+→ [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md),
 [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md),
 [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md)
 
@@ -124,8 +123,8 @@ Models are generated from a pinned, overlaid OpenAPI spec into standard-library 
 serialised through the Core's `Codec` Protocol with msgspec as the shipped implementation; the
 server version policy is the pinned ESR and newer with a nightly drift check. The REST client is a
 standalone typed API client — httpx2 behind an `HTTPTransport` Protocol, generated `Operation`
-descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async
-first with a generated `Sync` face. API failures are exceptions in a typed hierarchy carrying the
+descriptors under resource methods, pagination iterators, a narrow built-in retry policy,
+asynchronous under the bare name with a hand-written synchronous Face. API failures are exceptions in a typed hierarchy carrying the
 server's `AppError` fields and a retryable flag. The Runtime is a thin Event-aware layer over the
 client with a fixed helper set; identity resolution is uncached in the Runtime and caching is an
 optional plugin. Observability is optional and replaceable: no observer is registered by default, a

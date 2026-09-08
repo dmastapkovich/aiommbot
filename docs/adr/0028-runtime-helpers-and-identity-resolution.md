@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#21"
-amended-by: ADR-0029
+amended-by: [ADR-0029]
 ---
 
 # The Runtime is a thin Event-aware layer over the API client with a fixed helper set; user and channel resolution lives in the Runtime without a cache, and caching is an optional adapter-specific plugin

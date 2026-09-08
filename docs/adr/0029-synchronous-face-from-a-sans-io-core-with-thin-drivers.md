@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-04
 ticket: "#22"
+amends: [ADR-0026, ADR-0028]
 ---
 
 # The synchronous face covers only the API client and an Event-free `Workspace`, and is produced by a sans-I/O core with two thin drivers instead of async-to-sync code generation
@@ -73,8 +74,6 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 
 ## Consequences
 
-- ADR-0004 is amended: the synchronous face is not generated, and its scope is the client plus
-  `Workspace`. ADR-0028's helper set is split into an Event-free layer and Event-bound sugar.
 - The Adapter carries two thin drivers that must stay in step; the parity test and the shared
   conformance suite are what keep them honest.
 - The `Workspace` component and the two drivers each need a design document from the LLD inventory

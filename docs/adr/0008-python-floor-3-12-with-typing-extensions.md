@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#23"
-amends: ADR-0002
+amends: [ADR-0002]
 ---
 
 # Python 3.12 is the floor, supported until its EOL, with typing_extensions as the Core's only runtime dependency

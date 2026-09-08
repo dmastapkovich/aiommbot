@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-08
 ticket: "#57"
+amends: [ADR-0012, ADR-0020]
 ---
 
 # `Event.derive` is the only way to obtain an enriched envelope, and `dataclasses.replace` on an `Event` is banned

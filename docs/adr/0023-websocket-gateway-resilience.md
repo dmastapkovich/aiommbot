@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
-amended-by: ADR-0030
+amended-by: [ADR-0030]
 ---
 
 # The WebSocket gateway is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain

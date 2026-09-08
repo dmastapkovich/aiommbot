@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#17"
+amended-by: [ADR-0037]
 ---
 
 # Middleware is an asynchronous chain in two named layers with typed outcomes, typed Event-scope publication and typed handler flags
@@ -22,7 +23,7 @@ decided the following model
   via providers; Event-scoped ones by annotation on `__call__`, with a resolution plan compiled
   like a handler's (ADR-0018). Middleware is asynchronous only; there is no `data: dict`.
 - **Allowed moves.** Return an `Outcome` without calling `call_next` (short-circuit: dedup, ban,
-  rate limit); pass a derived envelope with enriched `meta` (events are immutable); wrap the call
+  rate limit); pass an enriched envelope obtained through `Event.derive` (ADR-0037; events are immutable); wrap the call
   in a timeout, lock or retry; publish Event-scope values; observe the outcome. **Not allowed:**
   choosing another handler or altering the payload — routing belongs to routers and filters.
   Calling `call_next` twice is an error.

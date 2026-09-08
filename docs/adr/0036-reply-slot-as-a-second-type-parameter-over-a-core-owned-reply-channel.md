@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-08
 ticket: "#57"
+amends: [ADR-0012, ADR-0024]
 ---
 
 # The reply slot is a second type parameter on `Event` typed by a Core-owned `ReplyChannel[R]` Protocol — the Core's twelfth seam

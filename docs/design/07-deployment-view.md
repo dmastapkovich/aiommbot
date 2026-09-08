@@ -28,7 +28,7 @@ documented:
 |---|---|---|
 | All in one | `Bot(adapter, plugins=[WebSocketTransport(), Webhook(), State(...)])`, profile `websocket_consumer=True, single_process=True` | small bot, one replica; in-memory State allowed |
 | Split | Process A: `WebSocketTransport` only, `websocket_consumer=True`. Processes B×N: `Webhook()` only, replicated behind a load balancer. Shared State on Redis | busy buttons and dialogs; ingress fault tolerance |
-| Plus workers | either shape, heavy work handed to Celery/taskiq/… through the sync or async Runtime | operations that do not fit the 10 s reply deadline |
+| Plus workers | either shape, heavy work handed to Celery/taskiq/… through the Workspace, `SyncWorkspace` from a synchronous worker | operations that do not fit the 10 s reply deadline |
 
 **The one hard constraint is protocol-level**: exactly one WebSocket consumer per bot account
 (ADR-0005, ADR-0023); the webhook ingress and workers replicate, the socket does not. Checks refuse

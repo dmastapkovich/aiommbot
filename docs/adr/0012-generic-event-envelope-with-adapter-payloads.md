@@ -2,17 +2,19 @@
 status: accepted
 date: 2026-09-03
 ticket: "#15"
+amended-by: [ADR-0036, ADR-0037]
 ---
 
-# Inbound events are one generic envelope `Event[P]`; payload types and their registry belong to the Adapter
+# Inbound events are one generic envelope `Event[P, R]`; payload types and their registry belong to the Adapter
 
 One class per platform event with a dispatcher per kind means a new class and a new dispatch path
 for every new Mattermost event, and most of those classes go unused.
 Mattermost itself emits over a hundred event names plus `custom_<plugin>_*`, so any closed list is
 wrong on arrival. We decided:
 
-- **The Core owns one immutable generic envelope** `Event[P]` (PEP 695): `kind` (the platform
-  event name), `payload: P`, and `meta` — transport that delivered it, receive time, correlation
+- **The Core owns one immutable generic envelope** `Event[P, R]` — `P` the Payload, `R` the type its
+  Reply channel accepts, `Never` by default (ADR-0036); an enriched copy is obtained only through
+  `derive` (ADR-0037). It carries `kind` (the platform event name), `payload: P`, and `meta` — transport that delivered it, receive time, correlation
   id, transport sequence, the raw wire data, and an optional typed **reply channel** with a
   deadline so request/response transports (webhook callbacks) can join the same model if #20
   decides so. The Core knows no concrete payload.

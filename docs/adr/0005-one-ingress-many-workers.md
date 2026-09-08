@@ -9,11 +9,12 @@ ticket: "#13"
 Every WebSocket connection of a bot account receives every event (`docs/research/01`), so a
 second identical replica processes each message twice. We decided the deployment model is
 **one WebSocket consumer per bot**, a **horizontally replicable webhook ingress**, and **heavy
-work offloaded to workers** (any task system) through the Runtime's sync or async face. Handlers
+work offloaded to workers** (any task system) through the Workspace, synchronous or asynchronous (ADR-0029). Handlers
 therefore stay thin and fast, and every process declares its role explicitly instead of inferring
 it from configuration.
 
 ## Consequences
 
-- Process roles, the single-consumer guard and the deployment view are designed in #19 and #40.
+- Process roles are the ProcessProfile (ADR-0016), the single-consumer guard is ADR-0023, and the
+  deployment shapes are §7 of the architecture document.
 - Distributed processing via brokers stays a recipe, not a Core capability (ADR-0002).

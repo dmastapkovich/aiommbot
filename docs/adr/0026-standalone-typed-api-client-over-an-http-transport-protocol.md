@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#21"
+amended-by: [ADR-0029]
 ---
 
 # The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a generated `Sync` face
@@ -75,8 +76,8 @@ for token, aiohttp has no sync face and niquests rewrites the host application's
 
 ## Considered options
 
-- *aiohttp behind a Protocol (`docs/research/04`)* — rejected after ADR-0004: no synchronous face,
-  so the generated sync client would need a second HTTP stack.
+- *aiohttp behind a Protocol (`docs/research/04`)* — rejected: no synchronous face, so the
+  synchronous Face (ADR-0029) would need a second HTTP stack.
 - *niquests* — rejected: shadows `urllib3` in the host application.
 - *httpx2 directly, no Protocol* — rejected: a young fork without insurance or an in-memory double.
 - *Publish only the Runtime* — rejected: every new need becomes a new helper, and the raw

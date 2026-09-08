@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#15"
+amended-by: [ADR-0030]
 ---
 
 # Filters are pure predicates, Extractors produce typed values, and handler signatures are closed
@@ -24,7 +25,8 @@ survive middleware injection has no checkable signature. We decided:
 - **Closed handler signature.** The first parameter is `Event[P]`; every other parameter is
   resolved by its annotation — an extractor value or a dependency (mechanism in #16) — never by
   name. No `**kwargs`. A parameter nothing can provide is a start-up error (fail closed).
-  Synchronous handlers are accepted and run in a thread pool (ADR-0004).
+  A synchronous Handler is accepted only by an explicit `sync_to_thread` declaration and runs in
+  the Sync executor (ADR-0030).
 - Filters, extractors and their composition render as data for `HandlerSpec` (ADR-0013).
 
 ## Considered options

@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#20"
+amended-by: [ADR-0036]
 ---
 
 # Interactive callbacks are events with a payload-bound reply channel; the webhook plugin is a bare ASGI callable; authenticity is a default-on self-issued HMAC token with no expiry unless configured
@@ -17,7 +18,8 @@ non-200 into a user-visible error; field errors of a dialog are expressible only
   (ADR-0012). The only difference is `meta.reply`: present and typed for webhook-delivered
   events, absent otherwise. Every mature peer with two transports funnels callbacks into one
   dispatch entry; hikari's split pays with two programming models.
-- **Reply channel.** The reply type is bound to the payload — `ActionReply(update,
+- **Reply channel.** The reply type is the Event's second type parameter, bound to the payload
+  (ADR-0036) — `ActionReply(update,
   ephemeral_text, skip_slack_parsing, goto_location)`, `DialogReply(errors, error, form)` — and is
   sent at most once. A handler that does not reply, an `Unhandled` walk or a `Failed` outcome all
   produce an **empty 200**; never 404, 202 or 5xx. The reply **deadline defaults to 10 s**

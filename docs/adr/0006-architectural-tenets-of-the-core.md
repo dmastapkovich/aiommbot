@@ -40,10 +40,10 @@ component document must argue against, in this order of authority:
 - `docs/design/engineering-style.md` (#36) turns these tenets into rules with examples; every LLD
   has a SOLID section that argues them for its component.
 
-## Amended by #36 on 2026-09-07: where inheritance is allowed
+## Where inheritance is allowed
 
-Tenet 1 said what inheritance is not for and left open where it is still the right tool. The
-boundary, written as rules in [`engineering-style.md`](../design/engineering-style.md) §3:
+Tenet 1 says what inheritance is not for; where it remains the right tool is bounded as follows,
+written as rules in [`engineering-style.md`](../design/engineering-style.md) §3:
 
 - **A Protocol expresses a seam**; the fourteen Protocols on the twelve seam rows of the
   building-block view §5.4 are the only substitution points, and nothing in the Core imports an

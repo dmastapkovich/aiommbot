@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#16"
+amended-by: [ADR-0030]
 ---
 
 # Handler parameters resolve from extractors first, then providers; the Core injects a minimal built-in set and never the Bot; overrides exist only in the testing toolkit
@@ -24,8 +25,9 @@ and dependencies. The rules:
 - **Overrides only in tests.** `aiommbot.testing` offers a typed override by key
   (`TestBot(bot).override(Storage, FakeStorage())`) that re-validates the graph; production code
   has no override API — a different implementation is composed with a different plugin.
-- **Execution.** Providers are asynchronous by preference or cheap synchronous constructions;
-  blocking synchronous work is the author's responsibility to move off the loop and is caught by
+- **Execution.** Providers are coroutine functions or cheap synchronous constructions; a
+  blocking synchronous Provider declares `sync_to_thread` and runs in the Sync executor
+  (ADR-0030), and an undeclared one is caught by
   the `ASYNC` lint rules. Event-scoped values are created on first request within an event and
   reused by middleware and the handler; clean-up runs in reverse order under an exit stack even
   when the handler raises.

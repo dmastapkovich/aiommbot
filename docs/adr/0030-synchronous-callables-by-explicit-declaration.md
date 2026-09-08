@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-04
 ticket: "#22"
+amends: [ADR-0014, ADR-0019, ADR-0023]
 ---
 
 # A Handler or Provider may be synchronous only by an explicit `sync_to_thread` declaration and runs in the Bot's own bounded executor; Filters and Extractors run inline; everything else the framework calls is a coroutine function
