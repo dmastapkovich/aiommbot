@@ -1,46 +1,43 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Tickets live as GitHub issues in this repository; the map is issue #1. Reads use the `gh issue`
+commands; **every write goes through `gh api`**, one command per call, with multi-line bodies
+drafted into a file first.
 
-## Conventions
+## Reads
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+- One ticket with its comments: `gh issue view <n> --comments`.
+- The open frontier: `gh issue list --state open --json number,title,labels,assignees`.
+- The map: `gh issue view 1`.
 
-Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
+## Writes
 
-## Pull requests as a triage surface
+`<owner>/<repo>` is `dmastapkovich/aiommbot`. `<db-id>` is an issue's numeric database id
+(`gh api repos/<owner>/<repo>/issues/<n> --jq .id`), not its `#number`.
 
-**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
+| Action | Command |
+|---|---|
+| Create a ticket | `gh api repos/<owner>/<repo>/issues -f title="…" -F body=@body.md -f 'labels[]=wayfinder:<type>'` |
+| Make it a child of the map | `gh api --method POST repos/<owner>/<repo>/issues/1/sub_issues -F sub_issue_id=<db-id>` |
+| Block it on another ticket | `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>` |
+| Claim | `gh api --method PATCH repos/<owner>/<repo>/issues/<n> -f 'assignees[]=<login>'` |
+| Comment | `gh api --method POST repos/<owner>/<repo>/issues/<n>/comments -F body=@comment.md` |
+| Close | `gh api --method PATCH repos/<owner>/<repo>/issues/<n> -f state=closed -f state_reason=completed` |
+| Edit the map body | `gh api --method PATCH repos/<owner>/<repo>/issues/1 -F body=@map.md` |
 
-When set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:
+## Wayfinding vocabulary
 
-- **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.
-- **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).
-- **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.
-
-GitHub shares one number space across issues and PRs, so a bare `#42` may be either — resolve with `gh pr view 42` and fall back to `gh issue view 42`.
-
-## When a skill says "publish to the issue tracker"
-
-Create a GitHub issue.
-
-## When a skill says "fetch the relevant ticket"
-
-Run `gh issue view <number> --comments`.
-
-## Wayfinding operations
-
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
-
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
-- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`/`lld`). Once claimed, the ticket is assigned to the driving dev.
-- **LLD ticket**: `wayfinder:lld`, one per component of §5.10 of the building-block view, titled `LLD: <component>`. It writes `docs/design/components/<term>.md` from `_template.md` and is run with the `lld-author` skill rather than `design-session`. Its `blocked_by` edges are the writing order of [ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md) and are the source of truth for the `Wave` column of `docs/design/components/README.md`.
-- **Blocking**: GitHub's **native issue dependencies** — the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only — the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.
-- **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
-- **Claim**: `gh issue edit <n> --add-assignee @me` — the session's first write.
-- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+- **Map**: the single issue labelled `wayfinder:map`, holding Destination, Notes, Decisions so far,
+  Not yet specified and Out of scope.
+- **Ticket**: a sub-issue of the map with one `wayfinder:<type>` label — `research`, `grilling`,
+  `prototype`, `task` or `lld`. An `lld` ticket is titled `LLD: <component>`, one per component of
+  §5.10 of the building-block view; it writes `docs/design/components/<term>.md` and its
+  `blocked_by` edges are the writing order of
+  [ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
+  from which the *Wave* column of `docs/design/components/README.md` is derived.
+- **Blocking**: GitHub's native issue dependencies. `issue_dependencies_summary.blocked_by` counts
+  open blockers; a ticket is unblocked when it is zero.
+- **Frontier**: the open sub-issues of the map with no open blocker and no assignee, in map order.
+- **Claim**: the assignee. An open, unassigned ticket is unclaimed; the claim is the session's first
+  write.
+- **Resolve**: a `## Resolution` comment, then close, then the map line under *Decisions so far*.

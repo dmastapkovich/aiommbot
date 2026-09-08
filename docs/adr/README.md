@@ -1,9 +1,11 @@
 # Architecture decision records
 
-One decision per file, numbered in order of acceptance, never rewritten: a changed mind is a new
-ADR that supersedes the old one. Format and triggers: [`_template.md`](_template.md). ADRs are
-produced by wayfinder tickets; the map (#1) and `docs/design/TRACKER.md` §B list which ticket owns
-which decision.
+One decision per file, numbered in order of acceptance. An ADR always states the current decision:
+a later decision that changes it rewrites it in the same commit, and the two link each other through
+`amends` / `amended-by`; a decision withdrawn in full retires its file, and its number stays below
+with a pointer to the ADRs that replaced it. Format and triggers: [`_template.md`](_template.md).
+ADRs are produced by wayfinder tickets; the map (#1) and `docs/design/TRACKER.md` §B list which
+ticket owns which decision.
 
 | ADR | Decision | Status |
 |---|---|---|

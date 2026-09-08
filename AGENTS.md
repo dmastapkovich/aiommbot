@@ -12,13 +12,17 @@ one node richer. The deliverable of this phase is documentation; code starts on 
 
 ## Warm-up, in order
 
-1. `docs/agents/context-brief.md` — what is settled, what the research found, how the maintainer
-   works. Everything a fresh session needs to sound like the previous one.
+1. `docs/agents/context-brief.md` — what is settled and how the maintainer works. Everything a
+   fresh session needs to sound like the previous one.
 2. `gh issue view 1` — the map: Destination, Notes, Decisions so far, fog, out of scope.
 3. `docs/design/TRACKER.md` — readiness of every document the catalogue must contain. Nothing is
    done until its row says so.
 4. `docs/agents/session-playbook.md` — the steps for the ticket type you are about to work.
 5. `docs/agents/design-quality-checklist.md` — the bar a reviewed document must clear.
+6. The ticket (`gh issue view N --comments`) and the resolution comments of every closed ticket it
+   was blocked by, then the ADRs and research notes those resolutions name.
+
+Every other document that describes the warm-up points here instead of repeating the list.
 
 ## Where things live
 
@@ -31,7 +35,7 @@ one node richer. The deliverable of this phase is documentation; code starts on 
 | Engineering style rulebook | `docs/design/engineering-style.md` | style ticket |
 | Diagram conventions | `docs/design/diagrams.md` | fixed |
 | Research findings | `docs/research/NN-*.md` | research tickets |
-| Documentation standard (types, naming, linking, status, discovery protocol) | `docs/documentation-style.md` | fixed |
+| Documentation standard (types, naming, status, linking, target-state rule, discovery protocol) | `docs/documentation-style.md` | fixed |
 | Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
 | Tracker conventions | `docs/agents/issue-tracker.md`, `docs/agents/domain.md` | fixed |
@@ -39,19 +43,37 @@ one node richer. The deliverable of this phase is documentation; code starts on 
 
 ## Standing rules
 
-- One ticket per session, claimed (`gh issue edit N --add-assignee @me`) before any work.
-  Research tickets are the exception and may run in parallel as background agents.
+- **Five ticket types, by label:** `wayfinder:research`, `wayfinder:grilling`, `wayfinder:prototype`,
+  `wayfinder:task`, `wayfinder:lld`. The playbook has a section per type; the `design-session` skill
+  runs every type and, for an LLD ticket, hands its *Resolve* step to the `lld-author` skill.
+- One ticket per session, claimed before any work. Research tickets are the exception and may run
+  in parallel as background agents.
+- **Target state only.** A document says what the design is, never what it was. A changed decision
+  rewrites the document it changes in the same commit; nothing refers to a predecessor code base,
+  an internal deployment or bot, a local path, or compatibility with anything outside this
+  repository. Evidence from such sources may inform the session and is never written down. Git is
+  the history (`docs/documentation-style.md` §9).
+- **No junk.** No placeholders, no "TBD", no dated amendment sections, no workaround notes, no
+  copy of a rule that lives elsewhere. If a document cannot be finished, its status line says
+  `in progress (#N)` and the ticket says why.
 - Decisions live in exactly one place — their ADR. The map, the tracker and the arc42 sections
-  link to it and never restate it. Vocabulary uses `CONTEXT.md` terms with no synonyms.
-- Every resolution is one commit: ADR + `CONTEXT.md` + arc42/LLD section + `TRACKER.md` row +
-  research links, Conventional Commits message referencing the issue. The maintainer has approved
+  link to it with a one-sentence gist and never restate it. Vocabulary uses `CONTEXT.md` terms with
+  no synonyms; the glossary wins over every other document, titles included.
+- Every grilling, prototype, LLD and task resolution is **one commit**: ADR + `CONTEXT.md` +
+  arc42/LLD section + `TRACKER.md` row + research links, message `docs(<area>): <what was decided>
+  (#N)`. A research ticket commits one note plus its index row. The maintainer has approved
   committing and pushing **documents** to `main` for this effort; anything else needs a fresh yes.
+- Verify against the checklist **before** the commit that sets a status; push after.
 - English in everything committed and in issues. The maintainer converses in Russian; questions to
-  them are asked in Russian, interactively, a few at a time, each with a recommended answer first.
+  them are asked in Russian, interactively, in rounds of at most four, each with the recommended
+  answer first.
 - Quality by mechanism, not by memory: patterns are named as on refactoring.guru with the rejected
   alternative, SOLID is argued per component, diagrams are C4 in Mermaid, and a document is
   *reviewed* only when the checklist says so.
-- Never commit secrets or personal data; never paste tokens, cookies or private URLs into issues.
+- Never commit secrets or personal data; never paste tokens, cookies, private URLs or local paths
+  into documents or issues.
+- GitHub writes go through `gh api`, one command per call; the exact forms are in
+  `docs/agents/issue-tracker.md`. If a write is blocked, hand the maintainer the exact command.
 - Anything the design did not foresee goes through the discovery protocol in
   `docs/agents/session-playbook.md` — one home per finding, current ticket unchanged.
 

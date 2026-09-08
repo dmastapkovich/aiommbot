@@ -1,8 +1,8 @@
 # <Component name>
 
-_Status: not started | in progress (#ticket) | reviewed._
-_Layer: core | adapter | plugin | testing._
-_ADRs: ADR-XXXX, ADR-YYYY. Research: `docs/research/NN`._
+_Status: not started (#N)._
+_Layer: Core | Adapter | Generic plugin | Adapter-specific plugin | Testing toolkit._
+_ADRs: [ADR-NNNN](../../adr/NNNN-slug.md). Research: [`docs/research/NN`](../../research/NN-slug.md)._
 
 ## 1. Purpose and boundaries
 
@@ -43,19 +43,21 @@ stating honestly where and why it is bent.
 
 ## 8. Failure modes and invariants
 
-Invariants that must always hold; what happens on timeout, cancellation, dependency outage, bad
-input, concurrent use; what is logged (never message text, tokens or PII) and what is surfaced to
-observability.
+Invariants that must always hold. What happens on timeout, cancellation, dependency outage, bad
+input and concurrent use — each named as a typed outcome or an exception, with the boundary that
+converts it — and what is surfaced to observability.
 
-## 9. Typing and async rules
+## 9. Rules that bind this component
 
-Generics, Protocols, `Final`s, sentinel handling; blocking calls forbidden; how cancellation is
-handled; sync face (if any) and how it is produced.
+The `ST-<AREA>-NN` identifiers of [`engineering-style.md`](../engineering-style.md) §12.1 that
+constrain this component's typing, async behaviour, errors, naming, layout, logging and
+documentation, each with the one sentence that says how it applies *here*. Cite; never restate.
 
 ## 10. Testing strategy
 
-Unit, contract (shared suites for pluggable implementations), integration (mock server / in-memory
-transport), property-based where invariants are compact, typing tests for the public contract.
+The `ST-TST-*` rules that apply and what is specific here: the conformance suite this component
+ships or passes, the doubles it needs, the typing tests of its public contract, the properties worth
+a property-based test.
 
 ## 11. Open questions
 

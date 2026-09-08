@@ -10,45 +10,46 @@ diagram renders on GitHub, is reviewed in pull requests and is diffed like code.
 
 ## Map of the catalogue
 
-| arc42 section | File | Owning ticket(s) |
+| arc42 section | File | Owning ticket |
 |---|---|---|
-| 1. Introduction and goals | [`01-introduction-and-goals.md`](01-introduction-and-goals.md) | Solution design: goals, constraints, quality scenarios |
-| 2. Constraints | [`02-constraints.md`](02-constraints.md) | same |
-| 3. Context and scope | [`03-context-and-scope.md`](03-context-and-scope.md) | HLD: context, containers and components |
-| 4. Solution strategy | [`04-solution-strategy.md`](04-solution-strategy.md) | Core ideology; Plugin model; HLD |
-| 5. Building block view | [`05-building-block-view.md`](05-building-block-view.md) | HLD: context, containers and components |
-| 6. Runtime view | [`06-runtime-view.md`](06-runtime-view.md) | HLD: runtime views |
-| 7. Deployment view | [`07-deployment-view.md`](07-deployment-view.md) | HLD: deployment and cross-cutting concepts |
-| 8. Cross-cutting concepts | [`08-cross-cutting-concepts.md`](08-cross-cutting-concepts.md) | same, plus the boundary tickets |
-| 9. Architecture decisions | [`../adr/`](../adr/) | every grilling ticket |
-| 10. Quality requirements | [`10-quality-requirements.md`](10-quality-requirements.md) | Solution design: goals, constraints, quality scenarios |
-| 11. Risks and technical debt | [`11-risks-and-technical-debt.md`](11-risks-and-technical-debt.md) | Solution design: risk register |
-| 12. Glossary | [`../../CONTEXT.md`](../../CONTEXT.md) | maintained inline by every ticket |
-| Engineering style and ideology | [`engineering-style.md`](engineering-style.md) | Engineering style and ideology |
-| Diagram conventions | [`diagrams.md`](diagrams.md) | Documentation foundation (this task) |
-| Component design documents (LLD) | [`components/`](components/) | one `LLD: <component>` ticket each |
+| 1. Introduction and goals | [`01-introduction-and-goals.md`](01-introduction-and-goals.md) | #37 |
+| 2. Constraints | [`02-constraints.md`](02-constraints.md) | #37 |
+| 3. Context and scope | [`03-context-and-scope.md`](03-context-and-scope.md) | #38 |
+| 4. Solution strategy | [`04-solution-strategy.md`](04-solution-strategy.md) | #38 |
+| 5. Building block view | [`05-building-block-view.md`](05-building-block-view.md) | #38 |
+| 6. Runtime view | [`06-runtime-view.md`](06-runtime-view.md) | #39 |
+| 7. Deployment view | [`07-deployment-view.md`](07-deployment-view.md) | #40 |
+| 8. Cross-cutting concepts | [`08-cross-cutting-concepts.md`](08-cross-cutting-concepts.md) | #40 |
+| 9. Architecture decisions | [`../adr/`](../adr/README.md) | every grilling ticket |
+| 10. Quality requirements | [`10-quality-requirements.md`](10-quality-requirements.md) | #37 |
+| 11. Risks and technical debt | [`11-risks-and-technical-debt.md`](11-risks-and-technical-debt.md) | #42 |
+| 12. Glossary | [`../../CONTEXT.md`](../../CONTEXT.md) | every ticket |
+| Engineering style and ideology | [`engineering-style.md`](engineering-style.md) | #36 |
+| Diagram conventions | [`diagrams.md`](diagrams.md) | #35 |
+| Component design documents (LLD) | [`components/`](components/README.md) | one `LLD: <component>` ticket each |
 
-Each file starts with a status line: `Status: not started | in progress (#ticket) | reviewed`.
-
-Readiness of every document, decision area, component and cross-cutting concern is tracked in
-[`TRACKER.md`](TRACKER.md); update it in the same commit as the document it describes.
+Status lines follow [`../documentation-style.md`](../documentation-style.md) §3. Readiness of every
+document, decision area, component and cross-cutting concern is tracked in [`TRACKER.md`](TRACKER.md);
+update it in the same commit as the document it describes.
 
 ## How the catalogue grows
 
 1. A wayfinder grilling ticket resolves a decision → an ADR is written and the relevant arc42
    section is updated in the same commit.
-2. When the building-block view is settled, every component listed there gets its own
-   `LLD: <component>` ticket and a file in `components/` created from
-   [`components/_template.md`](components/_template.md).
-3. A component document is *reviewed* only when every section of the template is filled, its
-   diagrams agree with the building-block and runtime views, and it links to the ADRs it depends on.
-4. The hand-off ticket checks the whole catalogue for contradictions before implementation starts.
+2. Every component of the building-block view has an `LLD: <component>` ticket and a file in
+   `components/` created from [`components/_template.md`](components/_template.md).
+3. A component document is *reviewed* only when
+   [`../agents/design-quality-checklist.md`](../agents/design-quality-checklist.md) says so.
+4. The hand-off ticket (#33) checks the whole catalogue for contradictions before implementation
+   starts.
 
 ## Rules
 
 - **Design before code.** No implementation module exists without a reviewed component document.
 - **One truth per fact.** A decision lives in its ADR; the catalogue links to it and never restates
   it. Vocabulary lives in `CONTEXT.md`; the catalogue uses those terms and no synonyms.
+- **Target state only.** Every document says what the design is; a changed decision rewrites the
+  documents it touches ([`../documentation-style.md`](../documentation-style.md) §9).
 - **Patterns are named.** When a component applies a design pattern, name it as
   [refactoring.guru](https://refactoring.guru/design-patterns/catalog) does and say *why* it is
   the right fit here and which alternative was rejected.
