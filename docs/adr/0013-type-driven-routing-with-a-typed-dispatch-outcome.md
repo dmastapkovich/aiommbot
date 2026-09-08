@@ -20,7 +20,7 @@ the router, and introspectable as data (ADR-0006, idea #34). We decided:
   ends the walk. There are no numeric priorities: order is local to the code that declares it.
 - **Typed dispatch outcome.** Dispatch returns `Handled | Unhandled`, not sentinel objects. An
   unhandled event completes quietly — a bot receives hundreds of server events it does not care
-  about — but passes through an observability hook carrying the event name and never its
+  about — but passes through the Observability seam carrying the event name and never its
   content. A fallback is an ordinary handler without filters registered last. A handler may
   raise `Skip` to let the walk continue with the next candidate; this is documented as the rare
   exception it is.
@@ -41,4 +41,4 @@ the router, and introspectable as data (ADR-0006, idea #34). We decided:
 - *Numeric priorities* — rejected: they make order non-local and are the usual source of "why
   did this handler fire" bugs.
 - *Pub/sub, all matching handlers run (hikari)* — rejected: a chat message deserves one answer.
-- *`UNHANDLED`/`REJECTED` sentinels* — rejected in favour of a typed result object.
+- *`UNHANDLED`/`REJECTED` sentinels* — rejected in favour of a Typed outcome.

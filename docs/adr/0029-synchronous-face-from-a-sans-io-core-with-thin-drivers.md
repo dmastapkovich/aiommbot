@@ -5,7 +5,7 @@ ticket: "#22"
 amends: [ADR-0026, ADR-0028]
 ---
 
-# The synchronous face covers only the API client and an Event-free `Workspace`, and is produced by a sans-I/O core with two thin drivers instead of async-to-sync code generation
+# The synchronous Face covers only the API client and an Event-free `Workspace`, and is a thin I/O layer over a sans-I/O Exchange instead of async-to-sync code generation
 
 A synchronous mirror of the whole Runtime is a hand-mirrored facade over a background thread that
 owns its own event loop: `future.result()` without a timeout, no cancellation, a thread that does
@@ -18,7 +18,7 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 `test_async_loop_safety`) name exactly the semantics that do not survive unasyncing. We decided:
 
 - **Two surfaces get a synchronous face, and no others.** `SyncMattermostClient` (ADR-0026) and
-  `SyncWorkspace`. The bare name stays asynchronous, the `Sync` prefix marks the twin.
+  `SyncWorkspace`. The bare name stays asynchronous, the `Sync` prefix marks the synchronous Face.
 - **`Workspace` is the Event-free layer, split out of the Runtime.** It is a public, independently
   constructible object holding `send(channel_id, ...)`, `send_direct(UserRef, ...)`, `ephemeral`,
   `upload`, `download`, `users.resolve` and `channels.direct`. The `Runtime` composes it and keeps
@@ -28,9 +28,9 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
   `SyncWorkspace.send_direct`, not three API calls.
 - **No async-to-sync tool enters the toolchain.** `Operation` descriptors are pure data with no
   face at all; the spec generator (ADR-0025) emits the resource methods for *both* faces, which
-  costs it nothing; the retry decision, the error mapping and the pagination advance are sans-I/O
-  pure functions tested once (ADR-0006); what remains per face is a thin driver — build the
-  request, send it, parse the response — because httpx2 shares `build_request`, `Request` and
+  costs it nothing; the retry decision, the error mapping and the pagination advance form the Exchange — sans-I/O
+  pure functions tested once (ADR-0006); what remains per Face is thin I/O — build the request,
+  send it, parse the response — because httpx2 shares `build_request`, `Request` and
   `Response` between its faces and its two client method sets differ only in `close`/`aclose`,
   `read`/`aread`, `iter_*`/`aiter_*` and the context-manager dunders.
 - **`SyncHTTPTransport` is a paired Core Protocol.** `HTTPTransport` exists as insurance against the
@@ -74,7 +74,6 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 
 ## Consequences
 
-- The Adapter carries two thin drivers that must stay in step; the parity test and the shared
+- The Adapter carries two Faces that must stay in step; the parity test and the shared
   conformance suite are what keep them honest.
-- The `Workspace` component and the two drivers each need a design document from the LLD inventory
-  (#41), and the conformance and parity suites belong to the testing toolkit (#25).
+- The `Workspace`, the Exchange and the Face each have a design document in the LLD inventory, and the conformance and parity suites belong to the testing toolkit (#25).

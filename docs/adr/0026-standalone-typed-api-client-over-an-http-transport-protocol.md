@@ -33,7 +33,7 @@ for token, aiohttp has no sync face and niquests rewrites the host application's
   spec operation — method, path template, parameter names, request and response types, flags from
   the overlay — and resource groups by spec tag with `operationId` in snake case:
   `client.posts.create(...)`, `client.users.get(user_id)`. Every method is one line over its
-  descriptor executed by a single hand-written executor. `Operation` is public and
+  descriptor executed by the Exchange through a Face. `Operation` is public and
   user-constructible: a server-plugin endpoint (`/plugins/<id>/...`) is declared as a typed
   `Operation` and run through `client.execute(op, ...)`, gaining auth, retries, observers and the
   error taxonomy. There is no raw `request(method, url)`.

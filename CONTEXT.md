@@ -73,17 +73,23 @@ Handler's parameters from its Resolution plan and returns the Outcome to the Tra
 routing rules of its own.
 _Avoid_: engine, event loop, pipeline, handler runner
 
+**Dispatch concurrency**:
+The number of Events the Dispatcher processes at once — the consumer coroutines the Bot runs over
+the Transport's bounded queue. A setting of the Bot; the Sync executor's size is checked against it
+at start.
+_Avoid_: worker count (workers are processes), workers (for coroutines), pool size, parallelism
+
 **Sync executor**:
 The Bot's own bounded thread pool, the only place a declared synchronous Handler or Provider runs.
-Its size is a setting checked against the transport's worker count; at drain the wait is dropped
+Its size is a setting checked against the Dispatch concurrency; at drain the wait is dropped
 and the thread abandoned with a `HandlerAbandoned` Signal, so such a Handler must be idempotent.
-_Avoid_: thread pool (bare), worker pool (workers are processes), executor (that is the API
-client's Operation executor), offloading
+_Avoid_: thread pool (bare), worker pool (workers are processes), executor (bare), offloading
 
 **Event**:
-The immutable generic envelope `Event[P]` the Core dispatches: the platform event name (`kind`),
-a typed `payload`, and `meta` (transport, receive time, correlation id, sequence, raw data, optional
-reply channel). The Core knows the envelope, never a concrete payload.
+The immutable generic envelope `Event[P, R]` the Core dispatches: the platform event name (`kind`),
+a typed `payload: P`, and `meta` (transport, receive time, correlation id, sequence, raw data, the
+optional Reply channel accepting `R`, `Never` by default). `derive` is the only way to obtain an
+enriched copy. The Core knows the envelope, never a concrete payload.
 _Avoid_: request, update, message (as the generic term), incoming
 
 **EventMeta**:
@@ -163,6 +169,11 @@ The typed result of dispatching an Event: `Handled`, `Unhandled`, or `Failed(err
 ErrorBoundary. Returned by `call_next` and by the dispatcher to the Transport, which reacts to it.
 _Avoid_: result, response, status
 
+**Skip**:
+The exception a matched Handler raises to decline the Event after all, so the Router walk continues
+with the next candidate. The rare escape; a Filter is the normal way to decline.
+_Avoid_: fallthrough, pass, `NoMatch` (that is an Extractor's outcome), next handler
+
 **Typed outcome**:
 The general shape the Outcome is one instance of: a closed union of frozen, domain-named values a
 component returns when its immediate caller must branch on the result in normal operation — an
@@ -191,6 +202,12 @@ _Avoid_: route match, target, handler context
 The non-removable outermost Middleware of the Core. Catches `Exception`, logs without payload,
 reports to observability, returns `Failed`. Lets `BaseException` and `FatalError` through.
 _Avoid_: error handler, exception middleware, catch-all
+
+**Observability seam**:
+The Core-owned Protocol through which the Dispatcher and the ErrorBoundary report dispatch facts —
+the event name of an `Unhandled` walk, the error class of a `Failed` outcome, timings — to whatever
+the application registered; nothing is registered by default. Its record shape is decided in #29.
+_Avoid_: observability hook, metrics hook, telemetry, instrumentation, tracer
 
 **HandlerSpec**:
 The frozen record built when a Handler is registered: name, router path, event kind, filters and
@@ -254,7 +271,8 @@ _Avoid_: event isolation (that is the middleware using it), mutex, semaphore
 The typed, single-use response slot in `meta.reply` of a webhook-delivered Event, typed by the Core
 Protocol `ReplyChannel[R]` and parametrised by the Event's second type parameter: `ActionReply` for
 an InteractiveAction, `DialogReply` for a DialogSubmission. Unused by the deadline, it sends an
-empty 200 and later sends yield `ReplyAlreadySent`.
+empty 200 and later sends yield `ReplyAlreadySent`. *Reply slot* names the position in `EventMeta`
+the channel occupies.
 _Avoid_: response (bare), ack (that is the default reply), HTTP response
 
 **Callback token**:
@@ -280,7 +298,7 @@ tells the user the action has expired and disables the buttons.
 _Avoid_: stale callback, dead button, timeout (bare)
 
 **Resync**:
-The moment the server hands the gateway a fresh `connection_id` after an unrecoverable gap: buffered
+The moment the server hands the WebSocketTransport a fresh `connection_id` after an unrecoverable gap: buffered
 events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the loss window so a
 plugin or the application can backfill over REST.
 _Avoid_: reconnect (that may resume without loss), full sync, catch-up (bare)
@@ -288,7 +306,7 @@ _Avoid_: reconnect (that may resume without loss), full sync, catch-up (bare)
 **WebSocketConnection**:
 The Core Protocol at the level of one socket — connect with headers, query, TLS and proxy;
 `receive(timeout)`; `send_text`; `ping`; `close(code)`; four typed error kinds — behind which the
-gateway logic runs. `websockets` is the shipped implementation, `picows` an extra.
+WebSocketTransport runs. `websockets` is the shipped implementation, `picows` an extra.
 _Avoid_: socket, websocket client, connection (bare), transport (that is the Plugin)
 
 **AuthLossDetector**:
@@ -310,7 +328,7 @@ _Avoid_: FSM plugin, context storage, session
 
 **API client**:
 The typed, standalone Mattermost REST client of the Adapter — `MattermostClient` and its
-synchronous twin `SyncMattermostClient` — with one resource group per spec tag and one method per
+synchronous Face `SyncMattermostClient` — with one resource group per spec tag and one method per
 Operation. Knows nothing of Bot or Event; a script constructs it directly.
 _Avoid_: SDK, driver, HTTP client (that is the transport), ApiManager
 

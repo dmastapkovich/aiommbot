@@ -54,7 +54,7 @@ C4Container
     System_Ext(mm, "Mattermost server", "Events, REST API, callbacks")
     Container_Boundary(deployment, "One bot account") {
         Container(consumer, "WebSocket consumer", "Python process", "Exactly one. WebSocketTransport plugin; ProcessProfile.websocket_consumer")
-        Container(ingress, "Webhook ingress", "Python process x N", "Webhook plugin behind an ASGI server the application runs")
+        Container(ingress, "Webhook process", "Python process x N", "Webhook plugin behind an ASGI server the application runs")
         Container(worker, "Worker or script", "Python process x N", "No Transport. Uses Workspace or SyncWorkspace")
     }
     ContainerDb_Ext(redis, "State store", "Redis", "Conversation state, isolation locks, nonces, identity cache")
@@ -71,7 +71,7 @@ C4Container
 | Container | Responsibility | Composition | Replicates |
 |---|---|---|---|
 | WebSocket consumer | Holds the one long-lived socket, decodes events, dispatches them | `WebSocketTransport` in the plugin list, `websocket_consumer=True` | no — a second replica is a standby behind a `LockProvider` lease |
-| Webhook ingress | Serves interactive callbacks within the reply deadline | `Webhook` in the plugin list; the application's ASGI server hosts it | yes, behind a load balancer |
+| Webhook process | Serves interactive callbacks within the reply deadline | `Webhook` in the plugin list; the application's ASGI server hosts it | yes, behind a load balancer |
 | Worker or script | Acts on Mattermost with no inbound events | no Transport at all; `Workspace` or `SyncWorkspace` | yes |
 
 All three collapse into one process in the all-in-one shape; which shape to run, and the
@@ -296,8 +296,8 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
-| **WebSocketTransport** | component | The gateway: one reconnect loop with a `TaskGroup` per connection, the transient/resumable/fatal exit table, heartbeat and silence monitor, full-jitter backoff, resume with sequence continuity, a reader that never stalls, the graceful drain, the single-consumer declaration and optional lease | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
-| The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the drain, the `websockets`/`picows` bindings, the gateway Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s drain, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| **WebSocketTransport** | component | One reconnect loop with a `TaskGroup` per connection, the transient/resumable/fatal exit table, heartbeat and silence monitor, full-jitter backoff, resume with sequence continuity, a reader that never stalls, the graceful drain, the single-consumer declaration and optional lease | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
+| The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the drain, the `websockets`/`picows` bindings, the Transport's Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s drain, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | Resync backfill | part, **open** | Recovering the loss window a `Resynced(since)` Signal reports. ADR-0023 leaves first-party plugin versus documented recipe undecided; a ticket owns the choice before #41 can give it a document | — | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | **Webhook** | component | `webhook_app(bot) -> ASGIApp` and `handle_callback`, the payload-bound single-use Reply channel with its 10 s deadline and empty-200 default, verification before an Event exists, the 1 MiB reply cap, the logging rules | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | The Reply channel (`ActionReply`, `DialogReply`, `ReplyAlreadySent`), `StaleAction` | part | The typed reply slot bound to the payload, and the routable event an expired or replayed token produces | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
@@ -316,7 +316,7 @@ so #41 creates its design documents only after #25 closes.
 |---|---|---|---|
 | **Testing toolkit** | component | — | #25 |
 | In-memory `HTTPTransport`/`SyncHTTPTransport` double, both faces in one class | part | the parametrised conformance suite of both client Faces | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| In-memory `WebSocketConnection` connector | part | the contract suite both gateway libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| In-memory `WebSocketConnection` connector | part | the contract suite both socket libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, `ReplyChannel`, plugin lifecycle | part | external storage backends, third-party plugins, and the one provided seam | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | Recording `ReplyChannel` slot | part | the second implementation of the provided seam, and the suite that is parametrised over both | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | `TestBot` with typed overrides by key | part | the only override API that exists — production has none | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |

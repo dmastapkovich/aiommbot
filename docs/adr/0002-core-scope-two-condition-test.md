@@ -22,7 +22,7 @@ extra or a documented recipe over an ecosystem library; placement per capability
 Consequences fixed with the same decision:
 
 - **Core refuses**: knowing Mattermost; scheduling; implementing metrics or tracing (it exposes
-  hooks only); retries, dead-letter, circuit breaking; any storage backend other than in-memory;
+  the Observability seam only); retries, dead-letter, circuit breaking; any storage backend other than in-memory;
   running an HTTP server (the webhook Plugin exposes an ASGI application for any server);
   selecting an event loop; a CLI framework (the CLI is an extra on typer; the Core offers
   `bot.run()`).

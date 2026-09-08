@@ -6,7 +6,7 @@ amends: [ADR-NNNN]        # optional: ADRs this decision rewrites
 amended-by: [ADR-NNNN]    # optional: ADRs that rewrote this one
 ---
 
-# <One decision stated as a sentence; a semicolon means two ADRs>
+# <One decision stated as a sentence; a decision that could be revisited on its own is another ADR>
 
 <One to three sentences: the context, what we decided, and why. Present tense; the current
 decision only. Link every ADR and research note you rely on; never restate them.>

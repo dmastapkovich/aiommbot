@@ -46,7 +46,7 @@ decided the following model
 - *Single layer around the handler* — rejected: dedup and state isolation must also cover events
   that match nothing.
 - *`(handler, event, data)` functions* — rejected: untyped dictionary (ADR-0006, ADR-0014).
-- *Phase hooks (before/after/on_error) without wrapping* — rejected: cannot wrap a call in a
+- *Phase callbacks (before/after/on_error) without wrapping* — rejected: cannot wrap a call in a
   timeout, lock or retry.
 - *Numeric priorities* — rejected as for handlers (ADR-0013).
 - *Free mutation of payloads* — rejected: handlers must trust what they receive.

@@ -41,7 +41,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Core scope: what the bare core owns and refuses | #13 | 0002 | reviewed |
 | Stateless core; State plugin with mandatory backend | #13 (→ #18) | 0003 | reviewed |
 | Execution model boundary: one asyncio engine, a narrow synchronous Face | #13 (→ #22) | 0004 retired → 0029, 0030, 0031 | reviewed |
-| Scaling model: one ingress, many workers | #13 (→ #19, #40) | 0005 | reviewed |
+| Scaling model: one consumer, many workers | #13 (→ #19, #40) | 0005 | reviewed |
 | Architectural tenets: composition, Core-owned Protocols, named patterns, typing, fail closed | #13 (→ #36) | 0006 | reviewed |
 | Public API surface: tiny root + explicit subpackages | #13 (→ #24, #36) | 0007 | reviewed |
 | Plugin contract, adapter role, ordering, settings, discovery, stability | #14 | 0015 | reviewed |
@@ -58,16 +58,16 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | State/FSM, event isolation, storage contract, first-party backends, lifetime | #18 | 0022 | reviewed |
 | Declarative scenes on top of State | #48 | | not started |
 | Resync backfill: first-party plugin or documented recipe | #55 | | not started |
-| WebSocket gateway resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
-| Webhook ingress: events + reply channel, bare ASGI, callback authenticity, replay policy | #20 | 0024 | reviewed |
+| WebSocketTransport resilience (reconnect, resume, heartbeat, backpressure, drain, auth loss, library) | #19 | 0023 | reviewed |
+| Webhook: events + reply channel, bare ASGI, callback authenticity, replay policy | #20 | 0024 | reviewed |
 | Mattermost API layer: generated dataclass models, Codec Protocol, server version policy | #21 | 0025 | reviewed |
 | Standalone typed API client: HTTPTransport, httpx2, Operation descriptors, pagination, retries, faces | #21 | 0026 | reviewed |
 | API error taxonomy | #21 | 0027 | reviewed |
 | Runtime helpers, identity resolution, IdentityCache plugin | #21 | 0028 | reviewed |
 | Message composition: attachment, button, select and dialog builders embedding Callback tokens | graduated from #21 (ticket pending) | | not started |
 | File API ergonomics: limits, resumable uploads, streaming | graduated from #21 (ticket pending) | | not started |
-| Execution model: sync face scope, `Workspace` split, thin drivers instead of codegen | #22 | 0029 | reviewed |
-| Synchronous callables: `sync_to_thread`, own executor, abandon at drain | #22 | 0030 | reviewed |
+| Execution model: sync face scope, `Workspace` split, thin Faces instead of codegen | #22 | 0029 | reviewed |
+| Synchronous callables: `sync_to_thread`, Sync executor, abandon at drain | #22 | 0030 | reviewed |
 | Concurrency discipline, event-loop ownership, process entry points | #22 | 0031 | reviewed |
 | Python floor and support policy | #23 | 0008 | reviewed |
 | Type checkers and typing tests | #23 | 0009 | reviewed |
@@ -142,13 +142,13 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | style §5; §8 | | in progress (§10 scenario pending #37) |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | in progress |
 | Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 (framework-wide rule, no content switch, one redaction list), #29 (observer record) | style §9; §8 | | in progress (list finalised by #29) |
-| Observability hooks and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | in progress |
+| Observability seam and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | in progress |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | in progress |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | in progress |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), #24 (layout) | style §8; §5, §8 | | in progress |
-| Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin drivers, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | in progress |
+| Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | in progress |
 | Testing strategy (unit / contract / integration / typing / property) | #36 (how tests are written), #25 (toolkit shape) | style §11; §8 | | in progress |
-| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (own executor sized against the worker count, checked at start) | §8, gateway LLD | | in progress |
+| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start) | §8, gateway LLD | | in progress |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | in progress |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | in progress |
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | in progress |

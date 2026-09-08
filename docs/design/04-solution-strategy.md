@@ -30,10 +30,10 @@ a thin I/O layer over a sans-I/O Exchange, not generated.
 [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md),
 [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md)
 
-## One ingress, many workers
+## One consumer, many workers
 
-A bot is one WebSocket consumer, a replicable webhook ingress and any number of workers reached
-through the Runtime; processes declare their role. → [ADR-0005](../adr/0005-one-ingress-many-workers.md)
+A bot is one WebSocket consumer, replicated Webhook processes and any number of workers that reach
+the server through the Workspace; processes declare their role. → [ADR-0005](../adr/0005-one-ingress-many-workers.md)
 
 ## Composition over Core-owned Protocols, named patterns, strict typing
 
@@ -96,7 +96,7 @@ events per key by default, surfaces conflicts and stale records as typed outcome
 every record with a sliding logical TTL of one hour by default. In-memory and Redis first-party.
 → [ADR-0022](../adr/0022-state-plugin-model.md)
 
-## A supervised, resumable, never-stalling WebSocket gateway
+## A supervised, resumable, never-stalling WebSocketTransport
 
 One reconnect loop with a TaskGroup per connection and a transient/resumable/fatal exit table;
 JSON `ping` every 30 s with a 60 s silence monitor; full-jitter backoff 1→300 s, unbounded with a

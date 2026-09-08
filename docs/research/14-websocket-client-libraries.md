@@ -310,7 +310,7 @@ suite, not the adapters, is what makes the library swappable in practice.
 | Typing | `py.typed`, deep generics | "Fully type annotated", `Headers.get -> str \| None` (2.10.0) | typed | typed |
 | Free-threading | 3.13.0+, `cp314t` wheels | pure Python; relies on anyio (`Free Threading :: 2 - Beta`) | classifier `4 - Resilient` | `2 - Beta` |
 | Multipart upload | `FormData` streaming | `files=` mapping | requests-style `files=` | `encode_multipart_formdata` |
-| Deal-breaker for us | no sync face → ADR-0004 needs a second implementation | fork risk (mitigated by pinning and a transport Protocol) | shadows `urllib3` namespace in host apps | no async |
+| Deal-breaker for us | no sync face → ADR-0029 needs a second implementation | fork risk (mitigated by pinning and a transport Protocol) | shadows `urllib3` namespace in host apps | no async |
 
 ## 9. Comparison table (WebSocket implementations)
 
@@ -362,7 +362,7 @@ behind it — it comes free with the REST dependency but is two months old as a 
 WebSocketTransport's resume/backoff decision reads the code without `except` ladders.
 
 **HTTP client for REST: httpx2, pinned `httpx2>=2.12,<3`, behind our own thin transport Protocol.**
-It is the only candidate that satisfies ADR-0004's dual sync/async face from one codebase, is fully
+It is the only candidate that satisfies ADR-0029's dual sync/async face from one codebase, is fully
 typed, uses the OS trust store by default (the corporate-CA problem disappears), offers HTTP/2 as an
 extra. aiohttp is async-only (the sync Face would need a second HTTP stack), niquests would rewrite
 the host application's `urllib3`, and urllib3 has no async API. The fork risk of httpx2 is real — twelve minor versions in four months, deprecations already in

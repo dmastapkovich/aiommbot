@@ -14,7 +14,7 @@ component document must argue against, in this order of authority:
 1. **Composition over inheritance.** `Bot` *has* routers, plugins, a transport and an adapter; it
    is not a `Router`. No framework class is designed to be subclassed by users.
 2. **Dependency inversion through Core-owned Protocols.** The Core defines the `Protocol`s
-   (transport, storage, lock, API client, observability hooks); adapters and plugins implement
+   (transport, storage, lock, API client, the Observability seam); adapters and plugins implement
    them; nothing in the Core imports an implementation.
 3. **Named patterns, each justified.** Candidates the Core is expected to use: Strategy for
    filters, Chain of Responsibility for middleware, Observer for lifecycle events, Adapter for the

@@ -52,7 +52,7 @@ configure.
 | Callback authenticity | A self-issued token the bot puts in button `context` and dialog `state` and verifies on return | Callback token behind `CallbackTokenCodec` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | Conversation state, locks, nonces | Whatever the chosen backend speaks; in-memory and Redis are first-party | `KeyValueStore`, `LockProvider` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | Credentials | Read through `TokenProvider` on every connection; never logged, never in a URL | Adapter | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| Observability | Typed records pushed to whatever the application registered; no observer by default | `RequestObserver`, Signals, the ErrorBoundary hook | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0021](../adr/0021-core-error-boundary.md) |
+| Observability | Typed records pushed to whatever the application registered; no observer by default | `RequestObserver`, Signals, the Observability seam | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0021](../adr/0021-core-error-boundary.md) |
 | Process lifecycle | `run(*, loop_factory=None)` blocks; `serve()` embeds in a loop the application owns | Bot | [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
 
 Two properties of the Mattermost side shape more of this design than any other fact, and both are

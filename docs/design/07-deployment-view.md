@@ -27,11 +27,11 @@ documented:
 | Shape | Composition | When |
 |---|---|---|
 | All in one | `Bot(adapter, plugins=[WebSocketTransport(), Webhook(), State(...)])`, profile `websocket_consumer=True, single_process=True` | small bot, one replica; in-memory State allowed |
-| Split | Process A: `WebSocketTransport` only, `websocket_consumer=True`. Processes B×N: `Webhook()` only, replicated behind a load balancer. Shared State on Redis | busy buttons and dialogs; ingress fault tolerance |
+| Split | Process A: `WebSocketTransport` only, `websocket_consumer=True`. Processes B×N: `Webhook()` only, replicated behind a load balancer. Shared State on Redis | busy buttons and dialogs; callback fault tolerance |
 | Plus workers | either shape, heavy work handed to Celery/taskiq/… through the Workspace, `SyncWorkspace` from a synchronous worker | operations that do not fit the 10 s reply deadline |
 
 **The one hard constraint is protocol-level**: exactly one WebSocket consumer per bot account
-(ADR-0005, ADR-0023); the webhook ingress and workers replicate, the socket does not. Checks refuse
+(ADR-0005, ADR-0023); the Webhook processes and workers replicate, the socket does not. Checks refuse
 a second consumer without the declared role, and an in-memory State backend without
 `single_process` (ADR-0003). An optional lease through a distributed `LockProvider` turns a second
 consumer replica into a standby (ADR-0023).
@@ -40,4 +40,4 @@ consumer replica into a standby (ADR-0023).
 
 `ProcessProfile` fields and their check matrix; C4 deployment diagrams for the three shapes;
 Kubernetes notes (readiness, SIGTERM and the 25 s drain budget, one replica for the consumer,
-HPA for the ingress); storage backends per shape; what scales and what does not.
+HPA for the Webhook processes); storage backends per shape; what scales and what does not.

@@ -19,7 +19,7 @@ returned in the signal's typed outcome.
 
 ## Considered options
 
-- *Only start/stop hooks on plugins* — rejected: transport-level events would be invisible to
+- *Only start/stop methods on plugins* — rejected: transport-level events would be invisible to
   plugins such as State (clear caches on resume) or observability.
 - *Routing signals through the event routers* — rejected: mixes process signals with user events
   and first-match dispatch defeats multiple subscribers.

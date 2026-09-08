@@ -30,7 +30,7 @@ committed.
 A document answers one question stated in its first paragraph. If a second question appears, it
 becomes a second document and a link. This is what makes the catalogue extensible: adding knowledge
 means adding a file and an index row, never growing a file until it covers everything. An ADR
-records one decision; a title that needs a semicolon is two ADRs.
+records one decision; two decisions that could be revisited independently are two ADRs.
 
 ## 3. Status
 

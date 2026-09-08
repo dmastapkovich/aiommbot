@@ -23,7 +23,7 @@ We decided:
   through untouched.
 - **Its default does exactly three things**: writes a structured log record **without payload**
   (event kind, handler, correlation id, exception class, traceback); hands the full exception to
-  the observability hook; returns the typed outcome **`Failed(error)`** to the Transport, which
+  the Observability seam; returns the typed outcome **`Failed(error)`** to the Transport, which
   decides the transport-level reaction (ack, nack, HTTP status, reply-channel default) the way
   FastStream's `AckPolicy` does. It never swallows silently and never composes a user-facing
   message.

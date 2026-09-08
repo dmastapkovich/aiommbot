@@ -5,7 +5,7 @@ ticket: "#19"
 amended-by: [ADR-0030]
 ---
 
-# The WebSocket gateway is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
+# The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
 
 A bot lives on one WebSocket for weeks. The Mattermost protocol facts (`docs/research/01`) and
 the mechanics of mature real-time clients (`docs/research/02`) fix the design of the
@@ -17,7 +17,7 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
   *transient* (network error, 1006, our own 4000) → backoff and resume; *resumable* (4001 sequence
   gap) → immediate resume; *fatal* (401/403 on the handshake, invalid URL, `not_authenticated`
   after a token refresh) → `FatalError` (ADR-0021).
-- **Heartbeat, configurable.** The library answers server ping frames; the gateway also sends the
+- **Heartbeat, configurable.** The library answers server ping frames; the WebSocketTransport also sends the
   JSON `ping` action every 30 s, as the official TS client does — it keeps proxies alive and
   verifies the session. A separate monitor treats **60 s without data of any kind** (2×
   interval) as a dead link: close with private code 4000 and reconnect with resume. Ping RTT and
@@ -35,15 +35,15 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
   application knows what matters. Cross-resync dedup by `post.id` is an optional Inbound
   middleware on `KeyValueStore`.
 - **The reader never stalls.** A full server send queue (256) drops the connection and the resume
-  window, so the reader always drains the socket into a bounded queue served by N workers (a thin
+  window, so the reader always drains the socket into a bounded queue served by N consumer coroutines, the Dispatch concurrency (a thin
   concurrency cap). Overflow is a typed `OverflowPolicy` per event kind: low-value kinds
   (`typing`, `status_change`, `presence`) drop the oldest with a `Dropped` Signal; posts and
-  callbacks grow to a hard ceiling and only then drop with a Signal. Queue depth, drops and worker
+  callbacks grow to a hard ceiling and only then drop with a Signal. Queue depth, drops and consumer
   saturation are metrics; sizes, N and policies are settings.
 - **Graceful drain.** On stop: close the socket first (1000/1001) so the server stops queueing
   for us, drain the queue and in-flight handlers within a grace period (default 25 s inside the
   30 s Kubernetes budget), then cancel the rest with `DrainTimedOut(count)`. Plugins stop in
-  reverse topological order (ADR-0015). A synchronous Handler running in the Bot's executor cannot
+  reverse topological order (ADR-0015). A synchronous Handler running in the Sync executor cannot
   be cancelled by anyone: the drain drops the wait on the deadline, keeps the grace period, and
   reports the abandoned thread with the `HandlerAbandoned` Signal —
   see [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md).
@@ -64,7 +64,7 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
   `api.web_socket_router.not_authenticated.app_error` (`docs/research/15`). Bot tokens are
   personal access tokens whose session the server recreates on demand, so only deleting or
   disabling the token, disabling the bot or deactivating the user can kill a bot — always a
-  configuration event, never a network one. Therefore the gateway **parses the reply to every
+  configuration event, never a network one. Therefore the WebSocketTransport **parses the reply to every
   JSON `ping`**; on `not_authenticated`, a close, or a pong timeout it runs a REST probe
   (`GET /api/v4/users/me`) through a shared `AuthLossDetector`: 200 → network trouble, reconnect
   with the same token; 401 `session_expired` → one retry with a token from `TokenProvider`, else
@@ -72,7 +72,7 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
   token; 403 → fatal; 5xx/429 → backoff. Detection is bounded by one ping interval plus RTT. Treating
   a mute socket as a network cut and reconnecting forever is exactly the silent-bot failure this
   rules out.
-- **Library.** The gateway logic depends only on the Core-owned `WebSocketConnection` Protocol —
+- **Library.** The WebSocketTransport depends only on the Core-owned `WebSocketConnection` Protocol —
   connect with headers/query/TLS/proxy, `receive(timeout)` returning `Text | Binary | Closed`,
   `send_text`, `ping`, `close(code)`, four typed error kinds — so the library is replaceable.
   **`websockets` 17.x is the primary implementation**: zero dependencies, proxy support including
@@ -96,7 +96,7 @@ the mechanics of mature real-time clients (`docs/research/02`) fix the design of
 - *Blocking the reader on a full queue* — rejected: against this server it becomes a disconnect
   and a lost resume window.
 - *Unbounded queue (Slack SDK)* — rejected: memory grows silently under slow handlers.
-- *Automatic post backfill inside the gateway* — rejected: the gateway cannot know what matters
+- *Automatic post backfill inside the WebSocketTransport* — rejected: the Transport cannot know what matters
   and would duplicate events.
 - *Passive heartbeat (Go client)* — rejected: a mute expired session or a proxy cut is noticed
   after 100 s or never.

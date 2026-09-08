@@ -5,7 +5,7 @@ ticket: "#22"
 amends: [ADR-0014, ADR-0019, ADR-0023]
 ---
 
-# A Handler or Provider may be synchronous only by an explicit `sync_to_thread` declaration and runs in the Bot's own bounded executor; Filters and Extractors run inline; everything else the framework calls is a coroutine function
+# A Handler or Provider may be synchronous only by an explicit `sync_to_thread` declaration and runs in the Sync executor; Filters and Extractors run inline; everything else the framework calls is a coroutine function
 
 The reference set splits three ways: Starlette/FastAPI, FastStream and aiogram decide the colour
 themselves and thread synchronous callables with no opt-out; Litestar refuses to guess and requires
@@ -40,8 +40,8 @@ effect happened; its acknowledgement never did. We decided:
   `RequestObserver`, `Codec`. No reference framework in the set allows synchronous middleware, and
   the two that tolerate synchronous lifecycle hooks run them inline on the loop with no opt-out,
   which is the hazard without the benefit.
-- **The Bot owns the executor.** A bounded `ThreadPoolExecutor` belonging to the Bot, its size a
-  setting, with a Check that it is not smaller than the worker count of ADR-0023, and `contextvars`
+- **The Bot owns the Sync executor.** A bounded `ThreadPoolExecutor` belonging to the Bot, its size a
+  setting, with a Check that it is not smaller than the Dispatch concurrency of ADR-0023, and `contextvars`
   copied explicitly into each call. Not the loop's default executor and not anyio's limiter: in every
   automatic implementation in the reference set the budget is invisible and unrelated to the
   framework's own backpressure — anyio's arbitrary 40 tokens, undocumented in FastAPI, or CPython's
@@ -57,7 +57,7 @@ effect happened; its acknowledgement never did. We decided:
   lost thread but the half-finished chain around it.
 - **Blocking work inside an asynchronous Handler is the application's `asyncio.to_thread` recipe**
   on the loop's default executor, not our pool. It is one standard-library call, so it fails the
-  two-condition admission test (ADR-0002), and routing it through the Bot's executor would let user
+  two-condition admission test (ADR-0002), and routing it through the Sync executor would let user
   code starve dispatch out of the same budget. Genuinely CPU-bound work belongs in a process pool,
   and the documentation says so.
 
@@ -77,7 +77,7 @@ effect happened; its acknowledgement never did. We decided:
   exactly this and got the answer *"we can't wait forever; sometimes we should decide that the
   broker is dead and kill it"*; a grace period that must exceed the slowest possible handler is not
   a grace period.
-- *The loop's default executor* — rejected: ADR-0023 promises N workers and per-kind overflow
+- *The loop's default executor* — rejected: ADR-0023 promises a Dispatch concurrency of N and per-kind overflow
   policies, and a shared invisible pool silently overrides both.
 - *`anyio.to_thread` with a dedicated limiter* — unavailable: anyio is never a Core dependency
   (ADR-0008), and its default defers the host task's cancellation until the thread finishes.
@@ -89,5 +89,5 @@ effect happened; its acknowledgement never did. We decided:
 - ruff's explained-ignore list (ADR-0011) gains `ASYNC109` — our timeouts are parameters by
   ADR-0026 — and `RUF029`, because a coroutine function here is a contract of the Protocol it
   implements, not a consequence of containing an `await`.
-- The executor size, the Check and the `HandlerAbandoned` Signal join the settings model, the Check
+- The Sync executor's size, the Check and the `HandlerAbandoned` Signal join the settings model, the Check
   catalogue and the Signal list; the drain contract is a §6 runtime view and a §10 quality scenario.

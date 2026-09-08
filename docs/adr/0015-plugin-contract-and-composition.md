@@ -16,7 +16,7 @@ relate, designed so that a second platform adapter would be an addition, not a r
   implement the Core-owned `Transport` Protocol. A Bot with an Adapter and no Transport is a valid
   process without a Transport (ADR-0005).
 - **Generic vs adapter-specific plugins.** A plugin declares whether it is generic (depends on the
-  Core only: State, observability hooks, scheduling bridges) or bound to an adapter
+  Core only: State, observability plugins, scheduling bridges) or bound to an adapter
   (`for_adapter=Mattermost`). Composing an adapter-specific plugin with the wrong adapter is a
   start-up check failure. Adapter-specific plugins live under the adapter's package; generic ones
   under the Core's plugin package (layout in #24).
@@ -50,7 +50,7 @@ relate, designed so that a second platform adapter would be an addition, not a r
   check and list order would acquire hidden meaning.
 - *Transports built into the adapter behind flags* — rejected: two extension models, and the
   process without a Transport becomes a special case instead of "no transport plugins".
-- *One fat `Plugin` base class* — rejected: inheritance and empty hooks in every plugin (ADR-0006,
+- *One fat `Plugin` base class* — rejected: inheritance and empty methods in every plugin (ADR-0006,
   ISP).
 - *List order only, no declared dependencies* — rejected: the user carries the ordering burden
   and missing dependencies surface at runtime.
