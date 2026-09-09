@@ -6,15 +6,11 @@ ticket: "#17"
 
 # The Core owns a narrow, non-removable error boundary: log without payload, report, return a typed `Failed`; a failing process is an explicit policy
 
-The maintainer asked whether the Core should intercept unexpected exceptions at all — "what if the
-process is meant to fail?" — and the question was researched against twelve frameworks and task
-systems (`docs/research/12`). None lets a handler exception kill the process: aiogram, discord.py,
-python-telegram-bot, Bolt, Litestar, Sanic, FastStream, Celery, taskiq, arq and Dramatiq keep the
-worker alive; Starlette/FastAPI respond 500 and re-raise to a server that also keeps serving. In
-Erlang and Go "let it crash" works only because a supervisor restarts the crashed unit; an asyncio
-task that dies without a handler is silently lost until garbage collection. Almost all defaults log
-without payload; the exceptions (Sanic's full URL, Dramatiq's task arguments, Bolt's documentation
-example) are exactly the leaks a default that logs the whole event produces.
+Should the Core intercept unexpected exceptions at all, or is the process meant to fail? The
+question was researched against twelve frameworks and task systems
+([`docs/research/12`](../research/12-error-boundary-conventions.md)): none lets a handler exception
+kill the process, almost all log without payload, and "let it crash" works only under a supervisor
+that restarts the crashed unit — an asyncio task that dies without a handler is silently lost.
 
 We decided:
 
@@ -22,17 +18,21 @@ We decided:
   `Exception` only; `BaseException` (cancellation, `SystemExit`, `KeyboardInterrupt`) passes
   through untouched.
 - **Its default does exactly three things**: writes a structured log record **without payload**
-  (event kind, handler, correlation id, exception class, traceback); hands the full exception to
-  the Observability seam; returns the typed outcome **`Failed(error)`** to the Transport, which
-  decides the transport-level reaction (ack, nack, HTTP status, reply-channel default) the way
-  FastStream's `AckPolicy` does. It never swallows silently and never composes a user-facing
-  message.
+  (event kind, handler, correlation id, exception class, traceback); hands the full exception to the
+  Observability seam; returns the typed outcome **`Failed(error)`** to the Transport, which decides
+  the transport-level reaction (ack, nack, HTTP status, reply-channel default) the way FastStream's
+  `AckPolicy` does ([`docs/research/12`](../research/12-error-boundary-conventions.md)). It never
+  swallows silently and never composes a user-facing message.
 - **A failing process is an explicit choice**, never the default: a boundary policy
-  (`on_failure=FailProcess`) or a typed `FatalError` that the boundary lets through. Without a
-  supervisor, a crash is a loss of events, not honesty.
+  (`on_failure=FailProcess`) or a typed `FatalError` that the boundary lets through, carrying a
+  typed reason — `AuthRevoked`, raised by the `AuthLossDetector` of
+  [ADR-0023](0023-websocket-gateway-resilience.md), is the one the taxonomy of
+  [ADR-0027](0027-api-error-taxonomy.md) defines. Without a supervisor, a crash is a loss of events,
+  not honesty.
 - **Everything else stays outside the Core**: user-facing "something went wrong" replies, retries,
   dead-lettering and cooldowns are Handler-layer middleware from plugins or the application, and
-  expected domain outcomes remain values (ADR-0014).
+  expected domain outcomes remain values
+  ([ADR-0014](0014-filters-and-extractors-with-closed-handler-signatures.md)).
 
 ## Considered options
 

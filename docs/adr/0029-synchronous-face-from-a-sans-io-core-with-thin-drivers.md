@@ -11,26 +11,30 @@ A synchronous mirror of the whole Runtime is a hand-mirrored facade over a backg
 owns its own event loop: `future.result()` without a timeout, no cancellation, a thread that does
 not survive `fork()`, a reflection test guarding the mirror and a release chore to mirror every new
 method. The need behind it is real — a process without an Event still messages users — and narrow:
-it never touches the Event-bound helpers. Meanwhile every reference library that generates a sync twin
-generates only the wide, boring surface and hand-writes concurrency, cancellation and I/O:
-httpcore's `_synchronization.py` and `_backends/`, psycopg's `_acompat.py`, and pymongo's
-never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancellation`,
-`test_async_loop_safety`) name exactly the semantics that do not survive unasyncing. We decided:
+it never touches the Event-bound helpers. Meanwhile every reference library that generates a
+synchronous Face generates only the wide, boring surface and hand-writes concurrency, cancellation
+and I/O ([`docs/research/18`](../research/18-execution-model-in-practice.md)): httpcore's
+`_synchronization.py` and `_backends/`, psycopg's `_acompat.py`, and pymongo's never-converted test
+list (`test_locks`, `test_concurrency`, `test_async_cancellation`, `test_async_loop_safety`) name
+exactly the semantics that do not survive unasyncing. We decided:
 
-- **Two surfaces get a synchronous face, and no others.** `SyncMattermostClient` (ADR-0026) and
+- **Two surfaces get a synchronous face, and no others.** `SyncMattermostClient`
+  ([ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md)) and
   `SyncWorkspace`. The bare name stays asynchronous, the `Sync` prefix marks the synchronous Face.
 - **`Workspace` is the Event-free layer, split out of the Runtime.** It is a public, independently
   constructible object holding `send(channel_id, ...)`, `send_direct(UserRef, ...)`, `ephemeral`,
   `upload`, `download`, `users.resolve` and `channels.direct`. The `Runtime` composes it and keeps
-  the public helper set ADR-0028 fixed; the Event-bound helpers — `answer`, `reply`, `update`,
-  `delete`, `open_dialog` — take channel, `root_id` and `trigger_id` from an Event, are meaningless
-  outside the loop and stay asynchronous only. A script that needs a direct message calls
-  `SyncWorkspace.send_direct`, not three API calls.
-- **No async-to-sync tool enters the toolchain.** `Operation` descriptors are pure data with no
-  face at all; the spec generator (ADR-0025) emits the resource methods for *both* faces, which
-  costs it nothing; the retry decision, the error mapping and the pagination advance form the Exchange — sans-I/O
-  pure functions tested once (ADR-0006); what remains per Face is thin I/O — build the request,
-  send it, parse the response — because httpx2 shares `build_request`, `Request` and
+  the public helper set [ADR-0028](0028-runtime-helpers-and-identity-resolution.md) fixed; the
+  Event-bound helpers — `answer`, `reply`, `update`, `delete`, `open_dialog` — take channel,
+  `root_id` and `trigger_id` from an Event, are meaningless outside the loop and stay asynchronous
+  only. A script that needs a direct message calls `SyncWorkspace.send_direct`, not three API calls.
+- **No async-to-sync tool enters the toolchain.** `Operation` descriptors are pure data with no face
+  at all; the Model generator ([ADR-0025](0025-generated-dataclass-models-with-a-codec-protocol.md),
+  [ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md)) emits the
+  resource methods for *both* Faces, which costs it nothing; the retry decision, the error mapping
+  and the pagination advance form the Exchange — sans-I/O pure functions tested once
+  ([ADR-0006](0006-architectural-tenets-of-the-core.md)); what remains per Face is thin I/O — build
+  the request, send it, parse the response — because httpx2 shares `build_request`, `Request` and
   `Response` between its faces and its two client method sets differ only in `close`/`aclose`,
   `read`/`aread`, `iter_*`/`aiter_*` and the context-manager dunders.
 - **`SyncHTTPTransport` is a paired Core Protocol.** `HTTPTransport` exists as insurance against the
@@ -39,36 +43,44 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
   reuse and the pair costs four lines. The in-memory double in `aiommbot.testing` implements **both
   faces in one class**, as httpx2's `MockTransport` does, so the test seam does not double.
 - **Credentials.** The synchronous face accepts a `str` or a `SyncTokenProvider`; `TokenProvider`
-  (ADR-0023) stays asynchronous and belongs to the Bot and the asynchronous client. `IdentityCache`
-  is unavailable to the synchronous face — `KeyValueStore` is asynchronous and ADR-0028 resolves
-  without a cache by default anyway.
-- **Duality is held by mechanism, not by review.** The committed-output `--check` of ADR-0025 covers
-  both faces; typing tests assert that `MattermostClient` and `SyncMattermostClient` satisfy their
-  Protocols; one parametrised conformance suite drives both faces through the shared in-memory
-  double; a typed parity test asserts the two faces expose the same method names.
+  ([ADR-0023](0023-websocket-gateway-resilience.md)) stays asynchronous and belongs to the Bot and
+  the asynchronous client. `IdentityCache` is unavailable to the synchronous face — `KeyValueStore`
+  is asynchronous and [ADR-0028](0028-runtime-helpers-and-identity-resolution.md) resolves without a
+  cache by default anyway.
+- **Duality is held by mechanism, not by review.** The committed-output `--check` of
+  [ADR-0025](0025-generated-dataclass-models-with-a-codec-protocol.md) covers both faces; typing
+  tests assert that `MattermostClient` and `SyncMattermostClient` satisfy their Protocols; one
+  parametrised conformance suite drives both faces through the shared in-memory double; a typed
+  parity test asserts the two faces expose the same method names.
 - **Threads.** The synchronous client documents *one instance per thread* rather than promising
   thread safety: httpx2 runs no free-threaded job in CI, states nothing about `Client` thread
   safety, and a shared `Client(http2=True)` corrupts the h2 state machine (upstream PR #1153, open).
-  HTTP/2 stays off by default (ADR-0026), so the corruption path is not ours by default.
+  HTTP/2 stays off by default
+  ([ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md)), so the
+  corruption path is not ours by default.
 
 ## Considered options
 
 - *A full `SyncRuntime` mirroring the Runtime* — rejected: every new helper would be a mirroring
   chore, and the Event-bound helpers are meaningless outside the loop.
 - *Only `SyncMattermostClient`, no helpers* — rejected: `send_direct` becomes resolve plus
-  create-direct-channel plus create-post in every script, which is the copy-paste ADR-0028 removed.
+  create-direct-channel plus create-post in every script, which is the copy-paste
+  [ADR-0028](0028-runtime-helpers-and-identity-resolution.md) removed.
 - *No synchronous face at all* — rejected: the requirement to serve scripts, migrations and
   synchronous workers stands, and the cost after this decision is a few dozen lines.
-- *`unasyncd` 0.10.1* — rejected: its `--check` reports "0 files would be transformed" against a
-  demonstrably stale target, it leaves `TypeVar("AsyncX")` and `bound="AsyncX"` unrenamed — which is
-  precisely our `Protocol` and `TypeVar` code and makes all four checkers (ADR-0009) fail — it is a
-  single-maintainer dependency, an invalid config key was silently ignored for a downstream user,
-  Litestar's own use has decayed to one vestigial file, and `sqlspec` in the same organisation chose
-  ~4,300 hand-written lines over adopting it.
-- *`unasync` 0.6.0, or our own libcst/AST script* — rejected: `unasync`'s last release predates this
-  design by two years, it has no `--check`, it overwrote the source file on a `fromdir` mismatch, and
-  neither it nor `unasyncd` rewrites `Coroutine[Any, Any, T]`; an AST rewriter makes the output
-  interpreter-version-dependent, which is why psycopg pins one CPython for generation.
+- *`unasyncd` 0.10.1 ([`docs/research/18`](../research/18-execution-model-in-practice.md))* —
+  rejected: its `--check` reports "0 files would be transformed" against a demonstrably stale
+  target, it leaves `TypeVar("AsyncX")` and `bound="AsyncX"` unrenamed — which is precisely our
+  `Protocol` and `TypeVar` code and makes all four checkers
+  ([ADR-0009](0009-four-strict-type-checkers.md)) fail — it is a single-maintainer dependency, an
+  invalid config key was silently ignored for a downstream user, Litestar's own use has decayed to
+  one vestigial file, and `sqlspec` in the same organisation chose ~4,300 hand-written lines over
+  adopting it.
+- *`unasync` 0.6.0 ([`docs/research/06`](../research/06-dual-sync-async-api.md)), or our own
+  libcst/AST script* — rejected: `unasync`'s last release predates this design by two years, it has
+  no `--check`, it overwrote the source file on a `fromdir` mismatch, and neither it nor `unasyncd`
+  rewrites `Coroutine[Any, Any, T]`; an AST rewriter makes the output interpreter-version-dependent,
+  which is why psycopg pins one CPython for generation.
 - *Runtime bridging over a background loop thread* — rejected: the thread does not survive
   `fork()`, and `future.result()` cannot be cancelled.
 
@@ -76,4 +88,5 @@ never-converted test list (`test_locks`, `test_concurrency`, `test_async_cancell
 
 - The Adapter carries two Faces that must stay in step; the parity test and the shared
   conformance suite are what keep them honest.
-- The `Workspace`, the Exchange and the Face each have a design document in the LLD inventory, and the conformance and parity suites belong to the testing toolkit (#25).
+- The `Workspace`, the Exchange and the Face each have a design document in the LLD inventory, and
+  the conformance and parity suites belong to the testing toolkit (#25).

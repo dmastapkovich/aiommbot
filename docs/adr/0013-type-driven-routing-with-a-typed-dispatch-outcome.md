@@ -6,8 +6,9 @@ ticket: "#15"
 
 # Handlers subscribe by annotation on a router tree walked depth-first to the first match, with a typed outcome and start-up reachability checks
 
-Routing must be deterministic, readable from the code, extensible by plugins without touching
-the router, and introspectable as data (ADR-0006, idea #34). We decided:
+Routing must be deterministic, readable from the code, extensible by plugins without touching the
+router, and introspectable as data ([ADR-0006](0006-architectural-tenets-of-the-core.md), idea #34).
+We decided:
 
 - **Type-driven subscription.** The Core has one registration point, `@router.on(*filters)`,
   which infers the event kind from the annotation of the handler's first parameter
@@ -18,12 +19,12 @@ the router, and introspectable as data (ADR-0006, idea #34). We decided:
   rejects cycles and re-attachment; a router may carry its own filter gates. Dispatch walks the
   tree in registration order; the first handler whose filters and extractors all pass runs and
   ends the walk. There are no numeric priorities: order is local to the code that declares it.
-- **Typed dispatch outcome.** Dispatch returns `Handled | Unhandled`, not sentinel objects. An
-  unhandled event completes quietly — a bot receives hundreds of server events it does not care
-  about — but passes through the Observability seam carrying the event name and never its
-  content. A fallback is an ordinary handler without filters registered last. A handler may
-  raise `Skip` to let the walk continue with the next candidate; this is documented as the rare
-  exception it is.
+- **Typed dispatch outcome.** Dispatch returns the typed `Outcome` — `Handled | Unhandled`, plus the
+  `Failed` variant of [ADR-0021](0021-core-error-boundary.md) — not sentinel objects. An unhandled
+  event completes quietly — a bot receives hundreds of server events it does not care about — but
+  passes through the Observability seam carrying the event name and never its content. A fallback is
+  an ordinary handler without filters registered last. A handler may raise `Skip` to let the walk
+  continue with the next candidate; this is documented as the rare exception it is.
 - **Handlers are data.** Registration builds a frozen `HandlerSpec`: name, router path, event
   kind, filters and extractors rendered as data with a readable description, declared
   dependencies, docstring, module and line, and metadata flags for middleware. The tree freezes
@@ -36,9 +37,12 @@ the router, and introspectable as data (ADR-0006, idea #34). We decided:
 
 ## Considered options
 
-- *Per-kind decorators only (aiogram)* — rejected: O(kinds) decorators and no seam for
-  plugin-defined kinds.
+- *Per-kind decorators only (aiogram,
+  [`docs/research/03`](../research/03-bot-framework-architectures.md))* — rejected: O(kinds)
+  decorators and no seam for plugin-defined kinds.
 - *Numeric priorities* — rejected: they make order non-local and are the usual source of "why
   did this handler fire" bugs.
-- *Pub/sub, all matching handlers run (hikari)* — rejected: a chat message deserves one answer.
-- *`UNHANDLED`/`REJECTED` sentinels* — rejected in favour of a Typed outcome.
+- *Pub/sub, all matching handlers run (hikari,
+  [`docs/research/03`](../research/03-bot-framework-architectures.md))* — rejected: a chat message
+  deserves one answer.
+- *`UNHANDLED`/`REJECTED` sentinels* — rejected in favour of the typed `Outcome`.

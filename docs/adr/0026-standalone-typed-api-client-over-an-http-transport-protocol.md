@@ -5,41 +5,44 @@ ticket: "#21"
 amended-by: [ADR-0029]
 ---
 
-# The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a generated `Sync` face
+# The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a synchronous Face
 
 A REST client that only a Bot can construct, parses no error body and handles no 429 leaves every
 script and worker calling raw paths. The requirement is a client good enough to use **without a
-bot**, with a synchronous face for processes that have no event loop (ADR-0029), which needs an
-HTTP library offering both faces from one code base: `httpx2` mirrors `Client`/`AsyncClient` token
-for token, aiohttp has no sync face and niquests rewrites the host application's `urllib3`
-(`docs/research/14`). We decided:
+bot**, with a synchronous face for processes that have no event loop
+([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)), which needs an HTTP
+library offering both faces from one code base: `httpx2` mirrors `Client`/`AsyncClient` token for
+token, aiohttp has no sync face and niquests rewrites the host application's `urllib3`
+([`docs/research/14`](../research/14-websocket-client-libraries.md)). We decided:
 
 - **A standalone API client.** `MattermostClient(base_url, token, *, transport=None, timeout=...,
   retry=..., codec=..., observers=())` is an async context manager that knows nothing of Bot or
-  Event; `token` is a `str` or a `TokenProvider` (ADR-0023), sent as `Authorization: Bearer` on
-  every request, never in the URL or a log. `base_url` is the server URL; the client appends
-  `/api/v4` and supports sub-path installations. The Adapter composes one per Bot; a script
-  constructs one directly.
+  Event; `token` is a `str` or a `TokenProvider` ([ADR-0023](0023-websocket-gateway-resilience.md)),
+  sent as `Authorization: Bearer` on every request, never in the URL or a log. `base_url` is the
+  server URL; the client appends `/api/v4` and supports sub-path installations. The Adapter composes
+  one per Bot; a script constructs one directly.
 - **Three layers, two public.** `HTTPTransport` is a Core-owned Protocol at the level of raw HTTP —
   method, URL, headers, body or byte stream, multipart → status, headers, body or stream — with an
   in-memory implementation in `aiommbot.testing` and **`httpx2 >=2.12,<3` as the sole shipped
-  implementation**, mirroring `WebSocketConnection` (ADR-0023); the fork risk of httpx2 is real and
-  the Protocol is the insurance. The **API client** and the **Runtime** (ADR-0028) are public.
+  implementation**, mirroring `WebSocketConnection`
+  ([ADR-0023](0023-websocket-gateway-resilience.md)); the fork risk of httpx2 is real and the
+  Protocol is the insurance. The **API client** and the **Runtime**
+  ([ADR-0028](0028-runtime-helpers-and-identity-resolution.md)) are public.
 - **Naming.** The bare name is the asynchronous face — `MattermostClient`, `Runtime` — and the
   synchronous face carries the `Sync` prefix (`SyncMattermostClient`, `SyncWorkspace`) as
-  ADR-0029 decides. Handlers are asynchronous by default and read
-  `Runtime` without a prefix.
-- **Operations are data.** The generator emits one frozen `Operation[Req, Resp]` descriptor per
-  spec operation — method, path template, parameter names, request and response types, flags from
-  the overlay — and resource groups by spec tag with `operationId` in snake case:
+  [ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) decides. Handlers are
+  asynchronous by default and read `Runtime` without a prefix.
+- **Operations are data.** The Model generator emits one frozen `Operation[Req, Resp]` descriptor
+  per spec operation — method, path template, parameter names, request and response types, flags
+  from the overlay — and resource groups by spec tag with `operationId` in snake case:
   `client.posts.create(...)`, `client.users.get(user_id)`. Every method is one line over its
-  descriptor executed by the Exchange through a Face. `Operation` is public and
-  user-constructible: a server-plugin endpoint (`/plugins/<id>/...`) is declared as a typed
-  `Operation` and run through `client.execute(op, ...)`, gaining auth, retries, observers and the
-  error taxonomy. There is no raw `request(method, url)`.
+  descriptor executed by the Exchange through a Face. `Operation` is public and user-constructible:
+  a server-plugin endpoint (`/plugins/<id>/...`) is declared as a typed `Operation` and run through
+  `client.execute(op, ...)`, gaining auth, retries, observers and the error taxonomy. There is no
+  raw `request(method, url)`.
 - **Pagination.** Operations flagged `x-aiommbot-paginated` get both the page method and an
   `iter_<name>()` iterator over items that stops on a short page, with `per_page` at the server's
-  maximum of 200; the generated sync face yields a plain iterator. Cursor-style endpoints
+  maximum of 200; the synchronous Face yields a plain iterator. Cursor-style endpoints
   (`since`/`before`/`after`) stay page methods in 0.5.0.
 - **Retries are narrow, built in, and off by one setting.** `RetryPolicy` (stdlib): 2 retries,
   full-jitter backoff, only on network errors, 408, 429 and 5xx, honouring `Retry-After` and
@@ -65,19 +68,23 @@ for token, aiohttp has no sync face and niquests rewrites the host application's
      observe: they cannot alter the request, the response or the retry decision.
   3. **Yours by wrapping** — an application that must *change* behaviour decorates the
      `HTTPTransport` Protocol (headers, caching, its own retry or breaker) or adds Middleware over
-     the dispatch layers (ADR-0020) for event-level instrumentation. Observation and modification
-     are separate seams on purpose.
-  The record shape, the first-party observer's conventions and whether `opentelemetry-api` is a
-  dependency at all are confirmed by `docs/research/17` and finalised with the observability
-  boundary in #29; the pluggability above is not up for renegotiation there.
+     the dispatch layers ([ADR-0020](0020-two-layer-middleware-chain.md)) for event-level
+     instrumentation. Observation and modification are separate seams on purpose.
+  The record's exact fields, the first-party observer's conventions and whether `opentelemetry-api`
+  is a dependency at all are decided by #29 with
+  [`docs/research/17`](../research/17-http-client-observability.md) as its input; the pluggability
+  above is not up for renegotiation there.
 - **Defaults are settings, not decisions**: timeouts (connect 5 s, read and write 30 s, pool 5 s;
   300 s for file operations), pool limits (httpx2's 100/20), HTTP/2 off (`http2` extra available).
   They live in the client's component document.
 
 ## Considered options
 
-- *aiohttp behind a Protocol (`docs/research/04`)* — rejected: no synchronous face, so the
-  synchronous Face (ADR-0029) would need a second HTTP stack.
+- *aiohttp behind a Protocol
+  ([`docs/research/04`](../research/04-modern-python-library-engineering-2026.md))* — rejected: no
+  synchronous face, so the synchronous Face
+  ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)) would need a second
+  HTTP stack.
 - *niquests* — rejected: shadows `urllib3` in the host application.
 - *httpx2 directly, no Protocol* — rejected: a young fork without insurance or an in-memory double.
 - *Publish only the Runtime* — rejected: every new need becomes a new helper, and the raw

@@ -7,27 +7,33 @@ amended-by: [ADR-0030]
 
 # Filters are pure predicates, Extractors produce typed values, and handler signatures are closed
 
-aiogram lets a filter return `bool | dict` and merges the dict into handler kwargs, so the type
-checker cannot see which filter produced which parameter; its `MagicFilter` DSL is built on
-dynamic attribute access, which ADR-0006 forbids. A handler that must accept `**kwargs: Any` to
-survive middleware injection has no checkable signature. We decided:
+aiogram lets a filter return `bool | dict`
+([`docs/research/03`](../research/03-bot-framework-architectures.md)) and merges the dict into
+handler kwargs, so the type checker cannot see which filter produced which parameter; its
+`MagicFilter` DSL is built on dynamic attribute access, which
+[ADR-0006](0006-architectural-tenets-of-the-core.md) forbids. A handler that must accept `**kwargs:
+Any` to survive middleware injection has no checkable signature. We decided:
 
 - **`Filter[P]` is a pure predicate** over `Event[P]`, composable with `&`, `|`, `~`
   (Strategy + Composite). Filters are explicit, typed classes and factories
   (`ChatType.DIRECT`, `Text.startswith("/")`); there is no dynamic DSL.
 - **`Extractor[P, T]` parses an event into a typed value** the handler receives by annotation
-  (`Command`, `RegexMatch`, `Submission[Model]`). It returns a typed result: `Value[T]`, or
-  `NoMatch` (the event is not about this — the walk continues, as with a failed filter), or
-  `Invalid` (the event is about this but the data is bad). `Invalid` skips the handler by
-  default; a handler that annotates the parameter as `Submission[Model] | InvalidSubmission`
+  (`Command`, `RegexMatch`, `Submission[Model]`). It returns a typed outcome
+  ([ADR-0034](0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md)):
+  `Value[T]`, or `NoMatch` (the event is not about this — the walk continues, as with a failed
+  filter), or `Invalid` (the event is about this but the data is bad). `Invalid` skips the handler
+  by default; a handler that annotates the parameter as `Submission[Model] | InvalidSubmission`
   receives the typed error and answers the user itself. Expected outcomes are values, never
   exceptions.
-- **Closed handler signature.** The first parameter is `Event[P]`; every other parameter is
-  resolved by its annotation — an extractor value or a dependency (mechanism in #16) — never by
-  name. No `**kwargs`. A parameter nothing can provide is a start-up error (fail closed).
-  A synchronous Handler is accepted only by an explicit `sync_to_thread` declaration and runs in
-  the Sync executor (ADR-0030).
-- Filters, extractors and their composition render as data for `HandlerSpec` (ADR-0013).
+- **Closed handler signature.** The first parameter is `Event[P]`; every other parameter is resolved
+  by its annotation — an extractor value or a dependency (mechanism in
+  [ADR-0018](0018-core-owned-type-keyed-dependency-injection.md) and
+  [ADR-0019](0019-handler-parameter-resolution-rules.md)) — never by name. No `**kwargs`. A
+  parameter nothing can provide is a start-up error (fail closed). A synchronous Handler is accepted
+  only by an explicit `sync_to_thread` declaration and runs in the Sync executor
+  ([ADR-0030](0030-synchronous-callables-by-explicit-declaration.md)).
+- Filters, extractors and their composition render as data for `HandlerSpec`
+  ([ADR-0013](0013-type-driven-routing-with-a-typed-dispatch-outcome.md)).
 
 ## Considered options
 

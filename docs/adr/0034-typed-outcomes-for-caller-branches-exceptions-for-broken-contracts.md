@@ -8,15 +8,14 @@ ticket: "#36"
 
 Both styles are already in the design and no document says which to reach for. Typed outcomes were
 chosen for Extractors (`Value | NoMatch | Invalid`,
-[ADR-0014](0014-filters-and-extractors-with-closed-handler-signatures.md)), for dispatch
-(`Handled | Unhandled | Failed`, [ADR-0020](0020-two-layer-middleware-chain.md)), for compare-and-set
-writes and stale records (`Conflict`, `StaleState`, [ADR-0022](0022-state-plugin-model.md)) and for
-Callback token verification (`Verified | Missing | Invalid | Expired | Replayed | ActorMismatch`,
+[ADR-0014](0014-filters-and-extractors-with-closed-handler-signatures.md)), for dispatch (`Handled |
+Unhandled | Failed`, [ADR-0020](0020-two-layer-middleware-chain.md)), for compare-and-set writes and
+stale records (`Conflict`, `StaleState`, [ADR-0022](0022-state-plugin-model.md)) and for Callback
+token verification (`Verified | Missing | Invalid | Expired | Replayed | ActorMismatch`,
 [ADR-0024](0024-webhook-ingress-and-callback-security.md)); exceptions were chosen for the API
-client, explicitly as "exceptions, not result unions"
-([ADR-0027](0027-api-error-taxonomy.md)). Left unstated, 27 component design documents would each
-pick by taste. We decided the rule that selects the mechanism, and two riders that decide the cases
-where the first sentence is not enough:
+client, explicitly as "exceptions, not result unions" ([ADR-0027](0027-api-error-taxonomy.md)). Left
+unstated, 27 component design documents would each pick by taste. We decided the rule that selects
+the mechanism, and two riders that decide the cases where the first sentence is not enough:
 
 - **The deciding question is who acts on the failure, not whether it is domain or infrastructure.**
   A typed outcome is right when the *immediate* caller must branch on it as part of normal
@@ -39,16 +38,18 @@ where the first sentence is not enough:
   a member of an outcome union and as an exception; where both control flows are genuinely wanted,
   the choice is exposed to the call site as an overload on a `Literal` parameter and the type
   checker records which one was asked for.
-- **An exception carries no payload** — the rule ADR-0027 already fixed for the API client, now
-  general: identifiers, status and classification, never message text, bodies, headers or tokens.
+- **An exception carries no payload** — the rule [ADR-0027](0027-api-error-taxonomy.md) already
+  fixed for the API client, now general: identifiers, status and classification, never bodies,
+  headers, query strings or tokens; Mattermost's short `message` and `error_id` are identifiers, not
+  payload ([ADR-0027](0027-api-error-taxonomy.md)).
 
-Evidence from the reference implementation we measured: its authentication chain documents exactly
-this split in the participant's own contract — return `Self` on success, return `None` when this
-participant declines and the chain must continue, raise to fail the whole login immediately — and
-the chain runner, not the participant, is what raises once every participant has declined. The same
-codebase returns a value rather than raising in exactly one place, and its docstring says why:
-unlike the exception, which reports the first failing throttle, the report collects the stats of
-all of them.
+Evidence from django-modern-rest
+([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)): its authentication
+contract is `-> Self | None` — return `self` on success, return `None` when this participant
+declines and the chain must continue, raise to fail the whole login immediately — and the chain
+runner, not the participant, raises `NotAuthenticatedError` once every participant has declined. Its
+`ThrottlingReport` docstring states the same contrast: unlike `TooManyRequestsError`, which reports
+the first failing stat, the report collects them all.
 
 ## Considered options
 
@@ -56,9 +57,9 @@ all of them.
   the cheapest answer today and it is precisely what produces the divergence across 27 documents,
   because each author would reason from the nearest precedent rather than from a rule.
 - *Typed outcomes inside the Core, exceptions only at the process boundary* — rejected: cleaner on
-  paper and closer to errors-as-values, but it contradicts ADR-0027 and would force the API client
-  to return a union on every call, which is the ergonomics ADR-0027 rejected for a client a script
-  uses directly.
+  paper and closer to errors-as-values, but it contradicts [ADR-0027](0027-api-error-taxonomy.md)
+  and would force the API client to return a union on every call, which is the ergonomics
+  [ADR-0027](0027-api-error-taxonomy.md) rejected for a client a script uses directly.
 - *A `Result[T, E]` type in the Core* — rejected: the outcome unions we have are each closed and
   domain-named (`NoMatch` is not `Invalid`, `Conflict` is not `StaleState`), and a generic wrapper
   would flatten distinctions the handlers of those unions rely on while adding a name the glossary
@@ -70,6 +71,7 @@ all of them.
   each failure it lists, whether it is an outcome or an exception and which boundary converts it.
 - `Typed outcome` enters `CONTEXT.md` as the general term whose instances are the unions above;
   `Outcome` stays the dispatch-specific term it already is.
-- The error taxonomy row of `docs/design/TRACKER.md` §D gains its missing piece: ADR-0014, 0021 and
-  0027 fixed the values, the boundary and the exceptions, and this ADR fixes the choice between
-  them.
+- The error taxonomy row of `docs/design/TRACKER.md` §D gains its missing piece:
+  [ADR-0014](0014-filters-and-extractors-with-closed-handler-signatures.md),
+  [ADR-0021](0021-core-error-boundary.md) and [ADR-0027](0027-api-error-taxonomy.md) fixed the
+  values, the boundary and the exceptions, and this ADR fixes the choice between them.

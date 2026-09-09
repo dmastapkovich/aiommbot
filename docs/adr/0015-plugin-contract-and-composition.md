@@ -6,26 +6,28 @@ ticket: "#14"
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
 
-ADR-0002 fixed explicit composition. This decision fixes what is composed and how the pieces
-relate, designed so that a second platform adapter would be an addition, not a rewrite.
+[ADR-0002](0002-core-scope-two-condition-test.md) fixed explicit composition. This decision fixes
+what is composed and how the pieces relate, designed so that a second platform adapter would be an
+addition, not a rewrite.
 
 - **Roles.** `Bot(adapter=..., plugins=[...])`. The **Adapter** is a distinct role and there is
   exactly one: it supplies the platform vocabulary — payload types and the `EventRegistry`
-  (ADR-0012), the REST client and Runtime, platform filters and router aliases. Everything
-  optional is a **Plugin**, including the Transports (`WebSocketTransport`, `Webhook`), which
-  implement the Core-owned `Transport` Protocol. A Bot with an Adapter and no Transport is a valid
-  process without a Transport (ADR-0005).
+  ([ADR-0012](0012-generic-event-envelope-with-adapter-payloads.md)), the REST client and Runtime,
+  platform filters and router aliases. Everything optional is a **Plugin**, including the Transports
+  (`WebSocketTransport`, `Webhook`), which implement the Core-owned `Transport` Protocol. A Bot with
+  an Adapter and no Transport is a valid process without a Transport
+  ([ADR-0005](0005-one-ingress-many-workers.md)).
 - **Generic vs adapter-specific plugins.** A plugin declares whether it is generic (depends on the
   Core only: State, observability plugins, scheduling bridges) or bound to an adapter
   (`for_adapter=Mattermost`). Composing an adapter-specific plugin with the wrong adapter is a
   start-up check failure. Adapter-specific plugins live under the adapter's package; generic ones
   under the Core's plugin package (layout in #24).
-- **Contract = declaration + narrow Protocols.** A plugin object carries an immutable
-  `PluginSpec` (name, contract version, `requires` and `after` dependencies on other plugins by
-  name, adapter binding, settings type) and implements only the narrow Protocols it needs:
-  `ContributesRouters`, `ContributesMiddleware`, `ContributesDependencies`,
-  `ContributesEventTypes`, `ContributesChecks`, `HasLifecycle` (an async context manager for
-  start/stop). No base class, no inheritance (ADR-0006); the declaration is readable without
+- **Contract = declaration + narrow Protocols.** A plugin object carries an immutable `PluginSpec`
+  (name, contract version, `requires` and `after` dependencies on other plugins by name, adapter
+  binding, settings type) and implements only the narrow Protocols it needs: `ContributesRouters`,
+  `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`, `ContributesChecks`,
+  `HasLifecycle` (an async context manager for start/stop). No base class, no inheritance
+  ([ADR-0006](0006-architectural-tenets-of-the-core.md)); the declaration is readable without
   running code.
 - **Ordering.** `requires` is hard (missing → start-up error), `after` is soft (orders when both
   are present). Activation is topological with list position as the tie-break; shutdown runs in
@@ -38,11 +40,11 @@ relate, designed so that a second platform adapter would be an addition, not a r
 - **Discovery.** A third-party plugin is an ordinary package whose object is imported and placed
   in `plugins=[...]`. Nothing activates by being installed; entry points stay out of 0.5.0.
 - **Contract stability.** The plugin Protocols and `PluginSpec` are public API under semantic
-  versioning; the declared contract version is checked at start-up and an incompatible plugin
-  fails with a clear message. First-party plugins are subpackages of the single distribution with
-  extras and a friendly missing-dependency error; each ships with a component design document
-  and passes the contract test kit in `aiommbot.testing` (conformance suites for `Storage`,
-  `Transport` and the plugin lifecycle).
+  versioning; the declared contract version is checked at start-up and an incompatible plugin fails
+  with a clear message. First-party plugins are subpackages of the single distribution with extras
+  and a friendly missing-dependency error; each ships with a component design document and passes
+  the contract test kit in `aiommbot.testing` (conformance suites for `KeyValueStore` and
+  `LockProvider` ([ADR-0022](0022-state-plugin-model.md)), `Transport` and the plugin lifecycle).
 
 ## Considered options
 
@@ -50,8 +52,8 @@ relate, designed so that a second platform adapter would be an addition, not a r
   check and list order would acquire hidden meaning.
 - *Transports built into the adapter behind flags* — rejected: two extension models, and the
   process without a Transport becomes a special case instead of "no transport plugins".
-- *One fat `Plugin` base class* — rejected: inheritance and empty methods in every plugin (ADR-0006,
-  ISP).
+- *One fat `Plugin` base class* — rejected: inheritance and empty methods in every plugin
+  ([ADR-0006](0006-architectural-tenets-of-the-core.md), ISP).
 - *List order only, no declared dependencies* — rejected: the user carries the ordering burden
   and missing dependencies surface at runtime.
 - *Framework reads environment variables itself* — rejected: a settings library in the Core or

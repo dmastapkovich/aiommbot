@@ -10,12 +10,14 @@ Plugins need to react to what the process does — started, stopping, a transpor
 disconnected or resumed — without those notifications competing with user events in the router
 tree, where first-match semantics would let only one subscriber win.
 
-We decided on a small **Signal** facility in the Core (the Observer of ADR-0006): `Signal[T]` with
-typed asynchronous subscribers, subscription by signal type, a closed set of Core and Transport
-signals, and the ability for plugins to declare their own. There is no synchronous variant, which
-avoids the sync/async retrofits pluggy and its users had to make. A subscriber's failure is not
-swallowed and does not stop other subscribers: it is collected, reported to observability and
-returned in the signal's typed outcome.
+We decided on a small **Signal** facility in the Core (the Observer of
+[ADR-0006](0006-architectural-tenets-of-the-core.md)): `Signal[T]` with typed asynchronous
+subscribers, subscription by signal type, a closed set of Core and Transport signals, and the
+ability for plugins to declare their own. There is no synchronous variant, which avoids the
+sync/async duality pluggy and its users retrofit at runtime
+([`docs/research/10`](../research/10-plugin-systems.md)). A subscriber's failure is not swallowed
+and does not stop other subscribers: it is collected, reported to observability and returned in the
+signal's typed outcome.
 
 ## Considered options
 

@@ -13,18 +13,19 @@ component document must argue against, in this order of authority:
 
 1. **Composition over inheritance.** `Bot` *has* routers, plugins, a transport and an adapter; it
    is not a `Router`. No framework class is designed to be subclassed by users.
-2. **Dependency inversion through Core-owned Protocols.** The Core defines the `Protocol`s
-   (transport, storage, lock, API client, the Observability seam); adapters and plugins implement
-   them; nothing in the Core imports an implementation.
-3. **Named patterns, each justified.** Candidates the Core is expected to use: Strategy for
-   filters, Chain of Responsibility for middleware, Observer for lifecycle events, Adapter for the
-   platform, Facade for the public API, Mediator for the dispatcher, Builder for message
-   composition. Every LLD names the pattern as on refactoring.guru, the problem it solves there
-   and the rejected alternative, and may replace a candidate with a reason.
+2. **Dependency inversion through Core-owned Protocols.** The Core defines the `Protocol`s (the
+   Transport, `KeyValueStore`, `LockProvider`, `HTTPTransport`, the Observability seam); adapters
+   and plugins implement them; nothing in the Core imports an implementation.
+3. **Named patterns, each justified.** Candidates the Core is expected to use: Strategy for filters,
+   Chain of Responsibility for middleware, Observer for Signals, Adapter for the platform, Facade
+   for the public API, Mediator for the dispatcher, Builder for message composition. Every LLD names
+   the pattern as on refactoring.guru, the problem it solves there and the rejected alternative, and
+   may replace a candidate with a reason.
 4. **No singletons, no global context.** No module-level mutable state, no `get_current()`; one
    `Bot` per process is the documented model, and several must still work in tests.
-5. **Immutable inbound events**, keyword-only constructors, typed result objects instead of
-   dictionaries and tuples.
+5. **Immutable inbound events**, keyword-only constructors, typed outcomes
+   ([ADR-0034](0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md)) instead
+   of dictionaries and tuples.
 6. **Declarative thin handlers.** Filters, state gates, payload parsing and dependency injection
    happen outside the handler body; the body makes one service call and answers; unexpected
    exceptions propagate to middleware and observability; handlers, filters and events are
@@ -37,8 +38,9 @@ component document must argue against, in this order of authority:
 
 ## Consequences
 
-- `docs/design/engineering-style.md` (#36) turns these tenets into rules with examples; every LLD
-  has a SOLID section that argues them for its component.
+- [`engineering-style.md`](../design/engineering-style.md)
+  ([ADR-0033](0033-identified-tiered-rules-with-a-derived-review-checklist.md)) turns these tenets
+  into rules with examples; every LLD has a SOLID section that argues them for its component.
 
 ## Where inheritance is allowed
 
@@ -53,13 +55,16 @@ written as rules in [`engineering-style.md`](../design/engineering-style.md) §3
 - **`abc.ABC` is a *restricted* pattern**: permitted inside a single component, for a family of
   interchangeable implementations of that component's own concept, and only with an ADR naming the
   rejected alternative. It never crosses a component boundary and is never a user extension point.
-- **Inheritance is otherwise for two purposes**: the error taxonomy (ADR-0027) and closed variant
-  types whose members are frozen dataclasses.
+- **Inheritance is otherwise for two purposes**: the error taxonomy
+  ([ADR-0027](0027-api-error-taxonomy.md)) and closed variant types whose members are frozen
+  dataclasses.
 - **A mixin is permitted only as a private `_Base…` class inside one component, and only to share
-  behaviour between an asynchronous and a synchronous pair** (ADR-0029).
+  behaviour between an asynchronous and a synchronous pair**
+  ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)).
 - **Template Method is banned as a user extension point** and restricted inside a component.
 - **`@final` is the default** on every class the component's document does not say who subclasses.
 
-The reference implementation we measured holds the mirror position — Protocols only for the shape
-of *foreign* objects, ABC grids for its own implementation families — which is why the boundary is
-worth stating rather than assuming.
+django-modern-rest holds the mirror position — twelve Protocols for the shape of *foreign* objects
+and callbacks, abstract methods on ordinary classes for its own implementation families
+([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)) — which is why the
+boundary is worth stating rather than assuming.

@@ -50,12 +50,13 @@ rule to be:
   the eleven rows. In the other five the seam is named after its implementation and the document is
   the implementation's — `DependencyProvider`, `KeyValueStore`, `LockProvider`, `Codec`,
   `CallbackTokenCodec`. Reading the prose instead of the column inverts three pairs, putting
-  `Router` before `Filter` and `Extractor`, `Webhook` before `Callback token`, and `Exchange`
-  before `API client`. [§5](../design/05-building-block-view.md) is reviewed and owned by #38; this
-  ADR records which of its two statements wins rather than editing it. The *Consumed by* column of
-  the same table is authoritative in the same way about who waits: it names Webhook on the
-  `KeyValueStore` row and the Transports on the `Codec` row, and those edges hold even where the
-  consumer reaches the seam through a part of a third document.
+  `Router` before `Filter` and `Extractor`, `Webhook` before `Callback token`, and `Exchange` before
+  `API client`. [§5.0 and §5.4](../design/05-building-block-view.md) state the column's authority
+  themselves ([ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md)); this ADR
+  records the ruling. The *Consumed by* column of the same table is authoritative in the same way
+  about who waits: it names Webhook on the `KeyValueStore` row and the Transports on the `Codec`
+  row, and those edges hold even where the consumer reaches the seam through a part of a third
+  document.
 - **Two documents may be written in parallel exactly when neither is named as specifying a contract
   in the other's §3** — the same rule read sideways. It is carried by GitHub's native `blocked_by`
   dependencies on the `LLD:` tickets, so the frontier is computed rather than remembered, and by
@@ -68,10 +69,11 @@ rule to be:
   `Outcome`, which `error-boundary.md` returns as `Failed`; `error-boundary.md` owns the exception
   roots that `dispatcher.md` must name. Under the strict reading the two block each other, and the
   same closes between `Router`, `Dispatcher` and `Middleware`.
-- *Bottom-up along the ADR-0032 layer table, with the seam-owning consumer first within a rank* —
-  rejected: it is the reading suggested when #36 closed, and it rests on the §5.4 prose the column
-  contradicts. It also costs roughly two extra waves by holding back four documents that depend on
-  nothing at all — `generated-model`, `codec`, `face` and the storage backends.
+- *Bottom-up along the [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md) layer
+  table, with the seam-owning consumer first within a rank* — rejected: it is the reading suggested
+  when #36 closed, and it rests on the §5.4 prose the column contradicts. It also costs roughly two
+  extra waves by holding back four documents that depend on nothing at all — `generated-model`,
+  `codec`, `face` and the storage backends.
 - *The layer table as a soft tie-breaker inside a wave* — rejected: it changes no edge and adds a
   second source of truth for a question the graph already answers.
 - *No order at all, 27 equal tickets* — rejected: the order is the decision #41 exists to make, and

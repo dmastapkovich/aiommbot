@@ -16,23 +16,27 @@ replicas — is a policy the framework must not choose for the application. We d
 
 - **Helpers bound to the Event**: `answer`, `reply` (in thread), `update`, `delete`,
   `open_dialog` — channel, `root_id` and `trigger_id` come from the Event.
-- **Addressed helpers**, on the Event-free `Workspace` (ADR-0029), for scripts and workers without
-  an Event: `send(channel_id, ...)`,
-  `send_direct(UserRef, ...)` (resolves the user, creates the direct channel), `ephemeral`.
+- **Addressed helpers**, on the Event-free `Workspace`
+  ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)), for scripts and
+  workers without an Event: `send(channel_id, ...)`, `send_direct(UserRef, ...)` (resolves the user,
+  creates the direct channel), `ephemeral`.
 - **File helpers**: `upload(...) -> file_ids` and `download(file_id)`, streaming, as thin wrappers
-  over the files and uploads operations. Everything else — reactions, pins, teams, preferences —
-  is reached through `runtime.api.<resource>` (ADR-0026).
+  over the files and uploads operations. Everything else — reactions, pins, teams, preferences — is
+  reached through `runtime.api.<resource>`
+  ([ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md)).
 - **Resolution without a cache.** `runtime.users.resolve(UserRef)` takes a typed union
   (`UserId | Email | Username | Nickname | FullName`) and queries the API in that priority;
   `runtime.channels.direct(user_id)` creates or fetches the direct channel. Ambiguous and missing
   matches are typed outcomes, not silent first hits.
 - **Caching is a plugin.** `IdentityCache` is an optional adapter-specific plugin on the Core
-  `KeyValueStore` (ADR-0022) with a one-hour default TTL, invalidated by `user_updated` and
-  `channel_updated` events; when enabled, the Runtime consults it through a Protocol. The Adapter
-  and the Core hold no identity state (ADR-0003).
+  `KeyValueStore` ([ADR-0022](0022-state-plugin-model.md)) with a one-hour default TTL, invalidated
+  by `user_updated` and `channel_updated` events; when enabled, the Runtime consults it through a
+  Protocol. The Adapter and the Core hold no identity state
+  ([ADR-0003](0003-stateless-core-state-plugin-with-explicit-backend.md)).
 - **Out of this decision**: message composition builders (attachments, buttons, selects, dialog
   elements and the embedding of Callback tokens) and the file API beyond the two thin helpers
-  (limits, resumable uploads, streaming ergonomics) are separate tickets graduated from #21.
+  (limits, resumable uploads, streaming ergonomics) are #52 and #53, the two tickets graduated from
+  #21.
 
 ## Considered options
 

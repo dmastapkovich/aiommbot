@@ -6,29 +6,48 @@ ticket: "#23"
 
 # One toolchain enforces style, complexity, architecture and dependencies; `just` is the single entry point
 
-Quality is enforced by mechanism (ADR-0006). We fixed the mechanisms and the way they are run:
+Quality is enforced by mechanism ([ADR-0006](0006-architectural-tenets-of-the-core.md)). We fixed
+the mechanisms and the way they are run:
 
 - **ruff** with `select = ["ALL"]` and `preview = true`, blocking. Every ignored rule is listed in
-  `pyproject.toml` with a reason. Known ignores from day one: the `TC` family (it pushes imports
-  into `TYPE_CHECKING` blocks, which we forbid), `D203`/`D213` and `COM812` (conflict with the
-  formatter). `flake8-tidy-imports` `banned-api` forbids `typing.cast`, `typing.TYPE_CHECKING`
-  and `typing.Any` outside annotations; `ANN401` forbids `Any` in annotations.
+  `pyproject.toml` with a reason. The explained ignores: the `TC` family (it pushes imports into
+  `TYPE_CHECKING` blocks, which we forbid); `D203`/`D213` and `COM812` (conflict with the
+  formatter); `ASYNC109` (the API client takes timeouts as parameters,
+  [ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md)); `RUF029` (a
+  coroutine function is a contract of the Protocol it implements, not a consequence of containing an
+  `await`, [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md)). The rule families the
+  rulebook cites by name: `ANN` and `UP` (annotations everywhere, PEP 695 syntax), the `ASYNC`
+  family and `RUF006` (no blocking call on the loop, no unowned task), `N818` (exception names end
+  in `Error`), `G` and `LOG` (logging calls), `ERA` and `TD` (no commented-out code, no untracked
+  to-do), `SLF001` and `PLC2701` package-wide (no private access across modules).
+  `flake8-tidy-imports` `banned-api` forbids `typing.cast`, `typing.TYPE_CHECKING`, `typing.Any`
+  outside annotations and the `typing` spelling of every name the compat module of
+  [ADR-0008](0008-python-floor-3-12-with-typing-extensions.md) owns (`TypeIs`, `ReadOnly`, `TypeVar`
+  defaults, `warnings.deprecated`, …); `ANN401` forbids `Any` in annotations.
 - **ruff format**: line length 100, double quotes, Google docstring convention; docstrings
   required for public names (`D1xx` off for `_internal` and tests); Markdown code blocks are
   formatted too.
-- **wemake-python-styleguide 1.x** as a blocking gate (`flake8 --select=WPS`) with tight limits
-  on arguments, complexity, nesting, module members and imports: the mechanical guard against
-  god objects and long signatures.
+- **wemake-python-styleguide 1.x** as a blocking gate (`flake8 --select=WPS`) with tight limits on
+  arguments, complexity, nesting, module members and imports, and `WPS110`/`WPS111`/`WPS117` with an
+  empty `allowed-domain-names` (no `data`, `item`, `value` or one-letter names): the mechanical
+  guard against god objects, long signatures and meaningless names.
 - **semgrep** with repository rules in `.semgrep/` for what ruff cannot express — dynamic
-  `getattr`/`hasattr`/`setattr`, `Any` in expressions, bare `type: ignore`, direct
-  `__annotations__` access, mutable module globals — each rule with a "do this instead" message
-  and covered by `semgrep --test`; plus the public `p/python` and `p/security-audit` rule sets.
-- **import-linter** contracts in `pyproject.toml`: `layers` (core → adapter → plugins direction
-  of allowed imports), `forbidden` (optional libraries importable only from their plugin or
-  quarantine module), `independence` (plugins do not import each other).
+  `getattr`/`hasattr`/`setattr`, `Any` in expressions, bare `type: ignore`, direct `__annotations__`
+  access, mutable module globals, `asyncio.shield` anywhere but the drain
+  ([ADR-0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md)), `unittest.mock` and
+  `monkeypatch` outside third-party seams and Quarantine tests — each rule with a "do this instead"
+  message and covered by `semgrep --test`; plus the public `p/python` and `p/security-audit` rule
+  sets.
+- **import-linter** contracts in `pyproject.toml`: `layers` (the direction of allowed imports is
+  [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md)'s table), `forbidden`
+  (optional libraries importable only from their plugin or quarantine module), `independence`
+  (plugins do not import each other).
 - **slotscheck** with `require-subclass` and `require-superclass`; data classes are
   `@dataclass(slots=True, frozen=True, kw_only=True)`, service classes declare `__slots__`;
   Protocols and listed ABCs are the exceptions.
+- **pytest** configuration is part of the toolchain: `filterwarnings = ["error"]`, doctest
+  collection over the package so documentation examples run, a per-test timeout (`pytest-timeout`),
+  and branch coverage at 100 % measured over the tests as well as the package.
 - **deptry**, `uv lock --check` and `uv audit` keep extras honest, the lock current and
   dependencies free of known vulnerabilities; **typos** for spelling; **pyproject-fmt** for a
   canonical `pyproject.toml`; **zizmor** for GitHub Actions hygiene.
