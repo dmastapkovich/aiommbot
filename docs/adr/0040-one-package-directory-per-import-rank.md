@@ -39,7 +39,12 @@ src/aiommbot/
       websocket_transport/  webhook/  callback_token/  identity_cache/
   plugins/                           the generic rank
     state/  backends/  dishka.py  wireup.py
-  testing/                           shape decided by #25
+  testing/                           the testing toolkit rank
+    __init__.py                      the toolkit's public surface
+    fake_mattermost.py  test_bot.py  fake_adapter.py  fake_clock.py
+    builders.py  assertions.py                     components and parts of §5.9
+    conformance/                     one module per conformance suite
+    plugin.py                        the pytest plugin named in `pytest_plugins`
 ```
 
 None of these module names is a documented import path — a public name is documented at its

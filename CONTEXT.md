@@ -31,8 +31,8 @@ _Avoid_: manifest, metadata, config
 **Extra**:
 An optional dependency of the distribution, published under one name and installed as
 `aiommbot[<name>]`. Exactly one Extra per optional library, named after that library; the four
-libraries a bot cannot run without are installed by default and are not Extras, and development
-tooling is a dependency group instead.
+libraries a bot cannot run without are installed by default and are not Extras, and a library no
+published module of ours imports is a dependency group instead.
 _Avoid_: optional dependency (as the name), feature, variant, flavour
 
 **Check**:
@@ -421,7 +421,37 @@ decorating the HTTPTransport or by Middleware.
 _Avoid_: hook (that is a Signal subscriber), interceptor, tracer, instrumentation
 
 **Testing toolkit**:
-`aiommbot.testing`: the first-party doubles, conformance suites, event builders, typed dependency
-overrides and parity tests shipped with the framework. It may import every layer and no layer may
-import it, which is what keeps doubles out of the shipped runtime.
+`aiommbot.testing`: the TestBot, the Conformance suites, the Event builders, the recording Reply
+channel, the small doubles and the pytest plugin shipped with the framework. It may import every
+layer and no layer may import it, which is what keeps doubles out of the shipped runtime; it is the
+one public package that imports pytest, and its fixtures reach a session only when the application
+names its plugin.
 _Avoid_: test utils, fixtures, mocks, test framework
+
+**TestBot**:
+The wrapper the Testing toolkit puts around a composed Bot: typed dependency overrides by key
+before the start, a context manager that runs the check and start phases without a Transport, `feed`
+returning the typed Outcome, and typed records of what the run produced. The only override API that
+exists; the toolkit never composes a Bot of its own.
+_Avoid_: test client, test harness, fake bot, dispatcher stub
+
+**FakeMattermost**:
+The stateful in-memory server the Testing toolkit ships — users, channels, posts and reactions —
+exposing an `http` port that implements both HTTP transport Protocols and a `websocket` port that
+implements the WebSocketConnection Protocol, with typed fault injection and a record of every call.
+The only double of the platform; a test seeds it and substitutes individual Operations rather than
+subclassing it.
+_Avoid_: mock server, stub server, fake API, sandbox
+
+**Conformance suite**:
+The executable form of a Protocol's contract: a factory that takes an implementation's factory and
+the capabilities it declines, and yields the parametrised test the implementer names in their own
+module. One per seam of the Core plus one for the Plugin lifecycle; a named case, and a suite whose
+tightening is a change to the Protocol itself.
+_Avoid_: contract test kit, compliance suite, test base class, ABC test
+
+**Event builder**:
+A typed constructor in the Testing toolkit for one first-class Payload, filling EventMeta and
+producing an Event without a server. FakeMattermost produces the events of its own mutations through
+the same builders, so a built and a provoked Event have one shape.
+_Avoid_: factory (that is a DI Provider), fixture, sample event

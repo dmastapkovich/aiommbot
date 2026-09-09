@@ -79,7 +79,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Default dependencies, one extra per optional library, dependency groups | #24 | 0041 | reviewed |
 | The documented import path of a public name | #24 | 0042 | reviewed |
 | Public surface mechanism: explicit re-export, reference page, internal-API page | #24 | 0043 | reviewed |
-| Testing toolkit | #25 | | not started |
+| Testing toolkit: pytest as an Extra, explicit plugin activation, three fixtures | #25 | 0044 | reviewed |
+| Platform double: one stateful `FakeMattermost` with ports, typed faults and seeding | #25 | 0045 | reviewed |
+| `TestBot` over the composed Bot, and no second composition path | #25 | 0046 | reviewed |
+| Conformance suite per Core seam: delivery form, capabilities, stability | #25 | 0047 | reviewed |
 | Documentation stack and executable docs | #26 | | not started |
 | Agent-native repository and AI policy | #27 | | not started |
 | CI, release, versioning, changelog, deprecation | #28 | | not started |
@@ -99,11 +102,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 
 ## C. Component design documents (LLD)
 
-§5.10 of `05-building-block-view.md` lists **28 components** across five layers, with 27 part
+§5.10 of `05-building-block-view.md` lists **29 components** across five layers, with 31 part
 rows and fourteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
-document of their own. One row per component here and one `LLD: <component>` ticket each; the
-testing toolkit's row appears once #25 has decided its shape. The file name is the `CONTEXT.md`
-term in kebab-case.
+document of their own. One row per component here and one `LLD: <component>` ticket each. The file
+name is the `CONTEXT.md` term in kebab-case.
 
 | Component | Layer | File | Status | Ticket |
 |---|---|---|---|---|
@@ -134,6 +136,8 @@ term in kebab-case.
 | WebSocketTransport | Adapter-specific plugin | `components/websocket-transport.md` | not started | #81 |
 | Bot | Core | `components/bot.md` | not started | #82 |
 | State | Generic plugin | `components/state.md` | not started | #83 |
+| FakeMattermost | Testing toolkit | `components/fake-mattermost.md` | not started | #88 |
+| Testing toolkit | Testing toolkit | `components/testing-toolkit.md` | not started | #89 |
 
 ## D. Cross-cutting concerns
 
@@ -151,12 +155,12 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | in progress |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), ADR-0040 (directories and contract shape) | style §8; §5, §8 | | in progress |
 | Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | in progress |
-| Testing strategy (unit / contract / integration / typing / property) | #36 (how tests are written), #25 (toolkit shape) | style §11; §8 | | in progress |
+| Testing strategy (unit / contract / integration / typing / property) | ADR-0033 and style §11 (how tests are written), ADR-0044 (packaging and activation), ADR-0045 (the platform double), ADR-0046 (`TestBot`), ADR-0047 (conformance suites) | style §11; §5.9; §8 | | in progress (§10 scenario pending #37) |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start) | §8, gateway LLD | | in progress |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | in progress |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | in progress |
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | in progress |
-| Deprecation and public-API definition for semver | ADR-0007 (the four criteria of public), ADR-0042 (the documented path), ADR-0043 (re-export form, reference page, internal-API page), research 22 §6.4 (the shim shape), #28 (semver and deprecation window) | style §8, §10 | | in progress |
+| Deprecation and public-API definition for semver | ADR-0007 (the four criteria of public), ADR-0042 (the documented path), ADR-0043 (re-export form, reference page, internal-API page), ADR-0047 (what tightening a conformance suite means), research 22 §6.4 (the shim shape), #28 (semver and deprecation window) | style §8, §10 | | in progress |
 
 ## E. Fog and backlog
 

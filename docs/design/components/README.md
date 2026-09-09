@@ -40,3 +40,5 @@ status line and `TRACKER.md` §C.
 | WebSocketTransport | Adapter-specific plugin | `websocket-transport.md` | 5 | #81 |
 | Bot | Core | `bot.md` | 6 | #82 |
 | State | Generic plugin | `state.md` | 6 | #83 |
+| FakeMattermost | Testing toolkit | `fake-mattermost.md` | 6 | #88 |
+| Testing toolkit | Testing toolkit | `testing-toolkit.md` | 7 | #89 |

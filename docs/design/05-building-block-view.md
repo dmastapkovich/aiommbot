@@ -79,7 +79,7 @@ Kubernetes consequences of the drain budget, are [§7](07-deployment-view.md).
 ```mermaid
 C4Component
     title Layers inside a Bot process — arrows are the allowed direction of imports
-    Component(testing, "Testing toolkit", "aiommbot.testing", "Doubles, conformance suites, TestBot")
+    Component(testing, "Testing toolkit", "aiommbot.testing", "TestBot, conformance suites, FakeMattermost")
     Component(aplugins, "Adapter-specific plugins", "Plugin", "WebSocketTransport, Webhook, IdentityCache")
     Component(adapter, "Adapter", "Mattermost", "Platform vocabulary, API client, Workspace, Runtime")
     Component(gplugins, "Generic plugins", "Plugin", "State, storage backends, DI bridges, observer extra")
@@ -306,27 +306,49 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 ## 5.9 Level 3 — the testing toolkit
 
 `aiommbot.testing` may import every layer and is imported by none
-([ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)). Its blocks are
-listed here because earlier decisions already require them by name; **its shape is #25's decision**,
-so it has no diagram and no design document until #25 closes.
+([ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)). It is the one public
+package that imports pytest, delivered by the extra of the same name, and its fixtures reach a test
+session only when the application asks for them by name
+([ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)).
 
-| Block | Kind | Required by | Decision |
-|---|---|---|---|
-| **Testing toolkit** | component | — | #25 |
-| In-memory `HTTPTransport`/`SyncHTTPTransport` double, both faces in one class | part | the parametrised conformance suite of both client Faces | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| In-memory `WebSocketConnection` double | part | the contract suite both socket libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, `ReplyChannel`, plugin lifecycle | part | external storage backends, third-party plugins, and the one provided seam | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
-| Recording `ReplyChannel` slot | part | the second implementation of the provided seam, generic in `R`, and the conformance suite parametrised over it and the Webhook's two slots | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
-| `TestBot` with typed overrides by key | part | the only override API that exists — production has none | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |
-| The typed name-parity test of the two Faces | part | holding duality by mechanism rather than review | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| `assert_matches(event, handler)` | part | shadowing between arbitrary filters, which start-up cannot decide | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
+Two components, because the platform double holds state, has invariants and fails in ways of its
+own, while everything else in the layer is a helper over somebody else's contract
+([ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md)).
+
+```mermaid
+C4Component
+    title Components of the testing toolkit
+    Component(toolkit, "Testing toolkit", "aiommbot.testing", "TestBot, conformance suites, event builders, the recording Reply channel, the pytest plugin")
+    Component(server, "FakeMattermost", "Stateful in-memory server", "Users, channels, posts; an http and a websocket port; typed faults")
+    Rel(toolkit, server, "seeds, composes into fixtures and drives")
+```
+
+A test configures exactly one object of the platform — the server — and reaches every seam it
+implements through that object's ports; there is no second double of Mattermost anywhere
+(ADR-0045).
+
+| Block | Kind | Responsibility | Document | Decisions |
+|---|---|---|---|---|
+| **Testing toolkit** | component | Everything a test needs that is not the platform: the wrapper that runs a composed Bot, the thirteen conformance suites, the typed event builders, the recording Reply channel, the two small doubles, the routing assertion and the pytest plugin | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| `TestBot` | part | The wrapper over a composed Bot: typed overrides by key before the start, an asynchronous context manager running check and start with no Transport, `feed` returning the typed `Outcome`, and typed records of outcomes, replies and Signals | `testing-toolkit.md` | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md) |
+| The thirteen conformance suites | part | One factory per seam row of 5.4 plus the plugin lifecycle, each taking the implementer's factory and the capabilities it declines, and reporting a named case's expectation and observation as typed data | `testing-toolkit.md` | [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| Event builders | part | One typed constructor per first-class payload, filling `EventMeta` and validating what the envelope deliberately does not; the server produces its events through the same builders | `testing-toolkit.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
+| Recording `ReplyChannel` slot | part | The second implementation of the one provided seam, generic in `R`, over which the `ReplyChannel` suite is parametrised alongside the Webhook's two slots | `testing-toolkit.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
+| `FakeAdapter` and `FakeClock` | part | The Adapter double a Core-only test composes, and the clock every timeout, TTL and backoff is driven by instead of sleeping (`ST-TST-09`) | `testing-toolkit.md` | [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md) |
+| `assert_matches(event, handler)` | part | Shadowing between arbitrary filters, which start-up cannot decide | `testing-toolkit.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
+| The typed name-parity test of the two Faces | part | Holding duality by mechanism rather than review | `testing-toolkit.md` | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
+| The pytest plugin and its three fixtures | part | `fake_mattermost`, `test_bot` and `fake_clock`, named in `pytest_plugins`, adding no option, marker or hook | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) |
+| **FakeMattermost** | component | The stateful in-memory server: users, channels, posts and reactions, answered with the generated models through the `Codec` seam, and a socket whose resume and sequence behaviour follows the protocol | `fake-mattermost.md` | [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md), [`docs/research/01`](../research/01-mattermost-websocket-protocol.md) |
+| The `http` and `websocket` ports | part | One class implementing both `HTTPTransport` and `SyncHTTPTransport`, and one implementing `WebSocketConnection`; each passes its own conformance suite | `fake-mattermost.md` | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md), [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| Typed fault injection | part | Scheduled outcomes on an `Operation` and on the socket — a status with an `AppError`, a close code, silence, a revoked session, a sequence gap — which is what removes the need for a scripted transport | `fake-mattermost.md` | [ADR-0027](../adr/0027-api-error-taxonomy.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
+| Seeding, per-`Operation` substitution and the `ApiCall` record | part | How a test prepares its own server and how it asserts on it, with no subclassing of ours anywhere (`ST-PAT-07`) | `fake-mattermost.md` | [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
 
 ## 5.10 Inventory summary
 
-28 components, 27 part rows, and fourteen Protocols on twelve seam rows — eleven of those rows
-required and one provided (5.4). The count matters in one way only: **27 `LLD: <component>`
-tickets**, and a twenty-eighth — the testing toolkit — held until #25 decides its shape. Parts and seams generate nothing; they are specified inside the document named
-beside them.
+29 components, 31 part rows, and fourteen Protocols on twelve seam rows — eleven of those rows
+required and one provided (5.4). The count matters in one way only: **29 `LLD: <component>`
+tickets**. Parts and seams generate nothing; they are specified inside the document named beside
+them.
 
 | Layer | Components |
 |---|---|
@@ -334,7 +356,7 @@ beside them.
 | Adapter | EventRegistry, Model generator, Generated model, Codec, API client, Exchange, Face, Workspace, Runtime, AuthLossDetector |
 | Generic plugins | State, KeyValueStore and LockProvider backends |
 | Adapter-specific plugins | WebSocketTransport, Webhook, Callback token, IdentityCache |
-| Testing toolkit | Testing toolkit (deferred to #25) |
+| Testing toolkit | Testing toolkit, FakeMattermost |
 
 Callback token is a component of its layer without a `PluginSpec`: the Webhook composes it, the
 application never lists it.

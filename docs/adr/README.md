@@ -52,3 +52,7 @@ ticket owns which decision.
 | [0041](0041-default-dependencies-and-one-extra-per-optional-library.md) | The distribution installs the four libraries a Mattermost bot cannot run without, and every other library is an extra named after it | accepted |
 | [0042](0042-a-public-name-is-documented-at-its-package-path.md) | A public name is documented at its package path, and a module path is never part of the public surface | accepted |
 | [0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) | A public name is a redundant-alias re-export listed on a hand-written reference page, and the package carries no `__all__` | accepted |
+| [0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) | The testing toolkit imports pytest through an extra named after it, and one line in the root `conftest.py` activates its plugin (amends 0041) | accepted |
+| [0045](0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) | One stateful `FakeMattermost` is the only platform double, and its ports, its faults and its events are its own surface | accepted |
+| [0046](0046-testbot-wraps-the-composed-bot.md) | A bot is tested by wrapping the composed `Bot`, and the toolkit offers no second way to compose one | accepted |
+| [0047](0047-a-conformance-suite-per-core-seam.md) | Every Core seam has a conformance suite, delivered as a factory over the implementer's factory, and tightening one is a change to the Protocol (amends 0015) | accepted |

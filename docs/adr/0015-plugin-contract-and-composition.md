@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
+amended-by: [ADR-0047]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -45,9 +46,9 @@ addition, not a rewrite.
   with a clear message. First-party plugins are subpackages of the single distribution, one extra
   per optional library and a `MissingExtraError` at construction
   ([ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)); each ships with a
-  component design document and passes
-  the contract test kit in `aiommbot.testing` (conformance suites for `KeyValueStore` and
-  `LockProvider` ([ADR-0022](0022-state-plugin-model.md)), `Transport` and the plugin lifecycle).
+  component design document and passes the conformance suite of every Protocol it implements,
+  including the one for the plugin lifecycle
+  ([ADR-0047](0047-a-conformance-suite-per-core-seam.md)).
 
 ## Considered options
 

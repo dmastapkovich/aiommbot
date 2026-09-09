@@ -89,4 +89,6 @@ exactly the semantics that do not survive unasyncing. We decided:
 - The Adapter carries two Faces that must stay in step; the parity test and the shared
   conformance suite are what keep them honest.
 - The `Workspace`, the Exchange and the Face each have a design document in the LLD inventory, and
-  the conformance and parity suites belong to the testing toolkit (#25).
+  the conformance and parity suites belong to the testing toolkit
+  ([ADR-0047](0047-a-conformance-suite-per-core-seam.md)), and the in-memory double is the `http`
+  port of `FakeMattermost` ([ADR-0045](0045-one-stateful-fake-mattermost-is-the-only-platform-double.md)).

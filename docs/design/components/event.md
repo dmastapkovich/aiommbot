@@ -51,7 +51,7 @@ dispatch, the order of enrichment — which belongs to Filter, Router, Dispatche
   - who may derive an enriched envelope and in what order — Middleware (#78)
     ([ADR-0020](../../adr/0020-two-layer-middleware-chain.md));
   - anything injected *beside* the envelope — DependencyProvider (#59);
-  - constructing envelopes in tests, and the recording `ReplyChannel` — the Testing toolkit (#25).
+  - constructing envelopes in tests, and the recording `ReplyChannel` — the Testing toolkit (#89).
 
 ## 3. Public contract
 
@@ -167,7 +167,7 @@ Handler to call rather than calling out through it
 ([ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md),
 [ADR-0038](../../adr/0038-seam-inventory-records-the-direction-of-the-call.md)). It has two
 implementations: the Webhook plugin's, as `ReplyChannel[ActionReply]` and
-`ReplyChannel[DialogReply]` (#80), and the recording slot of the Testing toolkit (#25).
+`ReplyChannel[DialogReply]` (#80), and the recording slot of the Testing toolkit (#89).
 
 - `async def send(self, reply: R) -> None | ReplyAlreadySent` — accepted at most once. "Already
   answered" is a branch the immediate caller takes in normal operation, so it is a Typed outcome
@@ -300,7 +300,7 @@ Verification runs *before* an Event exists, so a token that fails verification n
 envelope; which token outcomes produce a `StaleAction` envelope instead is
 [ADR-0024](../../adr/0024-webhook-ingress-and-callback-security.md)'s, described by the Webhook
 (#80) and Callback token (#70) documents. The same three branches run against the recording slot of
-the Testing toolkit (#25), which is the second implementation of the Protocol and the reason the
+the Testing toolkit (#89), which is the second implementation of the Protocol and the reason the
 conformance suite of [§10](#10-testing-strategy) is parametrised.
 
 ### 5.3 The Reply slot's lifecycle
@@ -369,7 +369,7 @@ Considered and unused (`ST-PAT-09`):
 - **[Builder](https://refactoring.guru/design-patterns/builder)** (§3.1) — an `EventBuilder` for
   Transports. Rejected: `kw_only=True` construction already names every field at the call site, and
   a half-built envelope is exactly what [§8](#8-failure-modes-and-invariants) forbids. Convenience
-  construction for tests is the Testing toolkit's event builders (#25).
+  construction for tests is the Testing toolkit's event builders (#89).
 - **[Decorator](https://refactoring.guru/design-patterns/decorator)** (§3.1) — wrapping an envelope
   to add fields. Rejected: a wrapper is not the frozen dataclass the seam promises, and enrichment
   already has one path.
@@ -457,7 +457,7 @@ Invariants that must always hold:
 |---|---|---|---|
 | Bad input — a `kind` with no registered payload | Not a failure here: the Adapter decodes it to `RawEvent`, so invariant 2 still holds and the event stays routable ([ADR-0012](../../adr/0012-generic-event-envelope-with-adapter-payloads.md)) | neither | — |
 | Bad input — a frame that does not decode | No envelope is ever constructed; the Adapter's decode raises before this component is reached | exception | the Transport, which logs and drops the frame; it never becomes a dispatch |
-| Bad input — a malformed envelope (a missing field, a `str` where a `CorrelationId` is due) | Unconstructible: keyword-only frozen construction plus four strict checkers reject it, and every construction site is first-party. Timezone-awareness of `received_at` is the promise of the Transport's injected clock (`ST-TST-09`) and is not checked here. This component performs **no runtime validation**, deliberately: it is the per-event hot path, and a hand-built envelope's checking belongs to the Testing toolkit's event builders (#25) | neither | — |
+| Bad input — a malformed envelope (a missing field, a `str` where a `CorrelationId` is due) | Unconstructible: keyword-only frozen construction plus four strict checkers reject it, and every construction site is first-party. Timezone-awareness of `received_at` is the promise of the Transport's injected clock (`ST-TST-09`) and is not checked here. This component performs **no runtime validation**, deliberately: it is the per-event hot path, and a hand-built envelope's checking belongs to the Testing toolkit's event builders (#89) | neither | — |
 | Timeout | The envelope owns no I/O and no deadline of its own. The one deadline it carries is the slot's: when it fires the Transport claims the slot and answers, and a later `send` reports `ReplyAlreadySent` | typed outcome | none — the Handler is the immediate caller and must branch (`ST-ERR-01`) |
 | Cancellation | An envelope is a value, so a cancelled dispatch simply drops it. `send` is the only awaitable in the contract; `CancelledError` passes through untouched (`ST-ASY-04`) and the claim already made is not released, so no second reply can follow | exception (`CancelledError`, unhandled by design) | none — `BaseException` passes the ErrorBoundary ([ADR-0021](../../adr/0021-core-error-boundary.md)) |
 | Dependency outage — the HTTP connection behind a slot is gone | `send` raises; the Protocol permits it and says so, because a failed write is a broken dependency and not a branch the caller can usefully take | exception | the ErrorBoundary, into `Failed` ([ADR-0021](../../adr/0021-core-error-boundary.md)) |
@@ -537,7 +537,8 @@ only how the rule lands here.
 - **Unit.** Frozen construction is keyword-only and assignment raises; `derive` returns a new
   envelope whose `kind` and `payload` are the *same objects* and whose `meta` is the replacement;
   `CorrelationId` is accepted where a `CorrelationId` is asked for and a bare `str` is not.
-- **Contract.** A `ReplyChannel` conformance suite in `aiommbot.testing` (#25), parametrised over
+- **Contract.** A `ReplyChannel` conformance suite in `aiommbot.testing`
+  ([ADR-0047](../../adr/0047-a-conformance-suite-per-core-seam.md)), parametrised over
   every implementation rather than copied per implementation (`ST-TST-08`, `ST-SOL-03`,
   `ST-TST-02`): a first `send` is accepted; a second reports `ReplyAlreadySent`; `sent` and
   `deadline` are readable before and after; two concurrent `send` calls produce exactly one
@@ -582,6 +583,6 @@ only how the rule lands here.
 
 | Question | Ticket |
 |---|---|
-| The home, shape and fixtures of the `ReplyChannel` conformance suite, the recording slot, and the event builders a hand-built envelope is validated by | #25 (Testing toolkit) |
+| The shape of the `ReplyChannel` conformance suite, the recording slot, and the event builders a hand-built envelope is validated by — their home is `aiommbot.testing` ([ADR-0044](../../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0047](../../adr/0047-a-conformance-suite-per-core-seam.md)) | #89 (LLD: Testing toolkit) |
 | The final contents of the single redaction list that must name `payload` and `raw`, and the observer record that carries `correlation_id` | #29 (observability boundary) |
 | Whether the `RawEvent` payload re-decodes `meta.raw` or receives the parsed mapping from the Adapter's own decode | #69 (EventRegistry) |

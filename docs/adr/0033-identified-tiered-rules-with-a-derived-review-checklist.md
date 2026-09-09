@@ -47,9 +47,11 @@ from a rule that lives on a reviewer's attention. We decided the shape of
   and the extras are [ADR-0040](0040-one-package-directory-per-import-rank.md),
   [ADR-0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) and
   [ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)'s; the testing
-  toolkit's shape is #25's; the documentation stack is #26's; the observability
-  boundary and the observer record are #29's; the ruff, WPS, semgrep and import-linter configuration
-  is [ADR-0011](0011-lint-format-and-architecture-toolchain.md)'s.
+  toolkit's shape is
+  [ADR-0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) to
+  [ADR-0047](0047-a-conformance-suite-per-core-seam.md); the documentation stack is #26's; the
+  observability boundary and the observer record are #29's; the ruff, WPS, semgrep and
+  import-linter configuration is [ADR-0011](0011-lint-format-and-architecture-toolchain.md)'s.
 
 Evidence that the shape works: django-modern-rest keeps its rules as a 1,570-line agent-facing
 `SKILL.md` — 31 imperative headings, `Wrong:`/`Correct:` pairs, `Limitations:` on most rules, deep

@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#24"
+amended-by: [ADR-0044]
 ---
 
 # The distribution installs the four libraries a Mattermost bot cannot run without, and every other library is an extra named after it
@@ -30,6 +31,7 @@ replaceable seams have two.
 | `paseto` | `pyseto` | the PASETO `CallbackTokenCodec` ([ADR-0024](0024-webhook-ingress-and-callback-security.md)) |
 | `dishka` | `dishka` | the dishka `DependencyProvider` bridge ([ADR-0018](0018-core-owned-type-keyed-dependency-injection.md)) |
 | `wireup` | `wireup` | the wireup `DependencyProvider` bridge (ADR-0018) |
+| `pytest` | `pytest` | `aiommbot.testing`, which imports it ([ADR-0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)) |
 
 `paseto` is the one extra named for a standard rather than a package, because that is the word the
 person asking for it uses; ADR-0024 fixed the name and it stays. The observability observers add
@@ -37,9 +39,14 @@ their extras under the same rule when #29 decides what they depend on.
 
 **No aggregate extra.** `websockets` and `picows` are alternatives, so are `dishka` and `wireup`; an
 `all` that installs both halves of two either-or choices teaches nobody anything and becomes the
-answer to every import error. Development tooling is not an extra either: it lives in PEP 735
-`[dependency-groups]` — `lint`, `typing`, `test`, `docs`, `codegen`, and `dev` including the
-rest — because groups are not published in the wheel's metadata while extras are
+answer to every import error.
+
+**A library is an extra when a published module of ours imports it, and a dependency group when
+only we run it.** The line is what the wheel contains, not what the library is for: `pytest` is a
+test runner and also the import of `aiommbot.testing`, so it is an extra, while the tooling that
+never appears in a published module — `lint`, `typing`, `test`, `docs`, `codegen`, and `dev`
+including the rest — lives in PEP 735 `[dependency-groups]`, which are not published in the wheel's
+metadata while extras are
 ([`docs/research/04`](../research/04-modern-python-library-engineering-2026.md)).
 
 A missing extra is reported as `MissingExtraError`, a subclass of `AiommbotError`, raised in the

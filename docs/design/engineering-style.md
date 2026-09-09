@@ -33,8 +33,9 @@ re-export mechanism and the extras are
 [ADR-0040](../adr/0040-one-package-directory-per-import-rank.md),
 [ADR-0043](../adr/0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) and
 [ADR-0041](../adr/0041-default-dependencies-and-one-extra-per-optional-library.md)'s, the testing
-toolkit's shape is #25's, the documentation stack is #26's, the observability boundary and the
-observer record are #29's.
+toolkit's shape is [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)
+to [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md)'s, the documentation stack is #26's,
+the observability boundary and the observer record are #29's.
 
 ## 1. Ideology
 
@@ -1571,7 +1572,9 @@ class StateSpec: ...
 ```
 
 _Limits:_ an immutable module-level `Final` constant, including one read from the environment into a
-frozen value, is not a side effect.
+frozen value, is not a side effect. `aiommbot.testing` imports pytest, so its smoke import runs with
+the `pytest` extra installed rather than without one
+([ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)).
 _Tier:_ `tool` — the smoke-import recipe: every public module imports with no extras installed.
 _Checked in:_ LLD, PR. _From:_ [ADR-0002](../adr/0002-core-scope-two-condition-test.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [`docs/research/10`](../research/10-plugin-systems.md).
 
@@ -1851,8 +1854,9 @@ class KeyValueStore(Protocol):
     """
 ```
 
-_Limits:_ the suites themselves are #25's to shape; this rule requires the docstring to name the one
-that applies.
+_Limits:_ every seam has one
+([ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md)); this rule requires the docstring to
+name the one that applies.
 _Tier:_ `review`, with `ST-SOL-03` making the suite itself blocking. _Checked in:_ LLD, PR.
 _From:_ [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md).
 
@@ -1937,7 +1941,10 @@ _From:_ [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md), [`d
 
 ## 11. Tests — `ST-TST`
 
-How tests are written is here; what `aiommbot.testing` provides is #25's.
+How tests are written is here; what `aiommbot.testing` provides is
+[§5.9](05-building-block-view.md) and
+[ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) to
+[ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md).
 
 #### `ST-TST-01` — Double one of our own Protocols with `aiommbot.testing` or with a real implementation of it, and never with a mock or a patched attribute
 
@@ -1950,7 +1957,7 @@ store = MagicMock(spec=KeyValueStore)
 monkeypatch.setattr(dispatcher, '_router', object())
 
 # Do
-store = InMemoryKeyValueStore()               # shipped in aiommbot.testing
+store = InMemoryKeyValueStore()               # shipped in aiommbot.plugins.backends
 class _RefusingStore:                         # a real implementation, for one behaviour
     __slots__ = ()
     async def get(self, key: str) -> bytes | None:
@@ -1986,7 +1993,7 @@ test_redis_store_conforms = key_value_store_conformance(lambda: RedisKeyValueSto
 
 _Limits:_ a Protocol with exactly one shipped implementation and no extension point may carry unit
 tests instead, and its document must say so.
-_Tier:_ `tool` — the suites. _Checked in:_ LLD, PR. _From:_ [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md).
+_Tier:_ `tool` — the suites. _Checked in:_ LLD, PR. _From:_ [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md).
 
 #### `ST-TST-03` — Test one behaviour per test and name the test after that behaviour
 

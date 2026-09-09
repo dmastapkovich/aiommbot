@@ -89,8 +89,9 @@ Core owns. We decided:
 ## Consequences
 
 - `ReplyChannel` and its conformance suite join the substitution surface: the suite is the testing
-  toolkit's (#25) and covers single use, the deadline, concurrent `send` and cancellation, run
-  against the Webhook slot and the recording slot alike.
+  toolkit's ([ADR-0047](0047-a-conformance-suite-per-core-seam.md)) and covers single use, the
+  deadline, concurrent `send` and cancellation, run against the Webhook slot and the recording slot
+  alike.
 - Every document that names `Event` in its own contract carries the second parameter. Where it does
   not care about the slot it writes `Event[P]`, which the declared contravariance makes correct
   rather than merely tolerated.
