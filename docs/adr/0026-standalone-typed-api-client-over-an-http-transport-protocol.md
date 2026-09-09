@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#21"
-amended-by: [ADR-0029]
+amended-by: [ADR-0029, ADR-0048]
 ---
 
 # The Mattermost REST client is a standalone typed API client: httpx2 behind an `HTTPTransport` Protocol, generated `Operation` descriptors under resource methods, pagination iterators, a narrow built-in retry policy, async first with a synchronous Face
@@ -70,10 +70,11 @@ token, aiohttp has no sync face and niquests rewrites the host application's `ur
      `HTTPTransport` Protocol (headers, caching, its own retry or breaker) or adds Middleware over
      the dispatch layers ([ADR-0020](0020-two-layer-middleware-chain.md)) for event-level
      instrumentation. Observation and modification are separate seams on purpose.
-  The record's exact fields, the first-party observer's conventions and whether `opentelemetry-api`
-  is a dependency at all are decided by #29 with
-  [`docs/research/17`](../research/17-http-client-observability.md) as its input; the pluggability
-  above is not up for renegotiation there.
+  The record's fields, the observers' conventions and the extras they arrive in are
+  [ADR-0048](0048-observability-is-not-a-core-seam.md)'s and
+  [ADR-0051](0051-first-party-observability-plugin.md)'s, over
+  [`docs/research/17`](../research/17-http-client-observability.md); `SyncRequestObserver` is the
+  synchronous face's pair, in the same module.
 - **Defaults are settings, not decisions**: timeouts (connect 5 s, read and write 30 s, pool 5 s;
   300 s for file operations), pool limits (httpx2's 100/20), HTTP/2 off (`http2` extra available).
   They live in the client's component document.

@@ -14,10 +14,12 @@ the questions above. [`docs/research/17`](17-http-client-observability.md) §4 c
 for an outbound HTTP client only and is not repeated;
 [`docs/research/23`](23-dispatch-observability-in-async-frameworks.md) covers metrics and traces.
 
-Findings only — the decisions are #29's. All sources are primary (`docs.python.org`,
-`peps.python.org`, RFC text, the OpenTelemetry specification, CPython source, project source and
-documentation on GitHub), read on 2026-09-09. `structlog` is studied only as a *consumer* of stdlib
-records and is never a dependency. Anything not confirmed from a primary source is marked
+Findings only — the decisions are
+[ADR-0052](../adr/0052-log-levels-by-frequency-and-audience.md) to
+[ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md). All sources are primary
+(`docs.python.org`, `peps.python.org`, RFC text, the OpenTelemetry specification, CPython source,
+project source and documentation on GitHub), read on 2026-09-09. `structlog` is studied only as a
+*consumer* of stdlib records and is never a dependency. Anything not confirmed from a primary source is marked
 **[unverified]**.
 
 ## 1 Ambient context: the four stdlib mechanisms, compared

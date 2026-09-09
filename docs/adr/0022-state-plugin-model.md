@@ -3,6 +3,7 @@ status: accepted
 date: 2026-09-03
 ticket: "#18"
 amends: [ADR-0003]
+amended-by: [ADR-0048]
 ---
 
 # Conversation state is a typed `Flow[Data]` keyed by a `StateKey`, stored through two Core Protocols with compare-and-set, isolated per key by default
@@ -39,7 +40,8 @@ at every step.
 - **Isolation by default.** The State plugin contributes an Inbound middleware: for events that
   yield a `StateKey` it takes `LockProvider.lock(key, ttl)` for the walk and the handler, then
   publishes `StateContext` into the Event scope (state is read after the lock is held). Locks carry
-  a TTL and a wait timeout; expiry is a typed outcome reported to observability, never a leaked lock
+  a TTL and a wait timeout; expiry is a typed outcome with a WARNING beside it
+  ([ADR-0052](0052-log-levels-by-frequency-and-audience.md)), never a leaked lock
   (aiogram's unfixed clean-up TODO). Isolation is on unless disabled explicitly; an in-memory lock
   is legal only under the single-process declaration
   ([ADR-0003](0003-stateless-core-state-plugin-with-explicit-backend.md)).

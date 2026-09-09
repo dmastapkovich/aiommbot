@@ -207,15 +207,18 @@ values, available to Handler-layer Middleware by annotation.
 _Avoid_: route match, target, handler context
 
 **ErrorBoundary**:
-The non-removable outermost Middleware of the Core. Catches `Exception`, logs without payload,
-reports to observability, returns `Failed`. Lets `BaseException` and `FatalError` through.
+The non-removable outermost Middleware of the Core. Catches `Exception`, writes the one ERROR record
+the framework allows a traceback in, and returns `Failed` carrying the exception — which is how the
+failure reaches whatever wraps it. Lets `BaseException` and `FatalError` through.
 _Avoid_: error handler, exception middleware, catch-all
 
 **Observability seam**:
-The Core-owned Protocol through which the Dispatcher and the ErrorBoundary report dispatch facts —
-the event name of an `Unhandled` walk, the error class of a `Failed` outcome, timings — to whatever
-the application registered; nothing is registered by default. Its record shape is decided in #29.
-_Avoid_: observability hook, metrics hook, telemetry, instrumentation, tracer
+The one observation Protocol the Core owns: RequestObserver together with its synchronous twin
+SyncRequestObserver, over the Request record. A dispatch fact travels no Protocol at all — it is the
+typed Outcome, observed by Middleware — so there is no second seam. Nothing is registered by
+default; an observer never changes the call, and its failure is caught and logged and never reaches
+the caller.
+_Avoid_: observability hook, metrics hook, telemetry, instrumentation, tracer, DispatchObserver
 
 **HandlerSpec**:
 The frozen record built when a Handler is registered: name, router path, event kind, filters and
@@ -415,10 +418,45 @@ _Avoid_: user cache, EventPreparer, lookup cache
 
 **RequestObserver**:
 The Protocol an application implements to observe API calls — `on_request`, `on_response`,
-`on_error` over a typed record without bodies, headers or tokens. Several may be registered, each
-isolated from the others; an observer never changes the call. Modifying behaviour is done by
-decorating the HTTPTransport or by Middleware.
+`on_error` over a Request record. Coroutine functions; `SyncRequestObserver` is its synchronous
+pair, taken by the synchronous Face, and the two share one module and one Conformance suite. Several
+may be registered, each isolated from the others; an observer never changes the call. Modifying
+behaviour is done by decorating the HTTPTransport or by Middleware.
 _Avoid_: hook (that is a Signal subscriber), interceptor, tracer, instrumentation
+
+**Request record**:
+The frozen typed value a RequestObserver receives, one per attempt over the wire: operation id,
+method, path template, server address and port, status, error class, duration, attempt ordinal, the
+Mattermost request id, server version and error id, and byte sizes. Never a body, a header, a query
+string, a URL or a token, and no switch adds one.
+_Avoid_: span, telemetry record, metric, event (that is a platform Event)
+
+**Observability plugin**:
+The generic Plugin that turns what the framework exposes into telemetry: PrometheusPlugin and
+OpenTelemetryPlugin, each behind the extra named after its library, absent unless the application
+composes it. It reads through Middleware, the RequestObserver pair, the Signals, the Stats snapshot
+and its own storage decorators, and it owns no process-global state — the application hands it the
+registry.
+_Avoid_: exporter, metrics plugin, telemetry plugin, instrumentation
+
+**Stats snapshot**:
+The frozen typed reading of every bounded resource in the process — the WebSocketTransport's queue,
+the Sync executor's pool — answered by `bot.stats()` and assembled from the parts that contribute
+one. Read when asked, never pushed, and the source of every gauge.
+_Avoid_: metrics, gauge, health check (that is a runtime probe), introspection
+
+**Log correlation**:
+The three layers that put the identity of one delivery on a log record: the fields a call passes in
+`extra`, the name of the asyncio task the delivery runs in, and the Core CorrelationId contextvar
+with the filter callable an application attaches to its own handler. Never a Filter — that word is a
+predicate over an Event — and never the process-global record factory.
+_Avoid_: Filter, log filter, log context, MDC, tracing
+
+**Redaction list**:
+The single named constant of field names that may never appear in a log record or a Request record.
+It bans names, not values, so a safe fact whose name collides is recorded under another key; what an
+exception may carry is a separate rule.
+_Avoid_: denylist, blocklist, secret keys, sensitive fields, scrubber
 
 **Testing toolkit**:
 `aiommbot.testing`: the TestBot, the Conformance suites, the Event builders, the recording Reply

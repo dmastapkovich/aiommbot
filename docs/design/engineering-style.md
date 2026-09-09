@@ -35,7 +35,9 @@ re-export mechanism and the extras are
 [ADR-0041](../adr/0041-default-dependencies-and-one-extra-per-optional-library.md)'s, the testing
 toolkit's shape is [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)
 to [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md)'s, the documentation stack is #26's,
-the observability boundary and the observer record are #29's.
+the observability boundary is [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) to
+[ADR-0051](../adr/0051-first-party-observability-plugin.md)'s, and the redaction list itself is
+[ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md)'s.
 
 ## 1. Ideology
 
@@ -55,7 +57,7 @@ it, and the two places inheritance remains the right tool — the error taxonomy
 closed variant types (`ST-PAT-10`) — are named rather than assumed.
 _Held by:_ `ST-PAT-05`, `ST-PAT-07`, `ST-PAT-08`, `ST-PAT-10`, `ST-TYP-08`, `ST-SOL-02`. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
 
-**The Core owns the Protocols; implementations arrive from outside.** Fourteen Protocols on twelve
+**The Core owns the Protocols; implementations arrive from outside.** Fifteen Protocols on twelve
 seams are the whole substitution surface: eleven seams the Core calls out through, and one it hands
 to a Handler to call. Imports point at the Core: testing toolkit → adapter-specific plugins →
 (Adapter · generic plugins) → Core. A generic Plugin may not import the Adapter, which is
@@ -1019,7 +1021,9 @@ class AuditMiddleware:
     async def __call__(self, event: Event[P], call_next: CallNext[P]) -> Outcome: ...
 ```
 
-_Limits:_ no exceptions.
+_Limits:_ one paired exception, `SyncRequestObserver`, which the synchronous client takes because
+the colour follows the face as it does for `SyncHTTPTransport`
+([ADR-0048](../adr/0048-observability-is-not-a-core-seam.md)).
 _Tier:_ `tool` — the Protocol signatures plus four checkers. _Checked in:_ LLD, PR.
 _From:_ [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md).
 
@@ -1656,8 +1660,13 @@ _Checked in:_ LLD, PR. _From:_ [ADR-0042](../adr/0042-a-public-name-is-documente
 
 ## 9. Logging and redaction — `ST-LOG`
 
-These rules cover the whole framework. The observability boundary and the shape of the observer
-record are #29's.
+These rules cover the whole framework, and they are the whole of what it emits without
+configuration: the framework ships no metric and no span of its own
+([ADR-0049](../adr/0049-what-the-framework-makes-observable.md)), so a log record is the only thing
+an unconfigured process can produce. The decisions behind them are
+[ADR-0052](../adr/0052-log-levels-by-frequency-and-audience.md) to
+[ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md), over
+[`docs/research/24`](../research/24-library-logging-design.md).
 
 #### `ST-LOG-01` — Log through one logger per component, named `aiommbot.<component>`, with a `NullHandler` on the package root
 
@@ -1674,8 +1683,13 @@ logger = logging.getLogger('aiommbot.websocket_transport')
 logging.getLogger('aiommbot').addHandler(logging.NullHandler())
 ```
 
-_Limits:_ no exceptions. The component name is its `CONTEXT.md` term in snake case.
-_Tier:_ `review`. _Checked in:_ LLD, PR. _From:_ [`docs/research/04`](../research/04-modern-python-library-engineering-2026.md), [`docs/research/17`](../research/17-http-client-observability.md).
+_Limits:_ no exceptions. The component name is its `CONTEXT.md` term in snake case and never a
+module path, so splitting a module (`ST-MOD-09`) never breaks an operator's configuration; a
+component that emits nothing has no logger. The `NullHandler` means silence on purpose — it
+suppresses `logging.lastResort`, which is safe only because every serious failure also arrives as a
+Signal or as `FatalError` ([ADR-0053](../adr/0053-log-records-are-a-documented-contract.md)).
+_Tier:_ `tool` — a guard test asserting that the loggers the framework creates are exactly the
+loggers `ST-DOC-08` documents. _Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [`docs/research/24`](../research/24-library-logging-design.md).
 
 #### `ST-LOG-02` — Log identifiers, counts and digests; never content
 
@@ -1725,16 +1739,37 @@ _Reason:_ a redaction rule repeated in nine components is nine chances to forget
 _SECRET_KEYS = ('authorization', 'token')     # NOTE: keep in sync with ws/redact.py
 
 # Do
-#: Field names that must never reach a log record, an exception or an observer.
+#: Field names that must never reach a log record or a Request record. Matched on the whole
+#: normalised name, so `token_sha256`, `post_id` and `server_address` are unaffected.
 REDACTED_FIELDS: Final[frozenset[str]] = frozenset({
-    'authorization', 'token', 'password', 'text', 'body', 'props', 'query',
+    # credentials and secrets
+    'access_token', 'authorization', 'cookie', 'password',
+    'proxy_authorization', 'secret', 'signing_keys', 'token',
+    # content of a message or an event
+    'body', 'data', 'followers', 'mentions', 'message',
+    'payload', 'post', 'props', 'raw', 'text',
+    # interactive-action and reply fields
+    'context', 'ephemeral_text', 'errors', 'form',
+    'state', 'submission', 'trigger_id', 'update',
+    # HTTP-level fields
+    'detailed_error', 'headers', 'multipart', 'query', 'url',
+    # names of people and places
+    'channel_display_name', 'channel_name', 'email', 'full_name',
+    'nickname', 'sender_name', 'team_domain', 'username',
+    # free text from an exception
+    'error',
 })
 ```
 
-_Limits:_ the list may only grow. The members shown are illustrative; the exact membership is
-#29's to finalise with the observer record, and the rule is that there is exactly one list.
-_Tier:_ `tool` — a test asserting no log record and no exception field intersects it.
-_Checked in:_ LLD, PR. _From:_ [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [`docs/research/17`](../research/17-http-client-observability.md).
+_Limits:_ the list may only grow, and it wins every collision — a safe fact whose name is on it is
+recorded under another key (`flow_state`, not `state`; `flow`, not `data`; `error_type`, not
+`error`). It governs two sinks, a log record and a Request record; what an exception may carry is
+`ST-ERR-08`'s, which is why `message` is banned here and allowed there. The membership is
+[ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md)'s.
+_Tier:_ `tool` — a test asserting that no log record field and no observability record field
+intersects it, and that the label allow-list of
+[ADR-0051](../adr/0051-first-party-observability-plugin.md) is disjoint from it.
+_Checked in:_ LLD, PR. _From:_ [ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md), [`docs/research/17`](../research/17-http-client-observability.md).
 
 #### `ST-LOG-05` — Write the message as a constant and put the variables in `extra`
 
@@ -1750,8 +1785,14 @@ logger.info('handler matched', extra={'handler': name, 'kind': event.kind})
 ```
 
 _Limits:_ no exceptions. `structlog` is never a dependency; `extra` on the standard library is the
-mechanism.
-_Tier:_ `tool` — ruff. _Checked in:_ PR. _From:_ [`docs/research/04`](../research/04-modern-python-library-engineering-2026.md).
+mechanism, and it is what makes every field readable to structlog, `python-json-logger` and a plain
+`Formatter` alike, and what survives a `QueueHandler`
+([`docs/research/24`](../research/24-library-logging-design.md) §3, §6). An `extra` key may never be
+a reserved `LogRecord` attribute name — `message`, `asctime`, `args`, `msg`, `name`, `module`,
+`process`, `taskName` and the rest — because
+[`Logger.makeRecord`](https://docs.python.org/3/library/logging.html#logrecord-attributes) raises
+`KeyError` on the collision rather than dropping the field.
+_Tier:_ `tool` — ruff, plus the same test that checks `ST-LOG-04`. _Checked in:_ PR. _From:_ [ADR-0054](../adr/0054-correlation-reaches-a-log-record-in-three-layers.md), [`docs/research/24`](../research/24-library-logging-design.md).
 
 #### `ST-LOG-06` — Give a user-visible failure a correlation id and keep the diagnosis in the log
 
@@ -1777,6 +1818,99 @@ class ApologyMiddleware:
 
 _Limits:_ applies to text the framework itself produces; an application's own copy is its business.
 _Tier:_ `review`. _Checked in:_ LLD, PR. _From:_ [ADR-0021](../adr/0021-core-error-boundary.md).
+
+#### `ST-LOG-07` — Choose the level from how often the fact happens and who needs it
+
+_Reason:_ thirty components choosing by importance produces a log nobody can read at the volume a
+bot receives presence and typing events in.
+
+```python
+# Don't
+logger.info('event dispatched', extra={'kind': event.kind})   # once per delivery
+
+# Do
+logger.debug('event dispatched', extra={'kind': event.kind, 'outcome': 'Handled'})
+logger.info('connected', extra={'connection_id': connection_id})   # once per connection
+```
+
+_Limits:_ DEBUG for anything per delivery or per request; INFO only for transitions bounded by the
+life of the process or of a connection, plus the one start-up record carrying the composition;
+WARNING for a survivable degradation; ERROR once per escaped exception, from the ErrorBoundary,
+which is also the only place `exc_info` is allowed; CRITICAL and custom levels never.
+_Tier:_ `tool` — `semgrep:ST-LOG-07` forbids `logger.critical` anywhere and `exc_info` or
+`logger.exception` outside the ErrorBoundary's module, and a test feeds a `TestBot` a hundred events
+with the logger at INFO and asserts that no record is produced.
+_Checked in:_ LLD, PR. _From:_ [ADR-0052](../adr/0052-log-levels-by-frequency-and-audience.md), [`docs/research/24`](../research/24-library-logging-design.md).
+
+#### `ST-LOG-08` — List every record a component can emit in that component's document, and keep the list and the code in step
+
+_Reason:_ an operator builds alerts on log lines, so a renamed message or a moved level breaks their
+tooling as surely as a renamed function breaks their code.
+
+```python
+# Don't — a new line appears in a patch release and nothing records it
+logger.warning('resync lost events', extra={'since': since})
+
+# Do — the same line, with a row in websocket-transport.md:
+#   | WARNING | 'resync lost events' | since, connection_id | a hello with a new connection_id |
+```
+
+_Limits:_ no exceptions. The message is a short human phrase, constant and unique within its logger,
+so a line reads under a bare `basicConfig` and groups in a structured pipeline without either being
+privileged. Adding a record, moving it between levels or dropping a field is a change to the
+document and to the public surface on the same terms as a public name (`ST-DOC-06`).
+_Tier:_ `tool` — a test comparing the documented catalogue with the records the code emits **both
+ways**: a record with no row and a row with no record each fail.
+_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md).
+
+#### `ST-LOG-09` — Pass the identifiers the call site holds in `extra`, and let the task name and the shipped filter carry the rest
+
+_Reason:_ a retry line written by the API client holds no Event, and tying it to the delivery that
+caused it is the whole reason anyone reads a log.
+
+```python
+# Don't — a LoggerAdapter carrying ambient context
+log = logging.LoggerAdapter(logger, {'correlation_id': cid})
+log.warning('retry scheduled', extra={'attempt': 2})   # 'attempt' is dropped before 3.13
+
+# Do
+logger.warning('retry scheduled', extra={'operation': op.id, 'attempt': 2})
+# and once, where the delivery starts:
+task = tg.create_task(dispatch(event), name=task_name(event.meta.correlation_id))
+```
+
+_Limits:_ three layers and no fourth: the call's own `extra`; the name of the asyncio task the
+delivery runs in, which puts `taskName` on every record made inside it including a third party's;
+and the Core CorrelationId contextvar with the filter callable an application attaches to its own
+handler. `LoggerAdapter` is never used (it drops per-call `extra` below Python 3.13) and
+`logging.setLogRecordFactory` is never called — that slot belongs to whoever installed the
+OpenTelemetry logging instrumentation. A thread reached through the Sync executor gets an explicitly
+copied context and no task name.
+_Tier:_ `review`, with `semgrep:ST-LOG-09` forbidding `LoggerAdapter` and `setLogRecordFactory`.
+_Checked in:_ LLD, PR. _From:_ [ADR-0054](../adr/0054-correlation-reaches-a-log-record-in-three-layers.md), [`docs/research/24`](../research/24-library-logging-design.md).
+
+#### `ST-LOG-10` — Change no logging configuration, and ship no handler beyond `NullHandler`
+
+_Reason:_ "the configuration of handlers is the prerogative of the application developer who uses
+your library", and every library that has taken that prerogative has had to defend it since.
+
+```python
+# Don't
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('aiommbot').setLevel(logging.WARNING)
+def setup_logging(level): ...
+
+# Do — one executable dictConfig example in the documentation, and nothing in the package
+```
+
+_Limits:_ no exceptions. No `basicConfig`, no `dictConfig`, no `captureWarnings`, no `setLevel` on
+any logger including our own root, no environment variable that configures logging, and no
+`setup_logging()`-style helper. A `QueueHandler` is recommended in the documentation because the
+standard handlers block the event loop, and the `QueueListener` and its thread belong to the
+application.
+_Tier:_ `tool` — `semgrep:ST-LOG-10` over the four calls, and the smoke import asserting that
+importing `aiommbot` adds exactly one handler, a `NullHandler`, and changes no level.
+_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [`docs/research/24`](../research/24-library-logging-design.md).
 
 ## 10. Documentation — `ST-DOC`
 
@@ -1938,6 +2072,26 @@ _Limits:_ `warnings.deprecated` is a 3.13 name, so it comes from the compat modu
 The deprecation window is #28's.
 _Tier:_ `tool` — the four checkers. _Checked in:_ PR.
 _From:_ [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md), [`docs/research/04`](../research/04-modern-python-library-engineering-2026.md).
+
+#### `ST-DOC-08` — Name every logger the package creates, and carry one executable configuration example
+
+_Reason:_ a library that is silent until configured has to say so and say how, and an operator who
+cannot find the logger names cannot silence one component without silencing all of them.
+
+```text
+Don't: "aiommbot uses the standard logging module."
+
+Do:    a page listing aiommbot.<component> for every component that logs, what each level means,
+       and one dictConfig example wiring a QueueHandler, the correlation filter on the handler and
+       %(taskName)s in the format — run as a doctest like any other example.
+```
+
+_Limits:_ no exceptions. The example is executable (`ST-DOC-02`); it recommends a `QueueHandler`
+because the standard handlers block the event loop, and it states that the `QueueListener` is the
+application's to own.
+_Tier:_ `tool` — the guard test of `ST-LOG-01` checks the list of loggers both ways, and the docs
+build runs the example.
+_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [`docs/research/24`](../research/24-library-logging-design.md).
 
 ## 11. Tests — `ST-TST`
 
@@ -2155,7 +2309,9 @@ Every rule tagged `LLD`, whatever its tier: at design time no tool has run.
 - [ ] Every name is its `CONTEXT.md` term, collides with no `_Avoid_` list, and any new concept gets its term in this commit; the `Sync` prefix, the module plural and the type-parameter spellings match the decided ones. `ST-NAM-01`, `ST-NAM-02`, `ST-NAM-03`, `ST-NAM-05`, `ST-NAM-06`, `ST-NAM-07`, `ST-NAM-08`
 - [ ] The public surface satisfies all four criteria and everything else is `_internal`; every public name is written at its package path; importing any public module needs no extras and no configuration; a missing extra fails at construction. `ST-MOD-01`, `ST-MOD-02`, `ST-MOD-07`, `ST-MOD-08`, `ST-MOD-11`
 - [ ] The document states what is logged and what is not: identifiers only, one logger per component, no content switch, the single redaction list, a correlation id for anything a user sees. `ST-LOG-01` … `ST-LOG-04`, `ST-LOG-06`
+- [ ] It carries the catalogue of every record the component can emit — level, constant message, `extra` fields, trigger — with the levels chosen by frequency, the correlation carried in `extra` and by the task name, and no logging configuration touched. `ST-LOG-07`, `ST-LOG-08`, `ST-LOG-09`, `ST-LOG-10`
 - [ ] Every public name the document introduces is documented, its examples are executable, and each Protocol docstring states the implementer's contract and names the conformance suite. `ST-DOC-01`, `ST-DOC-02`, `ST-DOC-03`
+- [ ] Every logger the component creates is named in the documentation. `ST-DOC-08`
 - [ ] The testing section names the doubles it uses (never mocks of our own types), the conformance suite each implementation passes, a test per failure mode, and how time is controlled. `ST-TST-01`, `ST-TST-02`, `ST-TST-04`, `ST-TST-09`
 
 ### 12.2 Code review — a pull request
@@ -2177,6 +2333,7 @@ when the pull request changes the component's contract or its document.
 - [ ] Every configured exception — import contract, lint relaxation, slotscheck exclusion, switched-off rule — carries its reason. `ST-MOD-06`
 - [ ] A deferred import exists only in the constructor of an object needing an optional extra. `ST-MOD-08`
 - [ ] Log lines carry identifiers and not content, no content switch was added, and the redaction list was not bypassed; user-visible failures carry a correlation id. `ST-LOG-01`, `ST-LOG-02`, `ST-LOG-03`, `ST-LOG-06`
+- [ ] A new or moved log record is in its component's catalogue, its level follows the frequency rule, no `exc_info` appeared outside the ErrorBoundary, and no logging configuration was changed. `ST-LOG-07`, `ST-LOG-08`, `ST-LOG-09`, `ST-LOG-10`
 - [ ] Comments explain why and cite the source; a `TODO:` names an issue; a public API change records its version. `ST-DOC-04`, `ST-DOC-06`
 - [ ] New tests assert one behaviour each, are parametrised over implementations rather than copied, cover the failure modes the document lists, and report through returned data rather than recorded calls. `ST-TST-03`, `ST-TST-04`, `ST-TST-07`, `ST-TST-08`
 - [ ] A Protocol docstring changed with its contract still states the implementer's contract and names the conformance suite that applies. `ST-DOC-03`

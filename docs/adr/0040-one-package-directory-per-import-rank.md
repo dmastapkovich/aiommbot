@@ -27,6 +27,7 @@ src/aiommbot/
     http_transport.py  websocket_connection.py  state_key_provider.py
     token_provider.py  callback_token_codec.py  request_observer.py
                                                    seams of §5.4, one Protocol group per module
+    log_correlation.py               the contextvar and the filter callable of ADR-0054
     errors.py                        AiommbotError, FatalError, AiommbotWarning, MissingExtraError
     _internal/
   mattermost/
@@ -38,7 +39,7 @@ src/aiommbot/
     plugins/                         the adapter-specific rank
       websocket_transport/  webhook/  callback_token/  identity_cache/
   plugins/                           the generic rank
-    state/  backends/  dishka.py  wireup.py
+    state/  backends/  observability/  dishka.py  wireup.py
   testing/                           the testing toolkit rank
     __init__.py                      the toolkit's public surface
     fake_mattermost.py  test_bot.py  fake_adapter.py  fake_clock.py

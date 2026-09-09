@@ -86,7 +86,14 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Documentation stack and executable docs | #26 | | not started |
 | Agent-native repository and AI policy | #27 | | not started |
 | CI, release, versioning, changelog, deprecation | #28 | | not started |
-| Observability boundary | #29 | | not started |
+| Observability boundary: no Core Protocol, the `Outcome` and Middleware, the `RequestObserver` pair | #29 | 0048 | reviewed |
+| What the framework makes observable and on which existing mechanism each fact travels | #29 | 0049 | reviewed |
+| Bounded-resource state read from a frozen `bot.stats()` snapshot | #29 | 0050 | reviewed |
+| First-party observability plugin: two extras, conventions, registry ownership, cardinality | #29 | 0051 | reviewed |
+| Log levels by frequency and audience | #29 | 0052 | reviewed |
+| Log records as a documented contract; no logging configuration by us | #29 | 0053 | reviewed |
+| Log correlation: `extra`, the task name, a contextvar with a shipped filter | #29 | 0054 | reviewed |
+| Redaction list: two sinks, forty names, exact normalised matching | #29 | 0055 | reviewed |
 | Scheduling, reliability middlewares, CLI boundaries | #30 | | not started |
 | Engineering style and ideology: rule form, pattern tiers, derived review checklist | #36 | 0033 | reviewed |
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
@@ -95,15 +102,15 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Reply-slot typing: second type parameter declared contravariant, `ReplyChannel` as the Core's twelfth seam, `ReplyAlreadySent` Core-owned | #57 | 0036 | reviewed |
 | Envelope enrichment: `derive(meta: EventMeta[R2])` only; `dataclasses.replace`, `copy.replace` and `__replace__` on an `Event` banned | #57 | 0037 | reviewed |
 | Seam inventory: direction of the call recorded per row, `required` and `provided`, and the count reconciled | #84 | 0038 | reviewed |
-| Rank of the six `Contributes*`/`HasLifecycle` plugin Protocols in §5 | #85 | | not started |
+| Rank of the seven `Contributes*`/`HasLifecycle` plugin Protocols in §5 | #85 | | not started |
 | Public API shape (prototype) | #31 | | not started |
 | Toolchain skeleton verified (prototype) | #32 | | not started |
 | Risk register | #42 | | not started |
 
 ## C. Component design documents (LLD)
 
-§5.10 of `05-building-block-view.md` lists **29 components** across five layers, with 31 part
-rows and fourteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
+§5.10 of `05-building-block-view.md` lists **30 components** across five layers, with 30 part
+rows and fifteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
 document of their own. One row per component here and one `LLD: <component>` ticket each. The file
 name is the `CONTEXT.md` term in kebab-case.
 
@@ -136,6 +143,7 @@ name is the `CONTEXT.md` term in kebab-case.
 | WebSocketTransport | Adapter-specific plugin | `components/websocket-transport.md` | not started | #81 |
 | Bot | Core | `components/bot.md` | not started | #82 |
 | State | Generic plugin | `components/state.md` | not started | #83 |
+| Observability plugin | Generic plugin | `components/observability.md` | not started | #92 |
 | FakeMattermost | Testing toolkit | `components/fake-mattermost.md` | not started | #88 |
 | Testing toolkit | Testing toolkit | `components/testing-toolkit.md` | not started | #89 |
 
@@ -149,8 +157,8 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`), ADR-0034 (which mechanism) | style §6; §8 | | in progress (§10 scenario pending #37) |
 | Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | style §5; §8 | | in progress (§10 scenario pending #37) |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | in progress |
-| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), #36 (framework-wide rule, no content switch, one redaction list), #29 (observer record) | style §9; §8 | | in progress (list finalised by #29) |
-| Observability seam and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | in progress |
+| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), ADR-0033 (the rulebook), ADR-0052 (levels), ADR-0053 (the record catalogue, no configuration), ADR-0054 (correlation), ADR-0055 (the forty names over two sinks) | style §9, §10 (`ST-DOC-08`); §8 | | in progress (§10 scenario pending #37) |
+| Observability seam and naming | ADR-0048 (no Core Protocol; the `RequestObserver` pair), ADR-0049 (what is observable), ADR-0050 (`bot.stats()`), ADR-0051 (extras, OpenTelemetry conventions, registry, cardinality), research 17, 23 | §8; `components/observability.md` | | in progress (§10 scenario pending #37) |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | in progress |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | in progress |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), ADR-0040 (directories and contract shape) | style §8; §5, §8 | | in progress |

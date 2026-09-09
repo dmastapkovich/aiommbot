@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#17"
+amended-by: [ADR-0048]
 ---
 
 # The Core owns a narrow, non-removable error boundary: log without payload, report, return a typed `Failed`; a failing process is an explicit policy
@@ -17,12 +18,17 @@ We decided:
 - **An outermost `ErrorBoundary` is part of the Core and cannot be removed.** It catches
   `Exception` only; `BaseException` (cancellation, `SystemExit`, `KeyboardInterrupt`) passes
   through untouched.
-- **Its default does exactly three things**: writes a structured log record **without payload**
-  (event kind, handler, correlation id, exception class, traceback); hands the full exception to the
-  Observability seam; returns the typed outcome **`Failed(error)`** to the Transport, which decides
+- **Its default does exactly two things**: writes one ERROR record **without payload** (event kind,
+  handler, correlation id, exception class and — uniquely in the framework — the traceback, because
+  a traceback ends in `str(exc)` and this is the one place that risk is worth taking,
+  [ADR-0052](0052-log-levels-by-frequency-and-audience.md)); and returns the typed outcome
+  **`Failed(error)`** to the Transport, which decides
   the transport-level reaction (ack, nack, HTTP status, reply-channel default) the way FastStream's
   `AckPolicy` does ([`docs/research/12`](../research/12-error-boundary-conventions.md)). It never
-  swallows silently and never composes a user-facing message.
+  swallows silently and never composes a user-facing message. `Failed(error)` carries the exception,
+  so returning it is also how the failure reaches Middleware and whatever the application
+  registered there ([ADR-0048](0048-observability-is-not-a-core-seam.md)) — there is no second
+  channel for the same fact.
 - **A failing process is an explicit choice**, never the default: a boundary policy
   (`on_failure=FailProcess`) or a typed `FatalError` that the boundary lets through, carrying a
   typed reason — `AuthRevoked`, raised by the `AuthLossDetector` of

@@ -469,15 +469,20 @@ nothing to bind here. It is the *source* of what others log. Loggable from an en
 `transport`, `seq`, `correlation_id`, `received_at`, and at most the length or a digest of `raw`.
 Never loggable: `payload` in whole or in part, `raw` itself, and anything reachable through the
 Reply slot (`ST-LOG-02`). No switch turns any of that on (`ST-LOG-03`); `payload` and `raw` are
-named in the single redaction list `ST-LOG-04` requires, whose final contents are #29's.
+named in the single redaction list `ST-LOG-04` requires
+([ADR-0055](../../adr/0055-one-redaction-list-over-two-sinks.md)), together with `data`, `props`,
+`text` and `message`.
 `correlation_id` is the identifier `ST-LOG-06` requires a user-visible failure to carry, which is
 why it is non-optional.
 
-**Observability.** The component emits nothing. `kind`, `transport` and `correlation_id` are the
-attributes every span and metric of a dispatch carries, and the Observability seam through which the
-Dispatcher reports an `Unhandled` walk
-([ADR-0013](../../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md)) carries the event
-name and never its content.
+**Observability.** The component emits nothing, and there is no Protocol it reports through:
+`Unhandled` is a value of the typed `Outcome`, and the Middleware that observes a dispatch reads it
+from `call_next` ([ADR-0013](../../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
+[ADR-0048](../../adr/0048-observability-is-not-a-core-seam.md)). `kind`, `transport` and
+`correlation_id` are the attributes such a Middleware may label by, and the payload never is;
+`correlation_id` also names the asyncio task the delivery runs in, which is how it reaches records
+this component knows nothing about
+([ADR-0054](../../adr/0054-correlation-reaches-a-log-record-in-three-layers.md)).
 
 ## 9. Rules that bind this component
 
@@ -584,5 +589,4 @@ only how the rule lands here.
 | Question | Ticket |
 |---|---|
 | The shape of the `ReplyChannel` conformance suite, the recording slot, and the event builders a hand-built envelope is validated by — their home is `aiommbot.testing` ([ADR-0044](../../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0047](../../adr/0047-a-conformance-suite-per-core-seam.md)) | #89 (LLD: Testing toolkit) |
-| The final contents of the single redaction list that must name `payload` and `raw`, and the observer record that carries `correlation_id` | #29 (observability boundary) |
 | Whether the `RawEvent` payload re-decodes `meta.raw` or receives the parsed mapping from the Adapter's own decode | #69 (EventRegistry) |

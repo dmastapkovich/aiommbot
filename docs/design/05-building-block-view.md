@@ -82,7 +82,7 @@ C4Component
     Component(testing, "Testing toolkit", "aiommbot.testing", "TestBot, conformance suites, FakeMattermost")
     Component(aplugins, "Adapter-specific plugins", "Plugin", "WebSocketTransport, Webhook, IdentityCache")
     Component(adapter, "Adapter", "Mattermost", "Platform vocabulary, API client, Workspace, Runtime")
-    Component(gplugins, "Generic plugins", "Plugin", "State, storage backends, DI bridges, observer extra")
+    Component(gplugins, "Generic plugins", "Plugin", "State, storage backends, DI bridges, observability")
     Component(core, "Core", "stdlib only", "Envelope, routing, dispatch, middleware, DI, lifecycle, Protocols")
     Rel(testing, aplugins, "doubles and drives")
     Rel(testing, adapter, "doubles and drives")
@@ -138,13 +138,14 @@ ADR-0038).
 | `StateKeyProvider` | required | State | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `TokenProvider`, `SyncTokenProvider` | required | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `CallbackTokenCodec` | required | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
-| `RequestObserver` | required | API client | none by default; a first-party extra | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
+| `RequestObserver`, `SyncRequestObserver` | required | API client | none by default; the Observability plugin | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
 | `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook, as `ReplyChannel[ActionReply]` and `ReplyChannel[DialogReply]`; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
 
-Two Core-owned Protocols are not rows yet: the Observability seam
-([ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
-[ADR-0021](../adr/0021-core-error-boundary.md)), whose Protocol and record shape are #29's decision,
-and the six `Contributes*`/`HasLifecycle` Protocols, ranked by #85.
+The seven `Contributes*`/`HasLifecycle` Protocols are not rows here: they are the plugin contract of
+[ADR-0015](../adr/0015-plugin-contract-and-composition.md) rather than substitution points, and
+their rank is #85's. There is no observability row beyond the one above — a dispatch fact is the
+typed `Outcome`, observed by Middleware
+([ADR-0048](../adr/0048-observability-is-not-a-core-seam.md)).
 
 ## 5.5 Level 3 — the Core
 
@@ -237,8 +238,8 @@ C4Component
 | **Generated model** | component | The committed frozen dataclasses and the `Operation` descriptors: the optionality rules, `UNSET` on requests, the hand-written models for what the spec leaves as `object` | `generated-model.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
 | `Operation` | part | The frozen descriptor of one REST call, public and user-constructible for endpoints outside the spec | `generated-model.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
 | **Codec** | component | `MsgspecCodec`, the only shipped implementation of the Core seam, registered as an App-scoped provider; the `dec_hook` that unpacks Mattermost's JSON-in-JSON | `codec.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
-| **API client** | component | The standalone `MattermostClient`: resource groups by spec tag, `execute` as the typed escape hatch, pagination iterators, the observability seam | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
-| `RetryPolicy`, `ApiError` and its subclasses, `iter_*`, the first-party observer extra | part | The narrow retry setting, the failure hierarchy with `retryable`, the pagination iterators, and the optional observer | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0027](../adr/0027-api-error-taxonomy.md); observer shape finalised in #29 |
+| **API client** | component | The standalone `MattermostClient`: resource groups by spec tag, `execute` as the typed escape hatch, pagination iterators, and the observer pair that is the Core's observability seam | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
+| `RetryPolicy`, `ApiError` and its subclasses, `iter_*`, the Request record | part | The narrow retry setting, the failure hierarchy with `retryable`, the pagination iterators, and the frozen per-attempt record the observer pair receives | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0027](../adr/0027-api-error-taxonomy.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
 | **Exchange** | component | The sans-I/O heart shared by both Faces: build the request from an `Operation`, classify the response, decide the retry, advance a page — pure functions, tested once without a network | `exchange.md` | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | **Face** | component | The two thin I/O layers over the Exchange — asynchronous and synchronous — and the parity mechanisms that keep them in step | `face.md` | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | The httpx2 binding of `HTTPTransport`/`SyncHTTPTransport`, `TokenProvider`/`SyncTokenProvider` use, the one-instance-per-thread contract | part | The shipped transport implementation, how credentials are read on each face, and the threading promise the synchronous face does *not* make | `face.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
@@ -257,7 +258,9 @@ C4Component
     title Components of the generic plugins
     Component(state, "State", "Plugin", "Flow, StateContext, isolation, schema versions, TTL")
     Component(backends, "KeyValueStore and LockProvider backends", "Plugin", "In-memory and Redis")
+    Component(obs, "Observability plugin", "Plugin", "Prometheus and OpenTelemetry over what the framework already exposes")
     Rel(state, backends, "stores and locks through", "Core Protocols, never by import")
+    Rel(obs, backends, "decorates an implementation of", "Core Protocols, never by import")
 ```
 
 State reaches the backends the way every plugin reaches every other capability — through the Core
@@ -265,7 +268,10 @@ Protocol, never by importing the plugin that also implements it.
 
 State is the case that proves the rank of
 [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md): it consumes the Core
-`StateKeyProvider` seam and receives the Adapter's implementation by injection.
+`StateKeyProvider` seam and receives the Adapter's implementation by injection. The Observability
+plugin is the second case, and the reason `bot.stats()` exists: it needs the WebSocketTransport's
+queue depth and may not import an adapter-specific plugin, so it reads the Bot's aggregate instead
+([ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md)).
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
@@ -273,7 +279,7 @@ State is the case that proves the rank of
 | `StateKey`, `Flow`, `StateContext`, the isolation middleware, `Conflict`, `StaleState` | part | The key and its strategy, the typed flow and its versioned data, the handle a handler receives, and the two typed failure outcomes | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | **KeyValueStore** and **LockProvider** backends | component | The two first-party implementations of both storage seams — in-memory for a declared single process, Redis for TTL and distributed locks — plus the conformance suite external backends must pass | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | dishka and wireup bridges | part | Serving dependencies from an external container behind `DependencyProvider`, shipped as extras | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
-| First-party `RequestObserver` extra | part | Spans and metrics under recognised conventions, registered in one line; no observer by default | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md); boundary finalised in #29 |
+| **Observability plugin** | component | `PrometheusPlugin` and `OpenTelemetryPlugin`, each behind the extra named after its library: two Middleware over the dispatch layers, an implementation of the `RequestObserver` pair, subscribers to the Signals, `ObservedKeyValueStore` and `ObservedLockProvider`, a collector reading the Stats snapshot, and an `HTTPTransport` decorator injecting `traceparent`. Takes its registry as an argument and touches no process-global state | `observability.md` | [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md), [ADR-0051](../adr/0051-first-party-observability-plugin.md) |
 
 ## 5.8 Level 3 — adapter-specific plugins
 
@@ -345,8 +351,8 @@ implements through that object's ports; there is no second double of Mattermost 
 
 ## 5.10 Inventory summary
 
-29 components, 31 part rows, and fourteen Protocols on twelve seam rows — eleven of those rows
-required and one provided (5.4). The count matters in one way only: **29 `LLD: <component>`
+30 components, 30 part rows, and fifteen Protocols on twelve seam rows — eleven of those rows
+required and one provided (5.4). The count matters in one way only: **30 `LLD: <component>`
 tickets**. Parts and seams generate nothing; they are specified inside the document named beside
 them.
 
@@ -354,7 +360,7 @@ them.
 |---|---|
 | Core | Bot, Dispatcher, Router, Filter, Extractor, Middleware, ErrorBoundary, DependencyProvider, Signal, Sync executor, Event |
 | Adapter | EventRegistry, Model generator, Generated model, Codec, API client, Exchange, Face, Workspace, Runtime, AuthLossDetector |
-| Generic plugins | State, KeyValueStore and LockProvider backends |
+| Generic plugins | State, KeyValueStore and LockProvider backends, Observability plugin |
 | Adapter-specific plugins | WebSocketTransport, Webhook, Callback token, IdentityCache |
 | Testing toolkit | Testing toolkit, FakeMattermost |
 

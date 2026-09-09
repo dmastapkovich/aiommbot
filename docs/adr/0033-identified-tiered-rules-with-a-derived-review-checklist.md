@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-07
 ticket: "#36"
+amended-by: [ADR-0048]
 ---
 
 # A style rule is an identified, tiered statement carrying a reason, an example and its limits, and the review checklist is derived from the rules and nothing else
@@ -9,7 +10,7 @@ ticket: "#36"
 [ADR-0006](0006-architectural-tenets-of-the-core.md) fixed the tenets and sent them to this ticket
 to become rules; [ADR-0011](0011-lint-format-and-architecture-toolchain.md) fixed the tools and
 asked for a human-readable list of banned patterns to write semgrep rules against. A rulebook that
-27 component design documents and later every pull request must obey is only usable if a rule can be
+30 component design documents and later every pull request must obey is only usable if a rule can be
 *cited* rather than paraphrased, and only honest if a reader can tell a rule that already blocks CI
 from a rule that lives on a reviewer's attention. We decided the shape of
 [`docs/design/engineering-style.md`](../design/engineering-style.md):
@@ -50,7 +51,10 @@ from a rule that lives on a reviewer's attention. We decided the shape of
   toolkit's shape is
   [ADR-0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) to
   [ADR-0047](0047-a-conformance-suite-per-core-seam.md); the documentation stack is #26's; the
-  observability boundary and the observer record are #29's; the ruff, WPS, semgrep and
+  observability boundary is [ADR-0048](0048-observability-is-not-a-core-seam.md) to
+  [ADR-0051](0051-first-party-observability-plugin.md)'s and the logging convention
+  [ADR-0052](0052-log-levels-by-frequency-and-audience.md) to
+  [ADR-0055](0055-one-redaction-list-over-two-sinks.md)'s; the ruff, WPS, semgrep and
   import-linter configuration is [ADR-0011](0011-lint-format-and-architecture-toolchain.md)'s.
 
 Evidence that the shape works: django-modern-rest keeps its rules as a 1,570-line agent-facing
@@ -61,7 +65,7 @@ architecture as nine commented `import-linter` contracts instead
 
 ## Considered options
 
-- *Headings only, cited by section number* — rejected: a citation from 27 component documents
+- *Headings only, cited by section number* — rejected: a citation from 30 component documents
   breaks the moment a section is inserted, and semgrep rules would need names of their own.
 - *Identifiers without an enforcement tier* — rejected: it removes any risk of drifting from
   [ADR-0011](0011-lint-format-and-architecture-toolchain.md), but a reviewer then cannot tell which

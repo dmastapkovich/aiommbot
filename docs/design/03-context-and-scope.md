@@ -14,9 +14,9 @@ infrastructure.
 |---|---|---|
 | Mattermost user | ↔ Bot | Writes posts and direct messages, clicks the buttons of an interactive attachment, submits a dialog. Receives answers, thread replies, post updates, ephemeral notices and dialogs. Never addresses the bot outside Mattermost. |
 | Application developer | → Bot | Composes the Bot — one Adapter, a list of Plugins, a tree of Routers — and writes the Handlers, Providers and services that hold the business logic. Owns everything the framework refuses (ADR-0002). |
-| Operator | ↔ Bot process | Starts the processes, supplies the token and the backend addresses, reads the structured logs and whatever the observability seams are wired to, and stops the process within its drain budget. |
+| Operator | ↔ Bot process | Starts the processes, supplies the token and the backend addresses, reads the structured logs and whatever the Observability plugin is wired to, and stops the process within its drain budget. |
 | Mattermost administrator | → Mattermost | Creates the bot account and its personal access token, enables interactive dialogs, and is the only party who can revoke a bot's access — deleting or disabling the token, disabling the bot or deactivating the user ([`docs/research/15`](../research/15-mattermost-session-revocation.md)). |
-| Observability backend | Bot → | Receives the typed records the application forwards from the Observability seam, `RequestObserver` and Signals. Optional, and the application's own. |
+| Observability backend | Bot → | Receives whatever the Observability plugin sends it, or whatever the application forwards from the Middleware layers, the `RequestObserver` pair and the Signals. Optional, and the application's own. |
 | Credential source | → Bot | Supplies the bot token through `TokenProvider` on every connection and request. Optional; the application's vault or environment. |
 
 ```mermaid
@@ -36,7 +36,7 @@ C4Context
     Rel(mm, bot, "events over WebSocket; callbacks over HTTPS")
     Rel(bot, mm, "REST API calls, callback replies")
     Rel(bot, store, "conversation state, locks, nonces")
-    Rel(bot, obs, "records from the observability seams")
+    Rel(bot, obs, "metrics, spans and logs, when a plugin is composed")
     Rel(bot, secrets, "reads the bot token")
     Rel(developer, bot, "composes and deploys")
     Rel(operator, bot, "starts, stops, observes")
@@ -56,7 +56,7 @@ configure.
 | Callback authenticity | A self-issued token the bot puts in button `context` and dialog `state` and verifies on return | Callback token behind `CallbackTokenCodec` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | Conversation state, locks, nonces | Whatever the chosen backend speaks; in-memory and Redis are first-party | `KeyValueStore`, `LockProvider` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | Credentials | Read through `TokenProvider` on every connection; never logged, never in a URL | Adapter | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| Observability | Typed records pushed to whatever the application registered; no observer by default | `RequestObserver`, Signals, the Observability seam | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0021](../adr/0021-core-error-boundary.md) |
+| Observability | Nothing is emitted by the framework itself; the Middleware layers, the `RequestObserver` pair, the Signals and `bot.stats()` are what a plugin reads | Middleware, `RequestObserver`, Signal, Bot | [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md), [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md) |
 | Process lifecycle | `run(*, loop_factory=None)` blocks; `serve()` embeds in a loop the application owns | Bot | [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
 
 Two properties of the Mattermost side shape more of this design than any other fact: **every
@@ -78,8 +78,8 @@ the line the rest of the catalogue is about.
 | Conversation state | `Flow`, `StateContext`, isolation, `KeyValueStore` and `LockProvider`, in-memory and Redis backends | Which backend, and the Flows themselves |
 | Configuration | Typed frozen settings objects per Plugin with stable field names | Where the values come from — environment, settings library, vault ([ADR-0015](../adr/0015-plugin-contract-and-composition.md)) |
 | Running the process | `run()` and `serve()` | The event loop policy, the HTTP server, the process supervisor, the orchestrator ([ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md)) |
-| Failure handling | The ErrorBoundary: log without payload, report, return `Failed` | The user-facing apology, retries, dead-lettering, cooldowns ([ADR-0021](../adr/0021-core-error-boundary.md)) |
-| Observability | Typed seams and a first-party extra | Its own conventions, names and backend ([ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md)) |
+| Failure handling | The ErrorBoundary: one ERROR record without payload, then `Failed` carrying the exception | The user-facing apology, retries, dead-lettering, cooldowns ([ADR-0021](../adr/0021-core-error-boundary.md)) |
+| Observability | The mechanisms above, a documented log contract, and two first-party plugins behind their own extras | Its own conventions, names, registry and backend ([ADR-0051](../adr/0051-first-party-observability-plugin.md), [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md)) |
 | Scheduling, retries, breakers, DLQ, CLI, metrics | Nothing — refused by the admission test | A library, a recipe or a plugin ([ADR-0002](../adr/0002-core-scope-two-condition-test.md)) |
 
 Explicitly outside the whole catalogue: a second platform adapter, compatibility with any earlier

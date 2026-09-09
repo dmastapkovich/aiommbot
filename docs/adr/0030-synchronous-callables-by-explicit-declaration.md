@@ -3,6 +3,7 @@ status: accepted
 date: 2026-09-04
 ticket: "#22"
 amends: [ADR-0014, ADR-0019, ADR-0023]
+amended-by: [ADR-0048]
 ---
 
 # A Handler or Provider may be synchronous only by an explicit `sync_to_thread` declaration and runs in the Sync executor; Filters and Extractors run inline; everything else the framework calls is a coroutine function
@@ -38,7 +39,10 @@ the side effect happened and its acknowledgement never did. We decided:
   starts. python-telegram-bot's shape — synchronous filters, asynchronous handlers — is the right
   one here.
 - **Everything else is a coroutine function**: Middleware, Signal subscribers, plugin lifecycle,
-  `RequestObserver`, `Codec`. No reference framework in the set allows synchronous middleware, and
+  `RequestObserver`, `Codec`. The one paired exception is the synchronous client's own observer,
+  `SyncRequestObserver`, where the colour follows the face as it does for `SyncHTTPTransport`
+  ([ADR-0048](0048-observability-is-not-a-core-seam.md)). No reference framework in the set allows
+  synchronous middleware, and
   the two that tolerate synchronous lifecycle hooks run them inline on the loop with no opt-out,
   which is the hazard without the benefit.
 - **The Bot owns the Sync executor.** A bounded `ThreadPoolExecutor` belonging to the Bot, its size

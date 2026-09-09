@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
-amended-by: [ADR-0030]
+amended-by: [ADR-0030, ADR-0049, ADR-0050]
 ---
 
 # The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
@@ -22,8 +22,9 @@ the design of the `WebSocketTransport` plugin:
   sends the JSON `ping` action every 30 s, as the official TS client does — it keeps proxies alive
   and verifies the session. A separate monitor treats **60 s without data of any kind** (2×
   interval) as a dead link: close with private code 4000 and reconnect with resume. Ping RTT and the
-  pong's `server_time` feed observability. Interval, deadline and codes are settings with these
-  defaults.
+  pong's `server_time` are DEBUG fields
+  ([ADR-0052](0052-log-levels-by-frequency-and-audience.md)). Interval, deadline and codes are
+  settings with these defaults.
 - **Backoff.** Full-jitter exponential: `uniform(0, min(300 s, 1 s · 2^n))`, the first delay
   randomised too, reset after 30 s of stable connection. Attempts are unbounded — the bot does
   not give up — but after a configurable count or duration the `Degraded` Signal fires for
@@ -40,7 +41,9 @@ the design of the `WebSocketTransport` plugin:
   coroutines, the Dispatch concurrency (a thin concurrency cap). Overflow is a typed
   `OverflowPolicy` per event kind: low-value kinds (`typing`, `status_change`, `presence`) drop the
   oldest with a `Dropped` Signal; posts and callbacks grow to a hard ceiling and only then drop with
-  a Signal. Queue depth, drops and consumer saturation are metrics; sizes, N and policies are
+  a Signal. A drop is that Signal; queue depth and consumer saturation are fields of the frozen
+  snapshot the Transport contributes to `bot.stats()`
+  ([ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md)); sizes, N and policies are
   settings.
 - **Graceful drain.** On stop: close the socket first (1000/1001) so the server stops queueing for
   us, drain the queue and in-flight handlers within a grace period (default 25 s inside the 30 s

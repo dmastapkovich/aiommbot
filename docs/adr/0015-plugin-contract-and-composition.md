@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0047]
+amended-by: [ADR-0047, ADR-0050]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -28,6 +28,8 @@ addition, not a rewrite.
   (name, contract version, `requires` and `after` dependencies on other plugins by name, adapter
   binding, settings type) and implements only the narrow Protocols it needs: `ContributesRouters`,
   `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`, `ContributesChecks`,
+  `ContributesStats` (a frozen snapshot of a bounded resource for `bot.stats()`,
+  [ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md)),
   `HasLifecycle` (an async context manager for start/stop). No base class, no inheritance
   ([ADR-0006](0006-architectural-tenets-of-the-core.md)); the declaration is readable without
   running code.

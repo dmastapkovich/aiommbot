@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#15"
+amended-by: [ADR-0048]
 ---
 
 # Handlers subscribe by annotation on a router tree walked depth-first to the first match, with a typed outcome and start-up reachability checks
@@ -22,7 +23,8 @@ We decided:
 - **Typed dispatch outcome.** Dispatch returns the typed `Outcome` — `Handled | Unhandled`, plus the
   `Failed` variant of [ADR-0021](0021-core-error-boundary.md) — not sentinel objects. An unhandled
   event completes quietly — a bot receives hundreds of server events it does not care about — but
-  passes through the Observability seam carrying the event name and never its content. A fallback is
+  reaches Middleware as `Unhandled`, which carries the event name and never its content
+  ([ADR-0048](0048-observability-is-not-a-core-seam.md)). A fallback is
   an ordinary handler without filters registered last. A handler may raise `Skip` to let the walk
   continue with the next candidate; this is documented as the rare exception it is.
 - **Handlers are data.** Registration builds a frozen `HandlerSpec`: name, router path, event

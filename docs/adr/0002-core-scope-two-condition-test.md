@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#13"
-amended-by: [ADR-0008]
+amended-by: [ADR-0008, ADR-0048]
 ---
 
 # The core admits a capability only if every bot needs it identically or it is chat-specific with no library equivalent
@@ -19,13 +19,18 @@ stale interactive actions, flood control keyed on chat identity. Everything else
 extra or a documented recipe over an ecosystem library; the extras that exist and the rule for
 adding one are
 [ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)'s, the Check phase is
-[ADR-0016](0016-three-phase-start-with-checks.md)'s, and where a capability still without a home
-will live is the map's *Not yet specified* — observability #29, the CLI #30.
+[ADR-0016](0016-three-phase-start-with-checks.md)'s, and observability is a generic Plugin behind
+two library-named extras
+([ADR-0051](0051-first-party-observability-plugin.md)). Where the CLI lives is #30's.
 
 Consequences fixed with the same decision:
 
-- **Core refuses**: knowing Mattermost; scheduling; implementing metrics or tracing (it exposes the
-  Observability seam only); retries, dead-letter, circuit breaking; any storage backend other than
+- **Core refuses**: knowing Mattermost; scheduling; emitting a metric or a span of its own — it
+  offers the Middleware layers, the typed `Outcome`, the Signals and the `RequestObserver` pair, and
+  a Plugin turns those into telemetry
+  ([ADR-0048](0048-observability-is-not-a-core-seam.md),
+  [ADR-0049](0049-what-the-framework-makes-observable.md)); retries, dead-letter, circuit breaking;
+  any storage backend other than
   in-memory; running an HTTP server (the webhook Plugin exposes an ASGI application for any server);
   selecting an event loop; a CLI framework (placement is #30's decision; the Core offers only the
   `run()` and `serve()` entry points of
@@ -33,7 +38,8 @@ Consequences fixed with the same decision:
 - **Core runtime dependencies: standard library only**, with `typing_extensions` as the single
   exception admitted by [ADR-0008](0008-python-floor-3-12-with-typing-extensions.md) while Python
   3.12 is supported. Core contracts are `dataclass(slots=True)` and `Protocol`; serialisation
-  (msgspec), HTTP and WebSocket clients (httpx2, websockets), observability (whatever library #29 chooses) live
+  (msgspec), HTTP and WebSocket clients (httpx2, websockets) and observability
+  (`opentelemetry-api`, `prometheus-client`) live
   in the Adapter and in Plugins behind Core-owned Protocols. Enforced by an import-linter
   `forbidden` contract and a smoke import of the Core with no extras installed.
 - **One distribution**, `aiommbot`, with the Core, the Mattermost Adapter and first-party Plugins as

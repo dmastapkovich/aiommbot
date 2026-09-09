@@ -18,7 +18,7 @@ building-block view, which is also the import-linter contract to be:
 |---|---|---|
 | Testing toolkit | `aiommbot.testing` | everything below |
 | Adapter-specific plugins | WebSocketTransport, Webhook, Callback token (composed by the Webhook, no `PluginSpec`), IdentityCache | the Adapter and the Core |
-| Adapter · generic plugins | the Mattermost Adapter · State, storage backends, DI bridges, the observer extra | the Core only — **and never each other** |
+| Adapter · generic plugins | the Mattermost Adapter · State, storage backends, DI bridges, the Observability plugin | the Core only — **and never each other** |
 | Core | envelope, routing, dispatch, middleware, DI, lifecycle, the Protocols | the standard library and `typing_extensions` |
 
 - **Five layers, four ranks.** A *layer* is a grouping of components the building-block view

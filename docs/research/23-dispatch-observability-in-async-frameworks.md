@@ -12,8 +12,11 @@ observer surface, its record fields and its logging policy, and
 core, extra, recipe or absent. This note covers the *shape*: the mechanism, the names, the
 ownership of process-global state and the cardinality rule.
 
-Findings only — the decisions are #29's. All sources are primary (specification text, PEPs,
-official documentation, source code on GitHub, PyPI metadata), read on 2026-09-09. Peer libraries
+Findings only — the decisions are
+[ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) to
+[ADR-0051](../adr/0051-first-party-observability-plugin.md). All sources are primary
+(specification text, PEPs, official documentation, source code on GitHub, PyPI metadata), read on
+2026-09-09. Peer libraries
 are evidence of practice, not authority. Anything not confirmed from such a source is marked
 **[unverified]**.
 
@@ -60,10 +63,10 @@ the keys used by the logging system", where the keys in question are the
 [LogRecord attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes) —
 `args`, `asctime`, `created`, `exc_info`, `exc_text`, `filename`, `funcName`, `levelname`,
 `levelno`, `lineno`, `message`, `module`, `msecs`, `msg`, `name`, `pathname`, `process`,
-`processName`, `relativeCreated`, `stack_info`, `thread`, `threadName` and `taskName`. Neither
-page states in prose whether a clash raises or is silently dropped **[unverified]**; either way the
-list is a set of names an `extra` payload must avoid, and it overlaps the vocabulary of a chat
-platform at `message`, `name`, `module`, `process` and `args`.
+`processName`, `relativeCreated`, `stack_info`, `thread`, `threadName` and `taskName`. The clash
+raises rather than being dropped, as `Logger.makeRecord` shows
+([`docs/research/24`](24-library-logging-design.md) §2), and the set overlaps the vocabulary of a
+chat platform at `message`, `name`, `module`, `process` and `args`.
 
 ### 1.3 Context propagation is guaranteed across `await`, not across a thread pool
 

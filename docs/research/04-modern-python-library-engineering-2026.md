@@ -150,10 +150,12 @@ the framework never chooses the event loop.
 
 **Recommendation for our library:** core dependency `opentelemetry-api>=1.30,<2`; spans/metrics via the API following messaging semconv (`messaging.system="mattermost"`); Protocol-based observers with Noop defaults; `[prometheus]` extra with `prometheus-client`; `[otel]` extra only for optional SDK-based helpers/exporters.
 
-The decision is [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md) and
-[ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md):
-`typing_extensions` is the Core's only runtime dependency, and observability goes through the
-`RequestObserver` Protocol with no `opentelemetry-api` dependency.
+The decision is [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md),
+[ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) and
+[ADR-0051](../adr/0051-first-party-observability-plugin.md): `typing_extensions` is the Core's only
+runtime dependency, `opentelemetry-api` is an extra and not a core dependency, and the messaging
+mapping recommended above is corrected there — the destination of a chat consumer is the transport's
+stream, never the channel.
 
 
 ## 9. Plugin/extension architecture

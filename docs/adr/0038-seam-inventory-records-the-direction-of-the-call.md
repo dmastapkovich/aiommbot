@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-08
 ticket: "#84"
+amended-by: [ADR-0048]
 ---
 
 # The Core's seam inventory records the direction of the call — eleven required Protocols and one provided
@@ -11,7 +12,7 @@ ticket: "#84"
 hold it. A seam inventory organised on substitutability — Feathers' direction-neutral definition
 ([`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md)) — admits it; one
 organised on the supply side, "every Protocol the Core owns, who implements it", cannot, and is
-false anyway: the six `Contributes*`/`HasLifecycle` Protocols of
+false anyway: the seven `Contributes*`/`HasLifecycle` Protocols of
 [ADR-0015](0015-plugin-contract-and-composition.md) are Core-owned and are not rows. The twelfth
 Protocol makes the difference visible, because it is the first whose caller is user code. We
 decided:
@@ -31,9 +32,10 @@ decided:
   in one hexagon, separated by position rather than by artefact. A second table would also make one
   row a section of its own, and §5.4's job is to be the single place a reader can count the
   substitution surface.
-- **The count is stated as "fourteen Protocols on twelve seams — eleven required, one provided".**
-  Rows and Protocols differ because two rows pair an asynchronous and a synchronous Protocol
-  (`HTTPTransport`/`SyncHTTPTransport`, `TokenProvider`/`SyncTokenProvider`). Wherever the figure is
+- **The count is stated as "fifteen Protocols on twelve seams — eleven required, one provided".**
+  Rows and Protocols differ because three rows pair an asynchronous and a synchronous Protocol
+  (`HTTPTransport`/`SyncHTTPTransport`, `TokenProvider`/`SyncTokenProvider`,
+  `RequestObserver`/`SyncRequestObserver`). Wherever the figure is
   repeated — §5.10, `TRACKER.md`, `engineering-style.md` §1, ADR-0006 — it carries the split, so a
   reader never learns the number without learning that it has two kinds in it.
 - **`seam` remains a single rank in §5.0.** Direction is an attribute of a seam, not a fourth rank:
@@ -43,7 +45,7 @@ decided:
   Core-owned Protocol is a §5.4 row when it is ranked `seam` — that is, when it is not itself a
   component and not a part of one. `Filter`, `Extractor` and `Middleware` are components,
   `Provider` and `Check` are parts, and the IdentityCache Protocol is excluded by ownership because
-  it is the Adapter's. The six `Contributes*`/`HasLifecycle` Protocols are ranked by nothing today;
+  it is the Adapter's. The seven `Contributes*`/`HasLifecycle` Protocols are ranked by nothing today;
   that gap is a discovery of this ticket and is routed to its own ticket rather than settled here.
 - **The *Specified in* column is authoritative, and §5 now says so itself.** ADR-0035 ruled that the
   prose "a Protocol is specified inside the document of the component that consumes it" loses to the
@@ -78,8 +80,9 @@ decided:
 - *A generic `Kind` column keyed on who implements the Protocol* — rejected: it is the axis none of
   the splitting doctrines uses, it does not separate `ReplyChannel` from `TokenProvider` (whose
   shipped implementations are already "none — the application's") or from `RequestObserver` (already
-  plural and application-implemented), and it would invite the six `Contributes*` Protocols in as a
-  second class of six, turning a reconciliation into a scope decision that belongs to `bot.md`.
+  plural and application-implemented), and it would invite the seven `Contributes*` Protocols in as a
+  second class of their own, turning a reconciliation into a scope decision that belongs to
+  `bot.md`.
 
 ## Consequences
 
@@ -97,7 +100,7 @@ decided:
 - `engineering-style.md` §1 states the substitution surface with both directions. The rules it is
   held by — `ST-SOL-04`, `ST-SOL-05` — are unchanged: `ReplyChannel` is sized to one consumer and
   names its conformance suite.
-- The six `Contributes*`/`HasLifecycle` Protocols are Core-owned public API under semantic
+- The seven `Contributes*`/`HasLifecycle` Protocols are Core-owned public API under semantic
   versioning with no rank anywhere in §5. Ranking them is #85's question; this ADR only records that §5.4's membership rule does not silently include them. On the
   *Direction* axis they are `required` — the Bot calls them — so the discriminator this ADR adds
   does not by itself admit them.

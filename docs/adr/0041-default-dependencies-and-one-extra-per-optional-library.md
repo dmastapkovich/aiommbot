@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#24"
-amended-by: [ADR-0044]
+amended-by: [ADR-0044, ADR-0051]
 ---
 
 # The distribution installs the four libraries a Mattermost bot cannot run without, and every other library is an extra named after it
@@ -32,10 +32,14 @@ replaceable seams have two.
 | `dishka` | `dishka` | the dishka `DependencyProvider` bridge ([ADR-0018](0018-core-owned-type-keyed-dependency-injection.md)) |
 | `wireup` | `wireup` | the wireup `DependencyProvider` bridge (ADR-0018) |
 | `pytest` | `pytest` | `aiommbot.testing`, which imports it ([ADR-0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)) |
+| `opentelemetry` | `opentelemetry-api` | the `OpenTelemetryPlugin` ([ADR-0051](0051-first-party-observability-plugin.md)) |
+| `prometheus` | `prometheus-client` | the `PrometheusPlugin` (ADR-0051) |
 
 `paseto` is the one extra named for a standard rather than a package, because that is the word the
-person asking for it uses; ADR-0024 fixed the name and it stays. The observability observers add
-their extras under the same rule when #29 decides what they depend on.
+person asking for it uses; ADR-0024 fixed the name and it stays. Two more extras join the table
+under the same rule, in the spelling the ecosystem uses for the library: `opentelemetry` installs
+`opentelemetry-api` and `prometheus` installs `prometheus-client`, both for the observability Plugin
+([ADR-0051](0051-first-party-observability-plugin.md)).
 
 **No aggregate extra.** `websockets` and `picows` are alternatives, so are `dishka` and `wireup`; an
 `all` that installs both halves of two either-or choices teaches nobody anything and becomes the

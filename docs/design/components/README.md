@@ -42,3 +42,4 @@ status line and `TRACKER.md` §C.
 | State | Generic plugin | `state.md` | 6 | #83 |
 | FakeMattermost | Testing toolkit | `fake-mattermost.md` | 6 | #88 |
 | Testing toolkit | Testing toolkit | `testing-toolkit.md` | 7 | #89 |
+| Observability plugin | Generic plugin | `observability.md` | 7 | #92 |

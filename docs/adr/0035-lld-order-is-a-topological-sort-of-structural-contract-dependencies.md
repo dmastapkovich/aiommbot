@@ -7,7 +7,7 @@ ticket: "#41"
 # The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table
 
 [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md) fixes the direction of every
-allowed *import*, and it is tempting to read it as the order in which the 27 component design
+allowed *import*, and it is tempting to read it as the order in which the 30 component design
 documents should be *written*. It is not: a document is ordered by what its **§3 Public contract**
 cannot be written without, and that graph does not follow the layer table. We decided the ordering
 rule to be:
@@ -76,7 +76,7 @@ rule to be:
   `codec`, `face` and the storage backends.
 - *The layer table as a soft tie-breaker inside a wave* — rejected: it changes no edge and adds a
   second source of truth for a question the graph already answers.
-- *No order at all, 27 equal tickets* — rejected: the order is the decision #41 exists to make, and
+- *No order at all, 30 equal tickets* — rejected: the order is the decision #41 exists to make, and
   without it every author re-derives the same graph.
 
 ## Consequences
