@@ -13,7 +13,7 @@ status line and `TRACKER.md` §C.
 
 | Component | Layer | File | Wave | Ticket |
 |---|---|---|---|---|
-| Event | Core | [`event.md`](event.md) | 1 | #57 |
+| Event | Core | [`event.md`](event.md) | 1 | #86 |
 | Signal | Core | `signal.md` | 1 | #58 |
 | DependencyProvider | Core | `dependency-provider.md` | 1 | #59 |
 | Generated model | Adapter | `generated-model.md` | 1 | #60 |

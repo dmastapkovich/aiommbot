@@ -138,7 +138,7 @@ ADR-0038).
 | `TokenProvider`, `SyncTokenProvider` | required | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `CallbackTokenCodec` | required | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | `RequestObserver` | required | API client | none by default; a first-party extra | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
-| `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
+| `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook, as `ReplyChannel[ActionReply]` and `ReplyChannel[DialogReply]`; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
 
 Two Core-owned Protocols are not rows yet: the Observability seam
 ([ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
@@ -160,7 +160,7 @@ C4Component
     Component(di, "DependencyProvider", "Resolver", "Type-keyed providers, two Scopes, compiled plans")
     Component(signal, "Signal", "Observer", "Typed asynchronous lifecycle notifications")
     Component(executor, "Sync executor", "Bounded pool", "Runs declared synchronous callables; abandons at drain")
-    Component(event, "Event", "Immutable envelope", "Event[P], EventMeta, the reply-channel slot")
+    Component(event, "Event", "Immutable envelope", "Event[P, R], EventMeta, ReplyAlreadySent")
     Rel(bot, dispatcher, "starts and feeds", "TaskGroup")
     Rel(bot, signal, "publishes lifecycle")
     Rel(bot, executor, "owns and sizes")
@@ -195,7 +195,7 @@ C4Component
 | **Signal** | component | `Signal[T]`: typed asynchronous lifecycle notification, every subscriber runs, failures collected not swallowed | `signal.md` | [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md) |
 | **Sync executor** | component | The Bot's own bounded thread pool: colour resolution at registration, `sync_to_thread` warnings, `contextvars` copying, dropping the wait at drain with `HandlerAbandoned` | `sync-executor.md` | [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
 | **Event** | component | The immutable generic envelope and its metadata; the only Core type every other block reads | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md) |
-| `EventMeta`, `CorrelationId`, the reply-channel slot | part | Transport, receive time, correlation, sequence, raw data, and the optional typed reply slot | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
+| `EventMeta`, `CorrelationId`, `ReplyAlreadySent` | part | Transport, receive time, correlation, sequence, raw data, the optional typed Reply slot, and the fieldless marker `send` returns once the slot is claimed | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 
 ## 5.6 Level 3 — the Mattermost Adapter
 
@@ -297,7 +297,7 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 | The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the drain, the `websockets`/`picows` bindings, the Transport's Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s drain, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | Resync backfill | part | Recovering the loss window a `Resynced(since)` Signal reports; first-party plugin or documented recipe is #55's decision | deferred to #55 | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | **Webhook** | component | `webhook_app(bot) -> ASGIApp` and `handle_callback`, the payload-bound single-use Reply channel with its 10 s deadline and empty-200 default, verification before an Event exists, the 1 MiB reply cap, the logging rules | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
-| The Reply channel (`ActionReply`, `DialogReply`, `ReplyAlreadySent`), `StaleAction` | part | The typed reply slot bound to the payload, and the routable event an expired or replayed token produces | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
+| The reply values `ActionReply` and `DialogReply` with the deadline behaviour, `StaleAction` | part | The two `ReplyChannel` implementations bound to the payload — `ReplyAlreadySent` is the Core's — and the routable event an expired or replayed token produces | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | **Callback token** | component | The self-issued credential: the compact HMAC-SHA256 format, the claim set, key rotation by `kid`, the typed verification union, and the default-on policy with its explicit `off` | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | `NonceStore`, the PASETO extra | part | Opt-in single-use enforcement on a `KeyValueStore`, and `pyseto` behind the same `CallbackTokenCodec` | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | **IdentityCache** | component | Optional caching of resolved users and direct channels on a `KeyValueStore` with a one-hour TTL and event-driven invalidation; absent, the Workspace queries every time. The Workspace consults it through an **Adapter-owned Protocol**, so the import still points plugin → Adapter and never back | `identity-cache.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md), [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md) |
@@ -315,7 +315,7 @@ so it has no diagram and no design document until #25 closes.
 | In-memory `HTTPTransport`/`SyncHTTPTransport` double, both faces in one class | part | the parametrised conformance suite of both client Faces | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | In-memory `WebSocketConnection` double | part | the contract suite both socket libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, `ReplyChannel`, plugin lifecycle | part | external storage backends, third-party plugins, and the one provided seam | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
-| Recording `ReplyChannel` slot | part | the second implementation of the provided seam, and the suite that is parametrised over both | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
+| Recording `ReplyChannel` slot | part | the second implementation of the provided seam, generic in `R`, and the conformance suite parametrised over it and the Webhook's two slots | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | `TestBot` with typed overrides by key | part | the only override API that exists — production has none | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |
 | The typed name-parity test of the two Faces | part | holding duality by mechanism rather than review | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `assert_matches(event, handler)` | part | shadowing between arbitrary filters, which start-up cannot decide | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |

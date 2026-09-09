@@ -268,11 +268,12 @@ isolation and dedup; separate from KeyValueStore.
 _Avoid_: event isolation (that is the middleware using it), mutex, semaphore
 
 **Reply channel**:
-The typed, single-use response slot in `meta.reply` of a webhook-delivered Event, typed by the Core
+The typed, single-use reply slot in `meta.reply` of a webhook-delivered Event, typed by the Core
 Protocol `ReplyChannel[R]` and parametrised by the Event's second type parameter: `ActionReply` for
 an InteractiveAction, `DialogReply` for a DialogSubmission. Unused by the deadline, it sends an
-empty 200 and later sends yield `ReplyAlreadySent`. *Reply slot* names the position in `EventMeta`
-the channel occupies.
+empty 200 and later sends yield `ReplyAlreadySent` — the Core-owned marker defined beside the
+Protocol, a Typed outcome and not an error. *Reply slot* names the position in `EventMeta` the
+channel occupies.
 _Avoid_: response (bare), ack (that is the default reply), HTTP response
 
 **Callback token**:

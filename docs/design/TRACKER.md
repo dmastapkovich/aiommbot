@@ -64,8 +64,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Standalone typed API client: HTTPTransport, httpx2, Operation descriptors, pagination, retries, faces | #21 | 0026 | reviewed |
 | API error taxonomy | #21 | 0027 | reviewed |
 | Runtime helpers, identity resolution, IdentityCache plugin | #21 | 0028 | reviewed |
-| Message composition: attachment, button, select and dialog builders embedding Callback tokens | graduated from #21 (ticket pending) | | not started |
-| File API ergonomics: limits, resumable uploads, streaming | graduated from #21 (ticket pending) | | not started |
+| Message composition: attachment, button, select and dialog builders embedding Callback tokens | #52 | | not started |
+| File API ergonomics: limits, resumable uploads, streaming | #53 | | not started |
 | Execution model: sync face scope, `Workspace` split, thin Faces instead of codegen | #22 | 0029 | reviewed |
 | Synchronous callables: `sync_to_thread`, Sync executor, abandon at drain | #22 | 0030 | reviewed |
 | Concurrency discipline, event-loop ownership, process entry points | #22 | 0031 | reviewed |
@@ -85,8 +85,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | | not started |
 | LLD writing order and parallelism | #41 | 0035 | reviewed |
-| Reply-slot typing: second type parameter, `ReplyChannel` as the Core's twelfth seam | #57 | 0036 | reviewed |
-| Envelope enrichment: `derive` only, `dataclasses.replace` on an `Event` banned | #57 | 0037 | reviewed |
+| Reply-slot typing: second type parameter declared contravariant, `ReplyChannel` as the Core's twelfth seam, `ReplyAlreadySent` Core-owned | #57 | 0036 | reviewed |
+| Envelope enrichment: `derive(meta: EventMeta[R2])` only; `dataclasses.replace`, `copy.replace` and `__replace__` on an `Event` banned | #57 | 0037 | reviewed |
 | Seam inventory: direction of the call recorded per row, `required` and `provided`, and the count reconciled | #84 | 0038 | reviewed |
 | Rank of the six `Contributes*`/`HasLifecycle` plugin Protocols in §5 | #85 | | not started |
 | Public API shape (prototype) | #31 | | not started |
@@ -103,7 +103,7 @@ term in kebab-case.
 
 | Component | Layer | File | Status | Ticket |
 |---|---|---|---|---|
-| Event | Core | `components/event.md` | reviewed | #57 |
+| Event | Core | `components/event.md` | reviewed | #86 |
 | Signal | Core | `components/signal.md` | not started | #58 |
 | DependencyProvider | Core | `components/dependency-provider.md` | not started | #59 |
 | Generated model | Adapter | `components/generated-model.md` | not started | #60 |

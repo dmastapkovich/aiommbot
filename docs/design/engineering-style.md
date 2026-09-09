@@ -297,7 +297,7 @@ _Tier:_ `review`. _Checked in:_ LLD. _From:_ [ADR-0006](../adr/0006-architectura
 | Dictionary-as-record: a `data` bag, `**kwargs` payloads, tuple returns | a bag has no contract, so nobody can tell what a middleware is allowed to put in it | `semgrep:ST-TYP-12` for the `**kwargs` half, WPS for the `data` name, `ST-ERR-01` for the tuple return |
 | Active Record | it binds a wire model to a storage backend the Core is not allowed to know about | import-linter `forbidden` |
 | Ambient context for the Bot or the Event | it removes the argument that makes a Handler testable in isolation | `ST-PAT-06`, `ST-TYP-16` |
-| `dataclasses.replace` on an `Event` | it can swap the payload under a `kind` that still names the old one, and the next link trusts what it receives | `semgrep:ST-TYP-17` |
+| `dataclasses.replace`, `copy.replace` or `__replace__` on an `Event` | it can swap the payload under a `kind` that still names the old one, and the next link trusts what it receives | `semgrep:ST-TYP-17` |
 | Registration by import side effect | functionality active because a module was imported is functionality nobody chose | `ST-MOD-07` |
 | Exceptions as ordinary control flow across a seam | a participant that raises "not me" makes the walk uninterruptible for real failures | `ST-ERR-03` |
 | Monkeypatching our own classes in tests | it proves a method was called, not that the method does what it promises | `ST-TST-01` |
@@ -478,16 +478,21 @@ removes the parallel `TypeVar` name that nothing keeps in step with the class.
 
 ```python
 # Don't
-_PayloadT = TypeVar('_PayloadT')
-class Event(Generic[_PayloadT]): ...
+_T = TypeVar('_T')
+class Signal(Generic[_T]): ...
 
 # Do
-class Event[P]: ...
+class Signal[T]: ...
 type Filter[P] = Callable[[Event[P]], bool]
 ```
 
 _Limits:_ a parameter needing `default=` comes from the compat module (`ST-TYP-09`), because PEP 696
-defaults land in 3.13.
+defaults land in 3.13. `Event`, `EventMeta` and `ReplyChannel` are the one permanent exception: they
+declare `R` contravariant on that compat `TypeVar`, because inference is unavailable on the floor
+and returns invariant on 3.13
+([ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md),
+[`docs/research/20`](../research/20-reply-slot-variance-and-capability-typing.md) §1);
+`components/event.md` §9 records it.
 _Tier:_ `tool` — ruff. _Checked in:_ PR. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md), [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md).
 
 #### `ST-TYP-03` — Type a genuinely open value as `object` and narrow it
@@ -794,8 +799,9 @@ event = replace(event, payload=normalised)
 event = event.derive(meta=replace(event.meta, correlation_id=cid))
 ```
 
-_Limits:_ no exceptions. The ban names `Event` and no other frozen type; `dataclasses.replace` on
-an `EventMeta` is the intended spelling.
+_Limits:_ no exceptions. The ban covers `dataclasses.replace`, `copy.replace` and `__replace__` —
+one operation under three names on 3.13 — and names `Event` and no other frozen type;
+`dataclasses.replace` on an `EventMeta` is the intended spelling.
 _Tier:_ `tool` — `semgrep:ST-TYP-17`. _Checked in:_ LLD, PR.
 _From:_ [ADR-0037](../adr/0037-derive-is-the-only-enrichment-path-for-an-event.md).
 
