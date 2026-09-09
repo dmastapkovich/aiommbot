@@ -100,8 +100,9 @@ import the Adapter, and every arrow points at the Core.
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0002](../adr/0002-core-scope-two-condition-test.md)
 
-Where this meets #24: the layer names and their direction are this section's line; the package
-paths, the `__all__` policy and the extras that realise them are #24's.
+The layer names and their direction are this section's line; each rank's package directory is
+[ADR-0040](../adr/0040-one-package-directory-per-import-rank.md)'s, and a diagram that disagrees
+with that tree is a bug in one of the two.
 
 ## 5.4 The seams of the Core
 

@@ -28,9 +28,13 @@ The tool configuration is not here. Which ruff rules, which WPS limits, which se
 which import-linter contracts run is [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md)'s
 single responsibility; this document names the tier and, where a semgrep rule carries the same
 identifier as the rule it enforces, that identifier. Where this document meets a neighbour, the
-**rule** is this document's line and the **realisation** is the neighbour's: package paths, `__all__`
-and extras are #24's, the testing toolkit's shape is #25's, the documentation stack is #26's, the
-observability boundary and the observer record are #29's.
+**rule** is this document's line and the **realisation** is the neighbour's: the package paths, the
+re-export mechanism and the extras are
+[ADR-0040](../adr/0040-one-package-directory-per-import-rank.md),
+[ADR-0043](../adr/0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) and
+[ADR-0041](../adr/0041-default-dependencies-and-one-extra-per-optional-library.md)'s, the testing
+toolkit's shape is #25's, the documentation stack is #26's, the observability boundary and the
+observer record are #29's.
 
 ## 1. Ideology
 
@@ -276,8 +280,8 @@ argument has to survive the session that made it.
 `_BaseThrottle` is an ABC because both faces share the arithmetic.
 
 <!-- Do -->
-See ADR-0040 (for example): an ABC inside this component, rejected alternative a Protocol plus a shared
-sans-I/O function, which loses the invariant that both faces validate identically.
+See the ADR that admitted it: an ABC inside this component, rejected alternative a Protocol plus a
+shared sans-I/O function, which loses the invariant that both faces validate identically.
 ```
 
 _Limits:_ none of these may cross a component boundary, whatever the ADR says.
@@ -1421,8 +1425,12 @@ _Tier:_ `review`. _Checked in:_ LLD, PR. _From:_ [ADR-0012](../adr/0012-generic-
 
 ## 8. Module layout and the public surface — `ST-MOD`
 
-This section owns the **rules**. The package paths, the `__all__` policy and the extras that realise
-them are #24's; where the two meet, the rule is this section's line and the directory is #24's.
+This section owns the **rules**. The directories that realise them are
+[ADR-0040](../adr/0040-one-package-directory-per-import-rank.md)'s, the extras
+[ADR-0041](../adr/0041-default-dependencies-and-one-extra-per-optional-library.md)'s and the
+re-export mechanism
+[ADR-0043](../adr/0043-explicit-re-export-with-a-reference-page-as-the-public-list.md)'s; where a
+rule and a path meet, the rule is this section's line and the path is theirs.
 
 #### `ST-MOD-01` — Treat a name as public only when all four criteria hold
 
@@ -1438,7 +1446,7 @@ Public  ⇔  (1) the name has no leading underscore
 
 ```python
 # Don't — importable, undocumented, and therefore accidentally promised
-from aiommbot.dispatch import walk_router
+from aiommbot.core.dispatcher import walk_router
 
 # Do — the four criteria, or it is internal
 from aiommbot import Router
@@ -1455,10 +1463,10 @@ tell at a glance that it reached into our internals.
 
 ```python
 # Don't
-from aiommbot.resolution import ResolutionPlan
+from aiommbot.core.resolution import ResolutionPlan
 
 # Do
-from aiommbot._internal.di.plan import ResolutionPlan   # and only from inside aiommbot
+from aiommbot.core._internal.resolution import ResolutionPlan   # and only from inside aiommbot
 ```
 
 _Limits:_ `aiommbot.testing` is public and may import every layer; nothing may import it.
@@ -1470,15 +1478,16 @@ _Reason:_ an implicit re-export is invisible to a type checker consuming the pac
 public for us and private for our users.
 
 ```python
-# Don't
-from aiommbot.event import Event
+# Don't — in aiommbot/core/__init__.py
+from .event import Event
 
 # Do
-from aiommbot.event import Event as Event
+from .event import Event as Event
 ```
 
-_Limits:_ the mechanism — `X as X` or `__all__` — is #24's to fix; this rule requires that it be
-explicit either way.
+_Limits:_ the form is the redundant alias — `X as X`, `import x as x` or `from . import x` — and
+the package carries no `__all__`
+([ADR-0043](../adr/0043-explicit-re-export-with-a-reference-page-as-the-public-list.md)).
 _Tier:_ `tool` — pyright `--verifytypes`, ruff. _Checked in:_ PR.
 _From:_ [ADR-0007](../adr/0007-tiny-public-root-with-explicit-subpackages.md), [ADR-0009](../adr/0009-four-strict-type-checkers.md).
 
@@ -1489,10 +1498,10 @@ internals makes that document false.
 
 ```python
 # Don't
-from aiommbot._internal.ws.reader import _ReaderState
+from aiommbot.mattermost.plugins.websocket_transport._internal.reader import _ReaderState
 
 # Do
-from aiommbot import WebSocketConnection      # the seam the WebSocketTransport is designed around
+from aiommbot.core import WebSocketConnection   # the seam the WebSocketTransport is designed around
 ```
 
 _Limits:_ inside one component, its own `_internal` modules import each other freely.
@@ -1507,15 +1516,16 @@ _Reason:_ this is the one architectural property a machine can check, and checki
 ```text
 Do: import only downward in this table.
 
-    testing toolkit           → everything below
-    adapter-specific plugins  → the Adapter and the Core
-    Adapter · generic plugins → the Core only, and never each other
-    Core                      → the standard library and the compat module's backport
+    aiommbot.testing                                → everything below
+    aiommbot.mattermost.plugins                     → the Adapter and the Core
+    aiommbot.mattermost | aiommbot.plugins          → the Core only, and never each other
+    aiommbot.core                                   → the standard library and the compat module
 
-Don't: State (a generic Plugin) → aiommbot.mattermost
-       Webhook → aiommbot.state          (plugins are independent)
-       Core → msgspec                    (the Core imports no third-party package)
-       Adapter → aiommbot.testing        (nothing imports the toolkit)
+Don't: aiommbot.plugins.state → aiommbot.mattermost      (a generic Plugin knowing the platform)
+       aiommbot.mattermost.plugins.webhook → aiommbot.plugins.state
+                                                         (plugins are independent)
+       aiommbot.core → msgspec                           (the Core imports no third-party package)
+       aiommbot.mattermost → aiommbot.testing            (nothing imports the toolkit)
 ```
 
 _Limits:_ no exceptions. A needed import in the wrong direction means a seam is missing — see
@@ -1611,8 +1621,8 @@ _Reason:_ the `independence` contract makes a shared helper between plugins impo
 construction, and that is deliberate: a shared helper is a seam nobody designed.
 
 ```python
-# Don't — Webhook's nonce store importing the State plugin's Redis helper
-from aiommbot.state.backends.redis import connect
+# Don't — Webhook's nonce store importing a backend plugin directly
+from aiommbot.plugins.backends.redis import connect
 
 # Do — both reach the Core Protocol the capability implements
 def __init__(self, *, store: KeyValueStore) -> None: ...
@@ -1622,6 +1632,24 @@ _Limits:_ deliberate duplication is allowed and must say so in both documents; t
 is a Protocol.
 _Tier:_ `tool` — import-linter. _Checked in:_ LLD, PR.
 _From:_ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md).
+
+#### `ST-MOD-11` — Write a public name at its package path, never at a module path
+
+_Reason:_ a module is a file, and `ST-MOD-09` requires it to be split the moment it holds a second
+part; a documented module path therefore promises the one thing these rules guarantee will change.
+
+```text
+Do:    from aiommbot.core import KeyValueStore
+       aiommbot.core.KeyValueStore                        in the reference page and in examples
+
+Don't: from aiommbot.core.key_value_store import KeyValueStore
+```
+
+_Limits:_ no exceptions. The five documented forms — the root for the closed headline set, then
+`core`, `mattermost`, `plugins.<name>` and `testing` — are
+[ADR-0042](../adr/0042-a-public-name-is-documented-at-its-package-path.md)'s.
+_Tier:_ `tool` — the public-surface guard test rejects a page row that names a module.
+_Checked in:_ LLD, PR. _From:_ [ADR-0042](../adr/0042-a-public-name-is-documented-at-its-package-path.md), [`docs/research/22`](../research/22-public-import-surface-of-modern-libraries.md).
 
 ## 9. Logging and redaction — `ST-LOG`
 
@@ -1819,7 +1847,7 @@ class KeyValueStore(Protocol):
         * keys are opaque bytes-safe strings and are never parsed.
 
     Conformance:
-        `aiommbot.testing.suites.key_value_store`
+        `aiommbot.testing.key_value_store_conformance`
     """
 ```
 
@@ -1951,7 +1979,7 @@ class TestRedisStore(KeyValueStoreConformance):
         return RedisKeyValueStore(url=REDIS_URL)
 
 # Do — the suite is a parametrised test over a factory the implementer supplies; nothing is subclassed
-from aiommbot.testing.suites import key_value_store_conformance
+from aiommbot.testing import key_value_store_conformance
 
 test_redis_store_conforms = key_value_store_conformance(lambda: RedisKeyValueStore(url=REDIS_URL))
 ```
@@ -2118,7 +2146,7 @@ Every rule tagged `LLD`, whatever its tier: at design time no tool has run.
 - [ ] Each failure the document lists says whether it is a typed outcome or an exception, and which boundary converts it; exhausted alternatives convert at the chain boundary; cardinality matches the mechanism; each failure has one representation. `ST-ERR-01` … `ST-ERR-05`
 - [ ] A bad composition stops the start with the full list; unexpected exceptions reach the ErrorBoundary; exceptions carry no content and are rooted at `AiommbotError`, warnings at `AiommbotWarning`, with `retryable` as a property. `ST-ERR-06` … `ST-ERR-10`
 - [ ] Every name is its `CONTEXT.md` term, collides with no `_Avoid_` list, and any new concept gets its term in this commit; the `Sync` prefix, the module plural and the type-parameter spellings match the decided ones. `ST-NAM-01`, `ST-NAM-02`, `ST-NAM-03`, `ST-NAM-05`, `ST-NAM-06`, `ST-NAM-07`, `ST-NAM-08`
-- [ ] The public surface satisfies all four criteria and everything else is `_internal`; importing any public module needs no extras and no configuration; a missing extra fails at construction. `ST-MOD-01`, `ST-MOD-02`, `ST-MOD-07`, `ST-MOD-08`
+- [ ] The public surface satisfies all four criteria and everything else is `_internal`; every public name is written at its package path; importing any public module needs no extras and no configuration; a missing extra fails at construction. `ST-MOD-01`, `ST-MOD-02`, `ST-MOD-07`, `ST-MOD-08`, `ST-MOD-11`
 - [ ] The document states what is logged and what is not: identifiers only, one logger per component, no content switch, the single redaction list, a correlation id for anything a user sees. `ST-LOG-01` … `ST-LOG-04`, `ST-LOG-06`
 - [ ] Every public name the document introduces is documented, its examples are executable, and each Protocol docstring states the implementer's contract and names the conformance suite. `ST-DOC-01`, `ST-DOC-02`, `ST-DOC-03`
 - [ ] The testing section names the doubles it uses (never mocks of our own types), the conformance suite each implementation passes, a test per failure mode, and how time is controlled. `ST-TST-01`, `ST-TST-02`, `ST-TST-04`, `ST-TST-09`

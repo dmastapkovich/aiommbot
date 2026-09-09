@@ -16,9 +16,11 @@ lifecycle and graceful shutdown, the Transport seam, the error taxonomy, the Plu
 Dispatch concurrency; or (2) it is *specific to a chat protocol and has no mature library
 equivalent* — per-key event isolation for conversation state, webhook callback signing, dedup of
 stale interactive actions, flood control keyed on chat identity. Everything else is a Plugin, an
-extra or a documented recipe over an ecosystem library; placement per capability is recorded in
-`docs/design/TRACKER.md` §E — the Check phase by [ADR-0016](0016-three-phase-start-with-checks.md),
-observability and the CLI by #29 and #30.
+extra or a documented recipe over an ecosystem library; the extras that exist and the rule for
+adding one are
+[ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)'s, the Check phase is
+[ADR-0016](0016-three-phase-start-with-checks.md)'s, and where a capability still without a home
+will live is the map's *Not yet specified* — observability #29, the CLI #30.
 
 Consequences fixed with the same decision:
 
@@ -31,7 +33,7 @@ Consequences fixed with the same decision:
 - **Core runtime dependencies: standard library only**, with `typing_extensions` as the single
   exception admitted by [ADR-0008](0008-python-floor-3-12-with-typing-extensions.md) while Python
   3.12 is supported. Core contracts are `dataclass(slots=True)` and `Protocol`; serialisation
-  (msgspec), HTTP and WebSocket clients (httpx2, websockets), observability (opentelemetry-api) live
+  (msgspec), HTTP and WebSocket clients (httpx2, websockets), observability (whatever library #29 chooses) live
   in the Adapter and in Plugins behind Core-owned Protocols. Enforced by an import-linter
   `forbidden` contract and a smoke import of the Core with no extras installed.
 - **One distribution**, `aiommbot`, with the Core, the Mattermost Adapter and first-party Plugins as

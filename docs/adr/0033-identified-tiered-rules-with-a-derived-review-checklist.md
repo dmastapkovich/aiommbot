@@ -43,8 +43,11 @@ from a rule that lives on a reviewer's attention. We decided the shape of
 - **The rulebook is the single source for the rules it owns.** The component-design lines of
   [`design-quality-checklist.md`](../../.agents/design-quality-checklist.md) delegate to it for
   typing, async and testing requirements. Where the rulebook meets a neighbour, the rule is the
-  rulebook's line and the realisation is the neighbour's: package paths, `__all__` and extras are
-  #24's; the testing toolkit's shape is #25's; the documentation stack is #26's; the observability
+  rulebook's line and the realisation is the neighbour's: the package paths, the re-export mechanism
+  and the extras are [ADR-0040](0040-one-package-directory-per-import-rank.md),
+  [ADR-0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) and
+  [ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)'s; the testing
+  toolkit's shape is #25's; the documentation stack is #26's; the observability
   boundary and the observer record are #29's; the ruff, WPS, semgrep and import-linter configuration
   is [ADR-0011](0011-lint-format-and-architecture-toolchain.md)'s.
 

@@ -39,9 +39,12 @@ the mechanisms and the way they are run:
   message and covered by `semgrep --test`; plus the public `p/python` and `p/security-audit` rule
   sets.
 - **import-linter** contracts in `pyproject.toml`: `layers` (the direction of allowed imports is
-  [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md)'s table), `forbidden`
-  (optional libraries importable only from their plugin or quarantine module), `independence`
-  (plugins do not import each other).
+  [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md)'s table over the package
+  directories of [ADR-0040](0040-one-package-directory-per-import-rank.md)), `protected` (an
+  adapter-specific plugin is importable by the testing toolkit alone, which is the rank a `layers`
+  contract cannot express), `forbidden` (third-party packages out of `core` and `_internal`;
+  optional libraries importable only from their plugin or quarantine module — both need
+  `include_external_packages`), `independence` (plugins do not import each other).
 - **slotscheck** with `require-subclass` and `require-superclass`; data classes are
   `@dataclass(slots=True, frozen=True, kw_only=True)`, service classes declare `__slots__`;
   Protocols and listed ABCs are the exceptions.

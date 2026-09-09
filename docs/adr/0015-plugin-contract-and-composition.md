@@ -20,8 +20,9 @@ addition, not a rewrite.
 - **Generic vs adapter-specific plugins.** A plugin declares whether it is generic (depends on the
   Core only: State, observability plugins, scheduling bridges) or bound to an adapter
   (`for_adapter=Mattermost`). Composing an adapter-specific plugin with the wrong adapter is a
-  start-up check failure. Adapter-specific plugins live under the adapter's package; generic ones
-  under the Core's plugin package (layout in #24).
+  start-up check failure. Adapter-specific plugins live in `aiommbot/mattermost/plugins/`, generic
+  ones in `aiommbot/plugins/`, a sibling of `core/`
+  ([ADR-0040](0040-one-package-directory-per-import-rank.md)).
 - **Contract = declaration + narrow Protocols.** A plugin object carries an immutable `PluginSpec`
   (name, contract version, `requires` and `after` dependencies on other plugins by name, adapter
   binding, settings type) and implements only the narrow Protocols it needs: `ContributesRouters`,
@@ -41,8 +42,10 @@ addition, not a rewrite.
   in `plugins=[...]`. Nothing activates by being installed; entry points stay out of 0.5.0.
 - **Contract stability.** The plugin Protocols and `PluginSpec` are public API under semantic
   versioning; the declared contract version is checked at start-up and an incompatible plugin fails
-  with a clear message. First-party plugins are subpackages of the single distribution with extras
-  and a friendly missing-dependency error; each ships with a component design document and passes
+  with a clear message. First-party plugins are subpackages of the single distribution, one extra
+  per optional library and a `MissingExtraError` at construction
+  ([ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)); each ships with a
+  component design document and passes
   the contract test kit in `aiommbot.testing` (conformance suites for `KeyValueStore` and
   `LockProvider` ([ADR-0022](0022-state-plugin-model.md)), `Transport` and the plugin lifecycle).
 

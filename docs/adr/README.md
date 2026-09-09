@@ -47,3 +47,8 @@ ticket owns which decision.
 | [0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) | The reply slot is a second, declared-contravariant type parameter on `Event` typed by a Core-owned `ReplyChannel[R]` Protocol — the Core's twelfth seam; `ReplyAlreadySent` is Core-owned beside it | accepted |
 | [0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) | `Event.derive(meta: EventMeta[R2]) -> Event[P, R2]` is the only way to obtain an enriched envelope, and `dataclasses.replace`, `copy.replace` and `__replace__` on an `Event` are banned | accepted |
 | [0038](0038-seam-inventory-records-the-direction-of-the-call.md) | The Core's seam inventory records the direction of the call — eleven required Protocols and one provided | accepted |
+| [0039](0039-src-layout-with-tests-and-examples-beside-the-package.md) | The repository is a `src/` layout, with tests, runnable examples and the catalogue beside the package | accepted |
+| [0040](0040-one-package-directory-per-import-rank.md) | Every import rank is a package directory, and every module is named after the `CONTEXT.md` term it holds | accepted |
+| [0041](0041-default-dependencies-and-one-extra-per-optional-library.md) | The distribution installs the four libraries a Mattermost bot cannot run without, and every other library is an extra named after it | accepted |
+| [0042](0042-a-public-name-is-documented-at-its-package-path.md) | A public name is documented at its package path, and a module path is never part of the public surface | accepted |
+| [0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md) | A public name is a redundant-alias re-export listed on a hand-written reference page, and the package carries no `__all__` | accepted |

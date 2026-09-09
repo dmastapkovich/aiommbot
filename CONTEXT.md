@@ -28,6 +28,13 @@ The immutable declaration of a Plugin: name, contract version, `requires` and `a
 on other plugins, adapter binding, settings type. Readable without running code.
 _Avoid_: manifest, metadata, config
 
+**Extra**:
+An optional dependency of the distribution, published under one name and installed as
+`aiommbot[<name>]`. Exactly one Extra per optional library, named after that library; the four
+libraries a bot cannot run without are installed by default and are not Extras, and development
+tooling is a dependency group instead.
+_Avoid_: optional dependency (as the name), feature, variant, flavour
+
 **Check**:
 A side-effect-free validation run in the check phase of start-up, contributed by the Core, the
 Adapter or a Plugin: id, severity, message, hint. Any error-severity Check stops the start with the
@@ -183,9 +190,10 @@ _Avoid_: result object, `Result`/`Either`, error code, status tuple
 
 **Public surface**:
 The set of names the semantic-versioning promise covers: no leading underscore, outside
-`_internal`, explicitly re-exported by its subpackage, and present in the reference documentation —
-all four at once. Everything else may change in a patch release.
-_Avoid_: public API (as the file-level thing), exports, `__all__` (that is one mechanism for it)
+`_internal`, explicitly re-exported by its subpackage as `X as X`, and present in the reference
+documentation — all four at once. Each such name is documented at exactly one path, its package's;
+everything else may change in a patch release.
+_Avoid_: public API (as the file-level thing), exports, `__all__` (the package carries none)
 
 **Flag**:
 A typed object attached to a Handler at its subscription to parametrise a Middleware (a timeout, a

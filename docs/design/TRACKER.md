@@ -74,7 +74,11 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Zero suppressions and quarantine | #23 (→ #36) | 0010 | reviewed |
 | Lint, format, architecture toolchain, task runner | #23 | 0011 | reviewed |
 | Layer model and the direction of allowed dependencies | #38 | 0032 | reviewed |
-| Repository layout, public/internal boundary, extras | #24 | | not started |
+| Repository layout: `src/`, tests, examples | #24 | 0039 | reviewed |
+| Package layout: one directory per import rank, module named after its term | #24 | 0040 | reviewed |
+| Default dependencies, one extra per optional library, dependency groups | #24 | 0041 | reviewed |
+| The documented import path of a public name | #24 | 0042 | reviewed |
+| Public surface mechanism: explicit re-export, reference page, internal-API page | #24 | 0043 | reviewed |
 | Testing toolkit | #25 | | not started |
 | Documentation stack and executable docs | #26 | | not started |
 | Agent-native repository and AI policy | #27 | | not started |
@@ -145,14 +149,14 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Observability seam and naming | ADR-0026 (optional composable `RequestObserver`, first-party extra, transport/Middleware for modification; record shape provisional), research 17, #29 | §8 | | in progress |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | in progress |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | in progress |
-| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), #24 (layout) | style §8; §5, §8 | | in progress |
+| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), ADR-0040 (directories and contract shape) | style §8; §5, §8 | | in progress |
 | Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | in progress |
 | Testing strategy (unit / contract / integration / typing / property) | #36 (how tests are written), #25 (toolkit shape) | style §11; §8 | | in progress |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start) | §8, gateway LLD | | in progress |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | in progress |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | in progress |
 | Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | in progress |
-| Deprecation and public-API definition for semver | ADR-0007 (the four criteria of public), #28 (semver and deprecation window) | style §8, §10 | | in progress |
+| Deprecation and public-API definition for semver | ADR-0007 (the four criteria of public), ADR-0042 (the documented path), ADR-0043 (re-export form, reference page, internal-API page), research 22 §6.4 (the shim shape), #28 (semver and deprecation window) | style §8, §10 | | in progress |
 
 ## E. Fog and backlog
 

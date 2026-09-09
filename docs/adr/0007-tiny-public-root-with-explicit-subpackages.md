@@ -17,8 +17,11 @@ semantic-versioning promise, and the public list is documented explicitly and gu
 
 ## Consequences
 
-- The concrete layout, `__all__` policy and extras are designed in #24; what makes a name public is
-  fixed below, and the deprecation window over that list is #28's.
+- The package directories are [ADR-0040](0040-one-package-directory-per-import-rank.md)'s, the
+  extras [ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)'s, and the
+  re-export mechanism and the list that closes criterion 4 are
+  [ADR-0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md)'s. What makes a
+  name public is fixed below; the deprecation window over that list is #28's.
 
 ## What makes a name public
 

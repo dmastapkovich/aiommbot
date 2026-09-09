@@ -64,8 +64,8 @@ A may import B — and a diagram that contradicts it is a bug in one of the two.
 
 ## Consequences
 
-- #24 maps these layers onto package paths, `__all__` and extras; this ADR names the layers and
-  their direction, #24 names the directories. Where the two documents meet, the layer name is this
-  ADR's line and the path is #24's.
+- [ADR-0040](0040-one-package-directory-per-import-rank.md) gives every rank a package directory of
+  its own, so this table is also the directory listing; this ADR names the layers and their
+  direction, ADR-0040 names the paths.
 - The `independence` contract makes a shared helper between two plugins impossible by construction:
   such a helper belongs to the Core behind a Protocol, or it is duplicated on purpose.

@@ -17,8 +17,10 @@ line:
   `pyrefly: ignore`, no `per-file-ignores` for package paths. Code that a rule rejects is
   redesigned, not annotated.
 - **Quarantine is the single exception.** Third-party libraries with incomplete typing (httpx2,
-  websockets, msgspec, redis, …) are wrapped in dedicated modules under `_internal/compat/`, each
-  adapting one library to a Core-owned Protocol. Only there may a suppression appear, always with a
+  websockets, msgspec, redis, …) are wrapped in dedicated modules under the `_internal/compat/` of
+  the rank that owns the library
+  ([ADR-0040](0040-one-package-directory-per-import-rank.md)), each adapting one library to a
+  Core-owned Protocol. Only there may a suppression appear, always with a
   rule code and a link to the upstream issue. A test counts quarantine suppressions against a
   committed baseline that may only decrease; raising it is a separate commit with a written reason.
 - **Tests and documentation examples** may relax rules by directory (`S101` asserts, private

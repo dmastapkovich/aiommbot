@@ -16,7 +16,9 @@ silently prefers uvloop whenever the import succeeds without logging the decisio
 - **Standard library only, asyncio only.** `asyncio.TaskGroup`, `asyncio.timeout`, `asyncio.Lock`.
   trio is explicitly unsupported and `anyio` is never a Core dependency
   ([ADR-0008](0008-python-floor-3-12-with-typing-extensions.md)); httpx2 brings anyio transitively
-  into the Adapter's extra, which is not a reason to build on it.
+  into the Adapter's dependencies
+  ([ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)), which is not a
+  reason to build on it.
 - **Every task has a named owner.** A task exists only inside a `TaskGroup` owned by a named
   component; a bare `create_task` or `ensure_future` is a lint error (ruff `RUF006` and the `ASYNC`
   family, [ADR-0011](0011-lint-format-and-architecture-toolchain.md)).
