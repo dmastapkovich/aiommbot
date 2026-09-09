@@ -95,8 +95,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 
 ## C. Component design documents (LLD)
 
-§5.10 of `05-building-block-view.md` lists **28 components** across four layers, with about forty
-*parts* and fourteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
+§5.10 of `05-building-block-view.md` lists **28 components** across five layers, with 27 part
+rows and fourteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
 document of their own. One row per component here and one `LLD: <component>` ticket each; the
 testing toolkit's row appears once #25 has decided its shape. The file name is the `CONTEXT.md`
 term in kebab-case.

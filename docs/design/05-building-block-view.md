@@ -1,17 +1,16 @@
 # 5. Building block view
 
-_Status: reviewed (#38). 5.0, 5.4, 5.9 and 5.10 amended by #84 —
-[ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)._
+_Status: reviewed (#38)._
 
-The static decomposition, opened one level at a time. It is the **inventory** the
-`LLD: <component>` tickets are generated from (#41), and the direction of every arrow is the layer
+The static decomposition, opened one level at a time. It is the **inventory** behind the
+`LLD: <component>` tickets, and the direction of every arrow is the layer
 contract of [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), which
 becomes the import-linter contract.
 
 ## 5.0 How to read this section
 
 **Levels.** Level 1 is the Bot process as one box — that is [§3](03-context-and-scope.md).
-Level 2 is the containers a deployment runs (5.2). Level 2 is opened once more into the four
+Level 2 is the containers a deployment runs (5.2). Level 2 is opened once more into the five
 **layers** inside a process (5.3). Level 3 is the components inside each layer, one diagram per
 layer (5.5–5.9), because one diagram answers one question.
 
@@ -21,19 +20,17 @@ layer (5.5–5.9), because one diagram answers one question.
 |---|---|---|
 | **component** | A designable unit with its own contract, failure modes and pattern story | yes — `components/<term>.md` |
 | **part** | A named piece that only makes sense inside one component | no — described inside that component's document |
-| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.4) | no — described inside the document 5.4's *Specified in* column names, which is authoritative; all of them listed in 5.4 |
+| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.4) | no — described inside the document 5.4's *Specified in* column names, which is authoritative; listed in 5.4, with the two exceptions named under its table |
 
 The distinction exists so that `RetryPolicy` and `NonceStore` are documented where they are used
 instead of becoming two-page documents of their own, while `Workspace` and the two Faces — which
 [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) requires to be
 designed — each get one.
 
-**Diagram boxes and their documents.** `diagrams.md` requires every box on a Component diagram to
-link to its document; Mermaid's C4 boxes carry no reliable link on GitHub, so the inventory table
-directly under each diagram is where the link lives, one row per box.
+**Diagram boxes and their documents.** The inventory table directly under each diagram carries the
+link to every box's document, one row per box ([`diagrams.md`](diagrams.md)).
 
-**Names.** Every block is named with its `CONTEXT.md` term, exactly. A block that needed a term got
-one in this ticket rather than a synonym.
+**Names.** Every block is named with its `CONTEXT.md` term, exactly.
 
 ## 5.1 Level 1 — the system
 
@@ -57,7 +54,7 @@ C4Container
         Container(ingress, "Webhook process", "Python process x N", "Webhook plugin behind an ASGI server the application runs")
         Container(worker, "Worker or script", "Python process x N", "No Transport. Uses Workspace or SyncWorkspace")
     }
-    ContainerDb_Ext(redis, "State store", "Redis", "Conversation state, isolation locks, nonces, identity cache")
+    ContainerDb_Ext(redis, "State store", "Redis or any KeyValueStore", "Conversation state, isolation locks, nonces, identity cache")
     Rel(user, mm, "posts, clicks")
     Rel(mm, consumer, "events", "WebSocket")
     Rel(mm, ingress, "callbacks", "HTTPS POST")
@@ -97,10 +94,8 @@ C4Component
     Rel(gplugins, core, "implements Core Protocols")
 ```
 
-The two middle boxes are **one rank, not two**: a generic Plugin may not import the Adapter, which
-is what makes "generic" a checked property rather than a claim. Plugins are independent of each
-other in both directions; a plugin that needs another's capability reaches the Core Protocol behind
-it. The Core imports no third-party package. Nothing imports the testing toolkit.
+Five layers, four import ranks: the two middle boxes are **one rank**, so a generic Plugin may not
+import the Adapter, and every arrow points at the Core.
 → [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md),
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0002](../adr/0002-core-scope-two-condition-test.md)
@@ -138,12 +133,17 @@ ADR-0038).
 | `LockProvider` | required | State, WebSocketTransport | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `Codec` | required | API client, Transports, State | `MsgspecCodec` | `codec.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
 | `HTTPTransport`, `SyncHTTPTransport` | required | Face | httpx2; the in-memory double implements both in one class | `face.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| `WebSocketConnection` | required | WebSocketTransport | `websockets` 17 primary, `picows` extra, in-memory connector | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| `WebSocketConnection` | required | WebSocketTransport | `websockets` primary, `picows` extra, the in-memory double | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | `StateKeyProvider` | required | State | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `TokenProvider`, `SyncTokenProvider` | required | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `CallbackTokenCodec` | required | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | `RequestObserver` | required | API client | none by default; a first-party extra | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md) |
 | `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
+
+Two Core-owned Protocols are not rows yet: the Observability seam
+([ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md),
+[ADR-0021](../adr/0021-core-error-boundary.md)), whose Protocol and record shape are #29's decision,
+and the six `Contributes*`/`HasLifecycle` Protocols, ranked by #85.
 
 ## 5.5 Level 3 — the Core
 
@@ -169,7 +169,7 @@ C4Component
     Rel(dispatcher, eb, "wraps every dispatch in")
     Rel(dispatcher, router, "walks depth-first")
     Rel(dispatcher, di, "resolves the plan")
-    Rel(dispatcher, executor, "offloads declared sync handlers")
+    Rel(dispatcher, executor, "runs declared synchronous Handlers in")
     Rel(router, filter, "gates with")
     Rel(router, extractor, "parses with")
     Rel(mw, event, "derives enriched")
@@ -181,8 +181,8 @@ C4Component
 |---|---|---|---|---|
 | **Bot** | component | Composition root: gathers plugin contributions, orders them topologically, runs the three-phase compose → check → start, owns the lifecycle and the entry points | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
 | `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()` | part | The plugin declaration, the typed check objects, the process role, the two entry points | `bot.md` | same |
-| **Dispatcher** | component | Receives an Event from a Transport, drives Inbound then Handler middleware, walks the Router tree to the first match, resolves parameters, returns the typed `Outcome` to the Transport | `dispatcher.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
-| `Outcome`, `MatchedHandler`, `Skip` | part | The typed dispatch result, the Event-scoped publication after a match, the rare continue-the-walk signal | `dispatcher.md` | same |
+| **Dispatcher** | component | Receives every Event the Bot feeds it, drives Inbound then Handler middleware, walks the Router tree to the first match, resolves parameters, returns the typed `Outcome` to the Transport | `dispatcher.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
+| `Outcome`, `MatchedHandler`, `Skip` | part | The typed dispatch result, the Event-scoped publication after a match, the `Skip` exception that continues the walk | `dispatcher.md` | same |
 | **Router** | component | The handler tree: registration by annotation, adapter aliases, filter gates, freeze, `bot.routes()`, unreachable-handler check | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
 | `HandlerSpec`, `Flag` | part | The frozen record of a registration, and the typed objects that parametrise middleware from a subscription | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
 | **Filter** | component | Pure predicates over an Event, composable with `&`, `\|`, `~`, renderable as data | `filter.md` | [ADR-0014](../adr/0014-filters-and-extractors-with-closed-handler-signatures.md) |
@@ -215,9 +215,8 @@ C4Component
     Rel(runtime, workspace, "composes and re-exposes")
     Rel(runtime, client, "reaches the rest through", "runtime.api")
     Rel(workspace, client, "calls")
-    Rel(client, exchange, "asks what to do next")
+    Rel(client, exchange, "asks what to do next, hands the response back")
     Rel(client, face, "performs I/O through")
-    Rel(face, exchange, "feeds responses back into")
     Rel(exchange, models, "reads Operation from")
     Rel(client, codec, "encodes and decodes with")
     Rel(codec, models, "decodes into")
@@ -245,7 +244,7 @@ C4Component
 | **Workspace** | component | The Event-free handle on one server — `send`, `send_direct`, `ephemeral`, `upload`, `download`, `users.resolve`, `channels.direct` — independently constructible, and the only helper layer with a synchronous face | `workspace.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `UserRef` resolution | part | The typed union resolved in priority order, with ambiguity and absence as typed outcomes | `workspace.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md) |
 | **Runtime** | component | The Event-bound layer a Handler receives: `answer`, `reply`, `update`, `delete`, `open_dialog`, taking channel, `root_id` and `trigger_id` from the Event; composes a Workspace and exposes `runtime.api` | `runtime.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| **AuthLossDetector** | component | Turns a mute socket into a decision: parse every `ping` reply, probe `/users/me`, refresh once, then `FatalError(AuthRevoked)` carrying ids and never the token. Shared by the gateway and the client | `auth-loss-detector.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0027](../adr/0027-api-error-taxonomy.md) |
+| **AuthLossDetector** | component | Turns a mute socket into a decision: parse every `ping` reply, probe `/users/me`, refresh once, then `FatalError(AuthRevoked)` carrying ids and never the token. Shared by the WebSocketTransport and the API client | `auth-loss-detector.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0027](../adr/0027-api-error-taxonomy.md) |
 
 ## 5.7 Level 3 — generic plugins
 
@@ -263,11 +262,9 @@ C4Component
 State reaches the backends the way every plugin reaches every other capability — through the Core
 Protocol, never by importing the plugin that also implements it.
 
-State is also the case that justifies the rank of
-[ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md): it needs a `StateKey`
-built from Mattermost identifiers, yet it may not import the Adapter. It consumes the Core
-`StateKeyProvider` seam and the Adapter's implementation is injected — which is precisely what
-keeps the State plugin usable under a second adapter that does not exist yet.
+State is the case that proves the rank of
+[ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md): it consumes the Core
+`StateKeyProvider` seam and receives the Adapter's implementation by injection.
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
@@ -298,7 +295,7 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 |---|---|---|---|---|
 | **WebSocketTransport** | component | One reconnect loop with a `TaskGroup` per connection, the transient/resumable/fatal exit table, heartbeat and silence monitor, full-jitter backoff, resume with sequence continuity, a reader that never stalls, the graceful drain, the single-consumer declaration and optional lease | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
 | The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the drain, the `websockets`/`picows` bindings, the Transport's Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s drain, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| Resync backfill | part, **open** | Recovering the loss window a `Resynced(since)` Signal reports. ADR-0023 leaves first-party plugin versus documented recipe undecided; a ticket owns the choice before #41 can give it a document | — | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| Resync backfill | part | Recovering the loss window a `Resynced(since)` Signal reports; first-party plugin or documented recipe is #55's decision | deferred to #55 | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | **Webhook** | component | `webhook_app(bot) -> ASGIApp` and `handle_callback`, the payload-bound single-use Reply channel with its 10 s deadline and empty-200 default, verification before an Event exists, the 1 MiB reply cap, the logging rules | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | The Reply channel (`ActionReply`, `DialogReply`, `ReplyAlreadySent`), `StaleAction` | part | The typed reply slot bound to the payload, and the routable event an expired or replayed token produces | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | **Callback token** | component | The self-issued credential: the compact HMAC-SHA256 format, the claim set, key rotation by `kid`, the typed verification union, and the default-on policy with its explicit `off` | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
@@ -310,13 +307,13 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 `aiommbot.testing` may import every layer and is imported by none
 ([ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)). Its blocks are
 listed here because earlier decisions already require them by name; **its shape is #25's decision**,
-so #41 creates its design documents only after #25 closes.
+so it has no diagram and no design document until #25 closes.
 
 | Block | Kind | Required by | Decision |
 |---|---|---|---|
 | **Testing toolkit** | component | — | #25 |
 | In-memory `HTTPTransport`/`SyncHTTPTransport` double, both faces in one class | part | the parametrised conformance suite of both client Faces | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
-| In-memory `WebSocketConnection` connector | part | the contract suite both socket libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| In-memory `WebSocketConnection` double | part | the contract suite both socket libraries run in CI | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | Conformance suites: `KeyValueStore`, `LockProvider`, `Transport`, `ReplyChannel`, plugin lifecycle | part | external storage backends, third-party plugins, and the one provided seam | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | Recording `ReplyChannel` slot | part | the second implementation of the provided seam, and the suite that is parametrised over both | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | `TestBot` with typed overrides by key | part | the only override API that exists — production has none | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |
@@ -325,10 +322,9 @@ so #41 creates its design documents only after #25 closes.
 
 ## 5.10 Inventory summary
 
-28 components, about forty parts, and fourteen Protocols on twelve seam rows — eleven of those rows
+28 components, 27 part rows, and fourteen Protocols on twelve seam rows — eleven of those rows
 required and one provided (5.4). The count matters in one way only: **27 `LLD: <component>`
-tickets** for #41 to generate now, and a twenty-eighth — the testing toolkit — held until #25
-decides its shape. Parts and seams generate nothing; they are specified inside the document named
+tickets**, and a twenty-eighth — the testing toolkit — held until #25 decides its shape. Parts and seams generate nothing; they are specified inside the document named
 beside them.
 
 | Layer | Components |
@@ -338,3 +334,6 @@ beside them.
 | Generic plugins | State, KeyValueStore and LockProvider backends |
 | Adapter-specific plugins | WebSocketTransport, Webhook, Callback token, IdentityCache |
 | Testing toolkit | Testing toolkit (deferred to #25) |
+
+Callback token is a component of its layer without a `PluginSpec`: the Webhook composes it, the
+application never lists it.

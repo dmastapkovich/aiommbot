@@ -15,7 +15,9 @@ infrastructure.
 | Mattermost user | ↔ Bot | Writes posts and direct messages, clicks the buttons of an interactive attachment, submits a dialog. Receives answers, thread replies, post updates, ephemeral notices and dialogs. Never addresses the bot outside Mattermost. |
 | Application developer | → Bot | Composes the Bot — one Adapter, a list of Plugins, a tree of Routers — and writes the Handlers, Providers and services that hold the business logic. Owns everything the framework refuses (ADR-0002). |
 | Operator | ↔ Bot process | Starts the processes, supplies the token and the backend addresses, reads the structured logs and whatever the observability seams are wired to, and stops the process within its drain budget. |
-| Mattermost administrator | → Mattermost | Creates the bot account and its personal access token, enables interactive dialogs, and is the only party who can revoke a bot's access — deleting or disabling the token, disabling the bot or deactivating the user (`docs/research/15`). |
+| Mattermost administrator | → Mattermost | Creates the bot account and its personal access token, enables interactive dialogs, and is the only party who can revoke a bot's access — deleting or disabling the token, disabling the bot or deactivating the user ([`docs/research/15`](../research/15-mattermost-session-revocation.md)). |
+| Observability backend | Bot → | Receives the typed records the application forwards from the Observability seam, `RequestObserver` and Signals. Optional, and the application's own. |
+| Credential source | → Bot | Supplies the bot token through `TokenProvider` on every connection and request. Optional; the application's vault or environment. |
 
 ```mermaid
 C4Context
@@ -23,12 +25,14 @@ C4Context
     Person(user, "Mattermost user", "Posts, clicks buttons, submits dialogs")
     Person(developer, "Application developer", "Composes the Bot and writes the Handlers")
     Person(operator, "Operator", "Runs the processes, supplies credentials, reads the logs")
+    Person(admin, "Mattermost administrator", "Creates the bot account, revokes its token")
     System(bot, "Bot process", "Application code composed with aiommbot 0.5.0")
     System_Ext(mm, "Mattermost server", "WebSocket events, REST API v4, interactive callbacks")
     SystemDb_Ext(store, "State store", "Optional: Redis for conversation state, locks, nonces")
     System_Ext(obs, "Observability backend", "Optional: whatever the application already runs")
     System_Ext(secrets, "Credential source", "Optional: the application's vault behind TokenProvider")
     Rel(user, mm, "posts, clicks, submits")
+    Rel(admin, mm, "creates the bot account, revokes the token")
     Rel(mm, bot, "events over WebSocket; callbacks over HTTPS")
     Rel(bot, mm, "REST API calls, callback replies")
     Rel(bot, store, "conversation state, locks, nonces")
@@ -55,12 +59,10 @@ configure.
 | Observability | Typed records pushed to whatever the application registered; no observer by default | `RequestObserver`, Signals, the Observability seam | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0021](../adr/0021-core-error-boundary.md) |
 | Process lifecycle | `run(*, loop_factory=None)` blocks; `serve()` embeds in a loop the application owns | Bot | [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
 
-Two properties of the Mattermost side shape more of this design than any other fact, and both are
-counter-intuitive enough to restate here rather than leave in the research: **every WebSocket
-connection of a bot account receives every event**, so a second identical replica processes each
-message twice (`docs/research/01`, [ADR-0005](../adr/0005-one-ingress-many-workers.md)); and **the
-server never closes a socket whose session was revoked and sends no event about it**, answering
-every JSON request with `not_authenticated` instead (`docs/research/15`,
+Two properties of the Mattermost side shape more of this design than any other fact: **every
+WebSocket connection of a bot account receives every event**, so identical replicas process each
+message twice ([`docs/research/01`](../research/01-mattermost-websocket-protocol.md), [ADR-0005](../adr/0005-one-ingress-many-workers.md)); and **a revoked session
+keeps its socket open and produces no event**, so silence has to be interpreted ([`docs/research/15`](../research/15-mattermost-session-revocation.md),
 [ADR-0023](../adr/0023-websocket-gateway-resilience.md)).
 
 ## 3.3 Scope: the line between the framework and the application
@@ -73,7 +75,7 @@ the line the rest of the catalogue is about.
 | Receiving events | The transports, the envelope, decoding, backpressure, reconnection | Nothing |
 | Deciding what runs | Routers, Filters, Extractors, the two middleware layers, dependency resolution | The tree, the subscriptions, the Providers |
 | Acting on the platform | The API client, Workspace, Runtime, the error taxonomy | The calls it wants to make |
-| Conversation state | `Flow`, `StateContext`, isolation, the two storage Protocols, in-memory and Redis backends | Which backend, and the Flows themselves |
+| Conversation state | `Flow`, `StateContext`, isolation, `KeyValueStore` and `LockProvider`, in-memory and Redis backends | Which backend, and the Flows themselves |
 | Configuration | Typed frozen settings objects per Plugin with stable field names | Where the values come from — environment, settings library, vault ([ADR-0015](../adr/0015-plugin-contract-and-composition.md)) |
 | Running the process | `run()` and `serve()` | The event loop policy, the HTTP server, the process supervisor, the orchestrator ([ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md)) |
 | Failure handling | The ErrorBoundary: log without payload, report, return `Failed` | The user-facing apology, retries, dead-lettering, cooldowns ([ADR-0021](../adr/0021-core-error-boundary.md)) |

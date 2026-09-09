@@ -1,6 +1,6 @@
 # 4. Solution strategy
 
-_Status: reviewed (#38 completed the section; open boundaries are named at the end)._
+_Status: reviewed (#38)._
 
 The handful of decisions that shape everything else. Each item is one paragraph and links to the
 ADR that holds the decision.
@@ -44,12 +44,12 @@ events; declarative thin handlers; Python 3.12+ typing as the contract; fail clo
 
 ## A tiny public root
 
-`aiommbot` exports Core concepts only; the Adapter, Plugins and testing toolkit are explicit
+`aiommbot` re-exports Core concepts only; the Adapter, Plugins and testing toolkit are explicit
 subpackages; the rest is `_internal`. → [ADR-0007](../adr/0007-tiny-public-root-with-explicit-subpackages.md)
 
 ## One event envelope, type-driven routing, typed extraction
 
-Every inbound event is `Event[P]`; the Adapter owns payload types and an explicit registry with
+Every inbound event is `Event[P, R]`; the Adapter owns payload types and an explicit registry with
 `RawEvent` as the fallback. Handlers subscribe by the annotation of their first parameter on a
 router tree walked depth-first to the first match; dispatch returns a typed outcome; unreachable
 handlers stop start-up. Filters are predicates, Extractors produce typed values, signatures are
@@ -74,7 +74,7 @@ A small stdlib resolver in the Core behind the `DependencyProvider` Protocol: de
 type with `Qualifier` for homonyms, two Scopes (App, Event), typed Providers from plugins and the
 application, a graph validated and resolution plans compiled in the check phase. Extractors win
 over providers; built-ins are minimal and never the Bot; overrides live only in the testing
-toolkit; dishka and wireup are offered as bridge plugins.
+toolkit; external containers plug in as bridge plugins.
 → [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md),
 [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md)
 
@@ -98,53 +98,54 @@ every record with a sliding logical TTL of one hour by default. In-memory and Re
 
 ## A supervised, resumable, never-stalling WebSocketTransport
 
-One reconnect loop with a TaskGroup per connection and a transient/resumable/fatal exit table;
-JSON `ping` every 30 s with a 60 s silence monitor; full-jitter backoff 1→300 s, unbounded with a
-`Degraded` Signal; resume by `connection_id`+`seq` with continuity checks and in-memory dedup,
-`Resynced` on loss; a reader that never stalls into a bounded queue with typed per-kind overflow
-policies; graceful drain within 25 s; a declared single consumer with an optional lease; Bearer
-auth via `TokenProvider` and auth-loss detection through the `ping` reply and a REST probe, ending
-in `FatalError(AuthRevoked)`; `websockets` primary, `picows` optional behind one Protocol.
+One supervised reconnect loop per socket with resume and sequence continuity, a heartbeat and
+silence monitor, a reader that never stalls into a bounded queue with typed per-kind overflow, a
+graceful drain, a declared single consumer with an optional lease, and auth-loss detection that ends
+in `FatalError(AuthRevoked)`; the socket library sits behind one Core Protocol.
 → [ADR-0023](../adr/0023-websocket-gateway-resilience.md)
 
 ## Callbacks as events with a reply channel; default-on callback authenticity
 
-Button clicks and dialog submissions are `Event[InteractiveAction]`/`Event[DialogSubmission]` in the
-same routers; the only difference is the payload-bound, single-use Reply channel with a 10 s
-deadline and an empty-200 default. The webhook plugin is a bare ASGI callable plus
-`handle_callback`. Authenticity is a self-issued HMAC-SHA256 Callback token behind
-`CallbackTokenCodec`, on by default with an explicit off, PASETO as an extra; no expiry unless
-configured, nonce store opt-in, `StaleAction` events for expired or replayed tokens.
+Button clicks and dialog submissions are Events in the same routers, distinguished only by the
+payload-bound, single-use Reply channel with a deadline and an empty-200 default. The Webhook is a
+bare ASGI callable plus `handle_callback`. Authenticity is a self-issued Callback token behind
+`CallbackTokenCodec`, on by default with an explicit off; an expired or replayed token becomes a
+`StaleAction` event.
 → [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md)
 
 ## A generated, standalone Mattermost API client behind Core-owned Protocols
 
 Models are generated from a pinned, overlaid OpenAPI spec into standard-library dataclasses and
-serialised through the Core's `Codec` Protocol with msgspec as the shipped implementation; the
-server version policy is the pinned ESR and newer with a nightly drift check. The REST client is a
-standalone typed API client — httpx2 behind an `HTTPTransport` Protocol, generated `Operation`
-descriptors under resource methods, pagination iterators, a narrow built-in retry policy,
-asynchronous under the bare name with a hand-written synchronous Face. API failures are exceptions in a typed hierarchy carrying the
-server's `AppError` fields and a retryable flag. The Runtime is a thin Event-aware layer over the
-client with a fixed helper set; identity resolution is uncached in the Runtime and caching is an
-optional plugin. Observability is optional and replaceable: no observer is registered by default, a
-first-party one ships as an extra, an application may implement the observer Protocol under its own
-conventions, and behaviour is changed by decorating the transport or by Middleware, never by an
-observer.
+serialised through the Core's `Codec` Protocol. The REST client is a standalone typed API client
+over an `HTTPTransport` Protocol, with generated `Operation` descriptors, pagination, a narrow retry
+policy and a hand-written synchronous Face; API failures are a typed exception hierarchy with a
+retryable flag. The Runtime is a thin Event-aware layer over the client with a fixed helper set;
+identity resolution is uncached and caching is a Plugin. Observability is an optional, replaceable
+observer that never changes behaviour.
 → [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md),
 [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md),
 [ADR-0027](../adr/0027-api-error-taxonomy.md),
 [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md)
 
-## Four layers and one direction of dependencies
+## Five layers, four import ranks, one direction
 
-Allowed imports run Core → (Adapter | generic plugins) → adapter-specific plugins → testing
-toolkit. The Adapter and the generic plugins are one rank rather than two, so a generic Plugin
-cannot import the Adapter and "generic" stays a checked property; plugins are independent of one
-another and collaborate only through Core-owned Protocols; the Core imports no third-party package;
-nothing imports the testing toolkit. The building-block view draws exactly this direction and the
-import-linter contract enforces it.
+Imports point at the Core: testing toolkit → adapter-specific plugins → (Adapter · generic plugins)
+→ Core, and the Core imports nothing above it. The Adapter and the generic plugins share one rank, so
+a generic Plugin cannot import the Adapter and "generic" stays a checked property; plugins are
+independent of one another and collaborate only through Core-owned Protocols; nothing imports the
+testing toolkit. The building-block view draws exactly this direction and the import-linter contract
+enforces it.
 → [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)
+
+## Typed outcomes for caller branches, exceptions for broken contracts
+
+A component returns a closed union of domain-named values when its immediate caller must branch in
+normal operation, and raises when a contract is broken or a dependency has failed. The rulebook
+holds this and every other tenet as identified, tiered rules with a derived review checklist, and
+component documents are written in the order their structural contracts require.
+→ [ADR-0034](../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md),
+[ADR-0033](../adr/0033-identified-tiered-rules-with-a-derived-review-checklist.md),
+[ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md)
 
 ## Quality by mechanism, not by memory
 
@@ -159,10 +160,3 @@ checks, driven by `just` and pre-commit.
 [ADR-0009](../adr/0009-four-strict-type-checkers.md),
 [ADR-0010](../adr/0010-zero-suppressions-with-a-quarantine.md),
 [ADR-0011](../adr/0011-lint-format-and-architecture-toolchain.md)
-
-## Boundaries still open
-
-Four questions of *responsibility* remain, each with its own ticket, and none of them changes the
-strategy above: the repository layout and extras that realise the layers (#24), the testing
-toolkit (#25), the observability boundary (#29), and where scheduling, reliability middlewares and
-the CLI live (#30).

@@ -8,34 +8,35 @@ first of the two storage seams it specifies, because the two have no collective 
 *Wave* is the writing order decided by [ADR-0035](../../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md):
 a document waits only for the documents specifying a contract that appears in its own §3. Everything
 in one wave may be written in parallel. The column is derived from the `blocked_by` dependencies on
-the tickets and from nothing else — the tickets are the source of truth.
+the tickets and from nothing else — the tickets are the source of truth. A file is linked once it exists; readiness is the document's
+status line and `TRACKER.md` §C.
 
-| Component | File | Wave | Status | Ticket |
+| Component | Layer | File | Wave | Ticket |
 |---|---|---|---|---|
-| Event | [`event.md`](event.md) | 1 | reviewed | #57 |
-| Signal | [`signal.md`](signal.md) | 1 | not started | #58 |
-| DependencyProvider | [`dependency-provider.md`](dependency-provider.md) | 1 | not started | #59 |
-| Generated model | [`generated-model.md`](generated-model.md) | 1 | not started | #60 |
-| Codec | [`codec.md`](codec.md) | 1 | not started | #61 |
-| Face | [`face.md`](face.md) | 1 | not started | #62 |
-| KeyValueStore and LockProvider backends | [`key-value-store.md`](key-value-store.md) | 1 | not started | #63 |
-| Filter | [`filter.md`](filter.md) | 2 | not started | #64 |
-| Extractor | [`extractor.md`](extractor.md) | 2 | not started | #65 |
-| Sync executor | [`sync-executor.md`](sync-executor.md) | 2 | not started | #66 |
-| Model generator | [`model-generator.md`](model-generator.md) | 2 | not started | #67 |
-| API client | [`api-client.md`](api-client.md) | 2 | not started | #68 |
-| EventRegistry | [`event-registry.md`](event-registry.md) | 2 | not started | #69 |
-| Callback token | [`callback-token.md`](callback-token.md) | 2 | not started | #70 |
-| Router | [`router.md`](router.md) | 3 | not started | #71 |
-| Exchange | [`exchange.md`](exchange.md) | 3 | not started | #72 |
-| Workspace | [`workspace.md`](workspace.md) | 3 | not started | #73 |
-| AuthLossDetector | [`auth-loss-detector.md`](auth-loss-detector.md) | 3 | not started | #74 |
-| Dispatcher | [`dispatcher.md`](dispatcher.md) | 4 | not started | #75 |
-| Runtime | [`runtime.md`](runtime.md) | 4 | not started | #76 |
-| IdentityCache | [`identity-cache.md`](identity-cache.md) | 4 | not started | #77 |
-| Middleware | [`middleware.md`](middleware.md) | 5 | not started | #78 |
-| ErrorBoundary | [`error-boundary.md`](error-boundary.md) | 5 | not started | #79 |
-| Webhook | [`webhook.md`](webhook.md) | 5 | not started | #80 |
-| WebSocketTransport | [`websocket-transport.md`](websocket-transport.md) | 5 | not started | #81 |
-| Bot | [`bot.md`](bot.md) | 6 | not started | #82 |
-| State | [`state.md`](state.md) | 6 | not started | #83 |
+| Event | Core | [`event.md`](event.md) | 1 | #57 |
+| Signal | Core | `signal.md` | 1 | #58 |
+| DependencyProvider | Core | `dependency-provider.md` | 1 | #59 |
+| Generated model | Adapter | `generated-model.md` | 1 | #60 |
+| Codec | Adapter | `codec.md` | 1 | #61 |
+| Face | Adapter | `face.md` | 1 | #62 |
+| KeyValueStore and LockProvider backends | Generic plugin | `key-value-store.md` | 1 | #63 |
+| Filter | Core | `filter.md` | 2 | #64 |
+| Extractor | Core | `extractor.md` | 2 | #65 |
+| Sync executor | Core | `sync-executor.md` | 2 | #66 |
+| Model generator | Adapter | `model-generator.md` | 2 | #67 |
+| API client | Adapter | `api-client.md` | 2 | #68 |
+| EventRegistry | Adapter | `event-registry.md` | 2 | #69 |
+| Callback token | Adapter-specific plugin | `callback-token.md` | 2 | #70 |
+| Router | Core | `router.md` | 3 | #71 |
+| Exchange | Adapter | `exchange.md` | 3 | #72 |
+| Workspace | Adapter | `workspace.md` | 3 | #73 |
+| AuthLossDetector | Adapter | `auth-loss-detector.md` | 3 | #74 |
+| Dispatcher | Core | `dispatcher.md` | 4 | #75 |
+| Runtime | Adapter | `runtime.md` | 4 | #76 |
+| IdentityCache | Adapter-specific plugin | `identity-cache.md` | 4 | #77 |
+| Middleware | Core | `middleware.md` | 5 | #78 |
+| ErrorBoundary | Core | `error-boundary.md` | 5 | #79 |
+| Webhook | Adapter-specific plugin | `webhook.md` | 5 | #80 |
+| WebSocketTransport | Adapter-specific plugin | `websocket-transport.md` | 5 | #81 |
+| Bot | Core | `bot.md` | 6 | #82 |
+| State | Generic plugin | `state.md` | 6 | #83 |

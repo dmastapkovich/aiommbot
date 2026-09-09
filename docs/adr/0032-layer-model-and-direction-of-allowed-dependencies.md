@@ -4,7 +4,7 @@ date: 2026-09-04
 ticket: "#38"
 ---
 
-# Allowed dependencies run Core → (Adapter | generic plugins) → adapter-specific plugins → testing toolkit, and a generic Plugin may never import the Adapter
+# Imports point at the Core — testing toolkit → adapter-specific plugins → (Adapter · generic plugins) → Core — and a generic Plugin may never import the Adapter
 
 [ADR-0002](0002-core-scope-two-condition-test.md) put the Core, the Adapter and the first-party
 Plugins in one distribution and said the boundaries are import-linter contracts;
@@ -17,10 +17,13 @@ building-block view, which is also the import-linter contract to be:
 | Layer | Contains | May import |
 |---|---|---|
 | Testing toolkit | `aiommbot.testing` | everything below |
-| Adapter-specific plugins | WebSocketTransport, Webhook, IdentityCache | the Adapter and the Core |
+| Adapter-specific plugins | WebSocketTransport, Webhook, Callback token (composed by the Webhook, no `PluginSpec`), IdentityCache | the Adapter and the Core |
 | Adapter · generic plugins | the Mattermost Adapter · State, storage backends, DI bridges, the observer extra | the Core only — **and never each other** |
 | Core | envelope, routing, dispatch, middleware, DI, lifecycle, the Protocols | the standard library and `typing_extensions` |
 
+- **Five layers, four ranks.** A *layer* is a grouping of components the building-block view
+  documents — Core, Adapter, generic plugins, adapter-specific plugins, testing toolkit; a *rank* is
+  a position in the import order, and the Adapter and the generic plugins share one.
 - **The Adapter and the generic plugins are one rank, not two.** A generic Plugin that could import
   the Adapter would be generic in name only, and ADR-0015's promise — a second platform adapter is
   an addition, not a rewrite — would be enforced by review instead of by mechanism. The rank is
@@ -44,8 +47,8 @@ building-block view, which is also the import-linter contract to be:
   job is to double everything; nothing may import it, which is what keeps test doubles out of the
   shipped runtime.
 
-The direction on every arrow of the building-block view is this table, and a diagram that
-contradicts it is a bug in one of the two.
+The direction on every arrow of the building-block view is this table — an arrow from A to B means
+A may import B — and a diagram that contradicts it is a bug in one of the two.
 
 ## Considered options
 

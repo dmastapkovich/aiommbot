@@ -6,19 +6,17 @@ ticket: "#84"
 
 # The Core's seam inventory records the direction of the call — eleven required Protocols and one provided
 
-[ADR-0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) made
-`ReplyChannel[R]` the Core's twelfth seam and left the reconciliation of
-[§5.4](../design/05-building-block-view.md) to this ticket. Reconciling it exposed that the
-arithmetic was the smaller half. §5.4's *title* organises on substitutability — "seams", which on
-Feathers' direction-neutral definition admits the twelfth — while its *introduction* organises on
-the supply side, "the single point of dependency inversion: every Protocol the Core owns, who
-implements it". Those two statements already disagreed, and neither was true: the six
-`Contributes*`/`HasLifecycle` Protocols of
-[ADR-0015](0015-plugin-contract-and-composition.md) are Core-owned and have never been rows. The
-twelfth Protocol only made the disagreement visible, because it is the first whose caller is user
-code. We decided:
+[ADR-0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) makes
+`ReplyChannel[R]` the Core's twelfth seam, and [§5.4](../design/05-building-block-view.md) has to
+hold it. A seam inventory organised on substitutability — Feathers' direction-neutral definition
+([`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md)) — admits it; one
+organised on the supply side, "every Protocol the Core owns, who implements it", cannot, and is
+false anyway: the six `Contributes*`/`HasLifecycle` Protocols of
+[ADR-0015](0015-plugin-contract-and-composition.md) are Core-owned and are not rows. The twelfth
+Protocol makes the difference visible, because it is the first whose caller is user code. We
+decided:
 
-- **§5.4 gains a *Direction* column carrying UML's pair, `required` and `provided`.** A `required`
+- **§5.4 carries a *Direction* column with UML's pair, `required` and `provided`.** A `required`
   seam is one the Core calls out through and an outside party implements — the eleven existing rows.
   A `provided` seam is one the Core hands to user code as a typed capability, which user code then
   calls — `ReplyChannel[R]`, and today nothing else. The vocabulary is chosen because **every
@@ -53,9 +51,8 @@ code. We decided:
   third way: its document is `event.md`, which is neither the consumer's — the consumer is the
   Handler, user code, which has no document — nor the implementation's. Rather than record a third
   correction in a third ADR, this one lifts ADR-0035's ruling into §5.0 and §5.4 as the rule, so the
-  prose that keeps being wrong stops being written. ADR-0035's own "six of the eleven rows" is left
-  as it stands: it is a dated record of the eleven rows it reasoned over, and its conclusion is
-  unchanged.
+  prose that keeps being wrong stops being written. ADR-0035 counted six rows where the prose held and
+  five where it did not; its conclusion is unchanged.
 
 ## Considered options
 
@@ -66,10 +63,9 @@ code. We decided:
   one it will ever see.
 - *Keep `ReplyChannel` out of §5.4 as a part of `Event`* — rejected on cost, not on principle. It
   has the strongest ecosystem support: no project surveyed puts a handed-out capability in the same
-  inventory as its pluggable backends, and four name the split in their own vocabulary — pytest's
-  Fixtures against Hooks, Litestar's "reserved keyword arguments" against "plugins are defined by
-  protocols", Bolt's "listener arguments" against "adapters", discord.py keeping
-  `InteractionResponse` out of `discord.abc`. But those projects all type the handed-out capability
+  inventory as its pluggable backends, and several name the split in their own vocabulary
+  ([`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md) §3). But
+  those projects all type the handed-out capability
   as a **concrete class**, which [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md)
   forbids us: the Core may not name the Webhook plugin's reply types. Having been forced into a
   Protocol with a shipped double and a conformance suite, we would then be hiding the one Protocol
@@ -92,18 +88,16 @@ code. We decided:
   and is *called*, not merely read, by user code — and everything else a Handler receives arrives by
   type-keyed dependency injection, where the key is the concrete type and the Core never has to name
   it. `EventMeta`'s field list is closed at five data fields and one callable, and
-  [ADR-0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) has frozen the envelope at
+  [ADR-0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) fixes the envelope at
   "exactly one method. Everything else about it is data". A second request/response Transport
   reuses `ReplyChannel[R]` with a new `R` and adds no row. See `docs/research/19` §3.2.
 - A column with eleven identical cells is the price of the twelfth being legible. It is paid once,
   and it makes the axis explicit for every seam added later, which is the property the flat table
   did not have.
-- `engineering-style.md` §1's "The Core owns the Protocols; implementations arrive from outside" was
-  directionally wrong for the new kind rather than merely miscounted, and is restated. The rules it
-  is held by — `ST-SOL-04`, `ST-SOL-05` — are unchanged: `ReplyChannel` is sized to one consumer and
+- `engineering-style.md` §1 states the substitution surface with both directions. The rules it is
+  held by — `ST-SOL-04`, `ST-SOL-05` — are unchanged: `ReplyChannel` is sized to one consumer and
   names its conformance suite.
 - The six `Contributes*`/`HasLifecycle` Protocols are Core-owned public API under semantic
-  versioning with no rank anywhere in §5. Ranking them is `bot.md`'s question (#82) and is filed as
-  #85; this ADR only records that §5.4's membership rule does not silently include them. On the
+  versioning with no rank anywhere in §5. Ranking them is #85's question; this ADR only records that §5.4's membership rule does not silently include them. On the
   *Direction* axis they are `required` — the Bot calls them — so the discriminator this ADR adds
   does not by itself admit them.

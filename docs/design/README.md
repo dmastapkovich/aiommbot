@@ -39,7 +39,7 @@ update it in the same commit as the document it describes.
 2. Every component of the building-block view has an `LLD: <component>` ticket and a file in
    `components/` created from [`components/_template.md`](components/_template.md).
 3. A component document is *reviewed* only when
-   [`../agents/design-quality-checklist.md`](../agents/design-quality-checklist.md) says so.
+   [`.agents/design-quality-checklist.md`](../../.agents/design-quality-checklist.md) says so.
 4. The hand-off ticket (#33) checks the whole catalogue for contradictions before implementation
    starts.
 
