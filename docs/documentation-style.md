@@ -18,8 +18,8 @@ index (`README.md`). A new document goes into an existing type or the type is ad
 | Readiness tracker | `design/TRACKER.md` | the single status view | — |
 | Decision record | `adr/NNNN-<slug>.md` | one decision | `adr/_template.md` |
 | Research note | `research/NN-<slug>.md` | one question answered from primary sources | see `research/README.md` |
-| Agent process document | `agents/*.md` | one process question | — |
-| Glossary | `CONTEXT.md` (root) | the ubiquitous language | format in `agents/domain.md` |
+| Agent process document | `.agents/*.md` (repository root) | one process question | — |
+| Glossary | `CONTEXT.md` (root) | the ubiquitous language | format in `.agents/domain.md` |
 | User documentation | `tutorials/ how-to/ reference/ explanation/` (later) | one Diátaxis quadrant each | decided by ticket #26 |
 
 Prototypes and sketches made while resolving a ticket are attached to the ticket; they are never
@@ -51,7 +51,7 @@ ADRs use YAML front matter: `status: proposed | accepted`, `date`, `ticket`, and
 decision withdrawn in full retires its file; the ADR index keeps the number with a pointer to the
 ADRs that replaced it.
 
-`reviewed` is granted only by [`agents/design-quality-checklist.md`](agents/design-quality-checklist.md)
+`reviewed` is granted only by [`.agents/design-quality-checklist.md`](../.agents/design-quality-checklist.md)
 and mirrored in [`design/TRACKER.md`](design/TRACKER.md) in the same commit.
 
 ## 4. Naming
@@ -124,7 +124,7 @@ The commit history is the record of what a document used to say.
 
 While researching, grilling or writing an LLD, a capability, detail or mechanism may surface that
 no ticket, section or ADR anticipates. Do not design it in passing and do not drop it. Run the
-**discovery protocol** in [`agents/session-playbook.md`](agents/session-playbook.md#discovery-protocol):
+**discovery protocol** in [`.agents/session-playbook.md`](../.agents/session-playbook.md#discovery-protocol):
 classify it (out of scope · fog · sharp question · backlog idea · gap in this document type),
 record it where that class lives, link it from the current ticket, and continue the current ticket
 unchanged. The map stays the single register of what is still open; the tracker stays the single

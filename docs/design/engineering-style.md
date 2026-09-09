@@ -1319,7 +1319,7 @@ Do:    one commit — the component document, the CONTEXT.md entry with its own 
 
 _Limits:_ terms are framework concepts, not process vocabulary; `CONTEXT.md` is a glossary and
 nothing else.
-_Tier:_ `review`. _Checked in:_ LLD. _From:_ [`documentation-style.md` §5](../documentation-style.md#5-vocabulary), [`docs/agents/domain.md`](../agents/domain.md).
+_Tier:_ `review`. _Checked in:_ LLD. _From:_ [`documentation-style.md` §5](../documentation-style.md#5-vocabulary), [`.agents/domain.md`](../../.agents/domain.md).
 
 #### `ST-NAM-04` — Name a variable after what it holds in this domain
 
@@ -1996,7 +1996,7 @@ def test_duplicate_sequence_is_deduplicated(): ...
 
 _Limits:_ timeout, cancellation, dependency outage, bad input and concurrent use are the minimum
 set; the document may list more.
-_Tier:_ `review`. _Checked in:_ LLD, PR. _From:_ [`design-quality-checklist.md`](../agents/design-quality-checklist.md) (the failure-mode line), [ADR-0023](../adr/0023-websocket-gateway-resilience.md).
+_Tier:_ `review`. _Checked in:_ LLD, PR. _From:_ [`design-quality-checklist.md`](../../.agents/design-quality-checklist.md) (the failure-mode line), [ADR-0023](../adr/0023-websocket-gateway-resilience.md).
 
 #### `ST-TST-05` — Reach 100 % coverage by testing the branch, not by excluding it
 
