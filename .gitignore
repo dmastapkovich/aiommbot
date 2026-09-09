@@ -54,6 +54,7 @@ docs/_build/
 Thumbs.db
 
 # Agent and local state
+.refs/
 .claude/settings.local.json
 .claude/*.local.*
 .scratch/

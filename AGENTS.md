@@ -37,6 +37,7 @@ Every other document that describes the warm-up points here instead of repeating
 | Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
 | Process documents for agents (playbook, checklist, tracker conventions, glossary format) | `.agents/*.md` | fixed |
+| Curated primary sources, cloned into the git-ignored `.refs/` | `.agents/references.md` | any ticket that reads a new source |
 | Backlog ideas that are not decisions | GitHub issues labelled `enhancement` + a fog line in #1 | maintainer |
 
 ## Standing rules
