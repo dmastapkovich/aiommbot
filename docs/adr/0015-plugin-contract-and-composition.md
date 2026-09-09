@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0047, ADR-0050]
+amended-by: [ADR-0047, ADR-0050, ADR-0056]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -19,7 +19,7 @@ addition, not a rewrite.
   an Adapter and no Transport is a valid process without a Transport
   ([ADR-0005](0005-one-ingress-many-workers.md)).
 - **Generic vs adapter-specific plugins.** A plugin declares whether it is generic (depends on the
-  Core only: State, observability plugins, scheduling bridges) or bound to an adapter
+  Core only: State, FloodControl, Health, the observability plugins) or bound to an adapter
   (`for_adapter=Mattermost`). Composing an adapter-specific plugin with the wrong adapter is a
   start-up check failure. Adapter-specific plugins live in `aiommbot/mattermost/plugins/`, generic
   ones in `aiommbot/plugins/`, a sibling of `core/`

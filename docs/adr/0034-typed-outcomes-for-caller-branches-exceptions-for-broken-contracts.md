@@ -14,7 +14,7 @@ stale records (`Conflict`, `StaleState`, [ADR-0022](0022-state-plugin-model.md))
 token verification (`Verified | Missing | Invalid | Expired | Replayed | ActorMismatch`,
 [ADR-0024](0024-webhook-ingress-and-callback-security.md)); exceptions were chosen for the API
 client, explicitly as "exceptions, not result unions" ([ADR-0027](0027-api-error-taxonomy.md)). Left
-unstated, 30 component design documents would each pick by taste. We decided the rule that selects
+unstated, 32 component design documents would each pick by taste. We decided the rule that selects
 the mechanism, and two riders that decide the cases where the first sentence is not enough:
 
 - **The deciding question is who acts on the failure, not whether it is domain or infrastructure.**

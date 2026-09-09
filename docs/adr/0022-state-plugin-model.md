@@ -3,7 +3,7 @@ status: accepted
 date: 2026-09-03
 ticket: "#18"
 amends: [ADR-0003]
-amended-by: [ADR-0048]
+amended-by: [ADR-0048, ADR-0060]
 ---
 
 # Conversation state is a typed `Flow[Data]` keyed by a `StateKey`, stored through two Core Protocols with compare-and-set, isolated per key by default
@@ -18,9 +18,11 @@ at every step.
 
 - **Key.** `StateKey` is a frozen data class of platform identifiers — channel, user, thread root —
   plus a scope name so several independent flows can run for one user. A **strategy**
-  (`USER_IN_CHANNEL` default, `CHANNEL`, `GLOBAL_USER`, `THREAD`) is a plugin setting, overridable
-  per Flow. The Adapter builds the key from an Event through the Core Protocol
-  `StateKeyProvider`; the State plugin only consumes it.
+  (`USER_IN_CHANNEL` default, `CHANNEL`, `GLOBAL_USER`, `THREAD`) is a setting of whichever plugin
+  asks, overridable per Flow. The Adapter builds the key from an Event through the Core Protocol
+  `StateKeyProvider`; a plugin only consumes it, and FloodControl consumes the same seam for a
+  chat identity of its own
+  ([ADR-0060](0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md)).
 - **Flow with typed data.** `class Order(Flow[OrderData]): choosing = State(); confirming =
   State()`. A Flow declares its states and a frozen data model that is serialised and versioned;
   there is no `dict[str, Any]`. Handlers receive `StateContext[Order]` with typed `state`, `data`,
@@ -29,7 +31,8 @@ at every step.
   ordinary Filter, `InState(Order.confirming)`.
 - **Two Core Protocols, not one profile.** `KeyValueStore` — get/set/delete of bytes by key with a
   version for compare-and-set, TTL as an optional capability; `LockProvider` — `lock(key, ttl)` as
-  an async context. Both are Core-owned and shared with other plugins (webhook dedup); the split
+  an async context. Both are Core-owned and shared with other plugins (webhook dedup,
+  FloodControl); the split
   follows Rasa and aiogram ([`docs/research/07`](../research/07-durable-bot-state-storage.md)); no
   precedent exists for one profile serving state, locks and idempotency. The State plugin adds
   serialisation and namespaces on top.

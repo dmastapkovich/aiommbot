@@ -7,7 +7,7 @@ ticket: "#41"
 # The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table
 
 [ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md) fixes the direction of every
-allowed *import*, and it is tempting to read it as the order in which the 30 component design
+allowed *import*, and it is tempting to read it as the order in which the 32 component design
 documents should be *written*. It is not: a document is ordered by what its **§3 Public contract**
 cannot be written without, and that graph does not follow the layer table. We decided the ordering
 rule to be:

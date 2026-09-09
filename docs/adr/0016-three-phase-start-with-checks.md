@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
+amended-by: [ADR-0058]
 ---
 
 # The Bot starts in three phases — compose, check, start — and stops on the full list of check failures
@@ -24,8 +25,10 @@ configuration has been validated as a whole, and problems are reported together.
 3. **Start.** Enter plugin lifecycles in topological order, then transports; stop in reverse.
 
 The process declares a typed **`ProcessProfile`** (at least `single_process`) that checks are
-evaluated against; its full field list is designed with the deployment view in #40. A
-"check only" entry point runs phases 1–2 and exits, for CI and for operators.
+evaluated against; its full field list is designed with the deployment view in #40. Phases 1–2 run
+without phase 3 as `aiommbot check`, the shipped command of
+[ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md), which exits non-zero on
+the full list of failures.
 
 ## Considered options
 

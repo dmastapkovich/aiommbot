@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
+amended-by: [ADR-0059]
 amends: [ADR-0002, ADR-0006, ADR-0013, ADR-0017, ADR-0021, ADR-0022, ADR-0026, ADR-0030, ADR-0033, ADR-0038, ADR-0047]
 ---
 
@@ -31,7 +32,7 @@ records, which a record pushed after the fact can never be. We decided:
   ([`docs/research/17`](../research/17-http-client-observability.md) §3). `RequestObserver` stays a
   coroutine Protocol, so [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md) is
   unchanged in substance; the pair is the third row of §5.4 to carry two Protocols, which makes the
-  count **fifteen Protocols on twelve seam rows — eleven required, one provided**
+  count **sixteen Protocols on thirteen seam rows — twelve required, one provided**
   ([ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md)) and leaves the thirteen
   conformance suites of [ADR-0047](0047-a-conformance-suite-per-core-seam.md) unchanged, because a
   paired row is one suite parametrised over both faces.

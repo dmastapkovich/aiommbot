@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#13"
-amended-by: [ADR-0048]
+amended-by: [ADR-0033, ADR-0048, ADR-0059]
 ---
 
 # The core is built by composition over Protocols it owns, with named patterns and strict typing
@@ -50,9 +50,9 @@ component document must argue against, in this order of authority:
 Tenet 1 says what inheritance is not for; where it remains the right tool is bounded as follows,
 written as rules in [`engineering-style.md`](../design/engineering-style.md) §3:
 
-- **A Protocol expresses a seam**; the fifteen Protocols on the twelve seam rows of the
+- **A Protocol expresses a seam**; the sixteen Protocols on the thirteen seam rows of the
   building-block view §5.4 are the only substitution points, and nothing in the Core imports an
-  implementation. Eleven of those rows are *required* — the Core calls out through them — and one is
+  implementation. Twelve of those rows are *required* — the Core calls out through them — and one is
   *provided*, handed to a Handler to call
   ([ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md)).
 - **`abc.ABC` is a *restricted* pattern**: permitted inside a single component, for a family of

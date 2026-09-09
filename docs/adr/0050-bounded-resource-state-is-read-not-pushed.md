@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
+amended-by: [ADR-0059]
 amends: [ADR-0015, ADR-0023]
 ---
 
@@ -45,7 +46,7 @@ observable gauge is asked through a callback. We decided:
 ## Consequences
 
 - `Contributes*` grows from six Protocols to seven, so the rank #85 is deciding covers seven; the
-  ticket is told, and nothing about the twelve seam rows of
+  ticket is told, and nothing about the thirteen seam rows of
   [§5.4](../design/05-building-block-view.md) changes, because a `Contributes*` Protocol is not a
   row there.
 - `bot.stats()` is a public name and its snapshot types are public

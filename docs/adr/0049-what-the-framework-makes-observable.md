@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
+amended-by: [ADR-0061]
 amends: [ADR-0023]
 ---
 
@@ -20,6 +21,7 @@ mechanisms below carry everything, and nothing in the framework emits a metric o
 | A transport or process transition | the Signals of ADR-0023 and [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md) | the Signals themselves |
 | One storage call | a decorator over `KeyValueStore` / `LockProvider` ([ADR-0022](0022-state-plugin-model.md)) | nothing |
 | A bounded resource's depth | the frozen snapshot of [ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md) | the snapshot |
+| Whether the process is alive, and whether it is ready | the two paths of the Health Plugin ([ADR-0061](0061-health-is-a-generic-plugin-over-application-supplied-checks.md)) | nothing — the Plugin is composed explicitly |
 | Anything a human has to read | the log ([ADR-0052](0052-log-levels-by-frequency-and-audience.md)) | the records, at their levels |
 
 Two entries in that table are decisions rather than bookkeeping.

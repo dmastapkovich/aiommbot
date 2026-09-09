@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#17"
-amended-by: [ADR-0048]
+amended-by: [ADR-0048, ADR-0060]
 ---
 
 # The Core owns a narrow, non-removable error boundary: log without payload, report, return a typed `Failed`; a failing process is an explicit policy
@@ -35,9 +35,14 @@ We decided:
   [ADR-0023](0023-websocket-gateway-resilience.md), is the one the taxonomy of
   [ADR-0027](0027-api-error-taxonomy.md) defines. Without a supervisor, a crash is a loss of events,
   not honesty.
-- **Everything else stays outside the Core**: user-facing "something went wrong" replies, retries,
-  dead-lettering and cooldowns are Handler-layer middleware from plugins or the application, and
-  expected domain outcomes remain values
+- **Everything else stays outside the Core**: a user-facing "something went wrong" reply is
+  Handler-layer middleware the application writes; retrying a delivery, dead-lettering and error
+  reporting are refused outright
+  ([ADR-0057](0057-reliability-middlewares-and-error-reporting-stay-outside.md)); a cooldown is the
+  FloodControl Plugin's Inbound middleware, because declining an Event that came too soon has to
+  happen before the Router walk
+  ([ADR-0060](0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md)); and expected domain
+  outcomes remain values
   ([ADR-0014](0014-filters-and-extractors-with-closed-handler-signatures.md)).
 
 ## Considered options

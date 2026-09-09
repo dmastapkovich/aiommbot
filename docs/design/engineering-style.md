@@ -57,7 +57,7 @@ it, and the two places inheritance remains the right tool — the error taxonomy
 closed variant types (`ST-PAT-10`) — are named rather than assumed.
 _Held by:_ `ST-PAT-05`, `ST-PAT-07`, `ST-PAT-08`, `ST-PAT-10`, `ST-TYP-08`, `ST-SOL-02`. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
 
-**The Core owns the Protocols; implementations arrive from outside.** Fifteen Protocols on twelve
+**The Core owns the Protocols; implementations arrive from outside.** Sixteen Protocols on thirteen
 seams are the whole substitution surface: eleven seams the Core calls out through, and one it hands
 to a Handler to call. Imports point at the Core: testing toolkit → adapter-specific plugins →
 (Adapter · generic plugins) → Core. A generic Plugin may not import the Adapter, which is
@@ -1600,9 +1600,12 @@ def __init__(self, *, url: str) -> None:
 ```
 
 _Limits:_ the deferred import lives in the constructor of the object that needs it, and nowhere
-else; this is the one sanctioned function-local import.
+else; this is the one sanctioned function-local import. **One object has no constructor**: the
+`aiommbot` console script, which an extra cannot gate, so its entry point raises `MissingExtraError`
+and prints it as a message with exit 1 rather than a traceback
+([ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md)).
 _Tier:_ `review`, with the per-extra smoke imports as the mechanical floor. _Checked in:_ LLD, PR.
-_From:_ [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [`docs/research/04`](../research/04-modern-python-library-engineering-2026.md).
+_From:_ [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [`docs/research/04`](../research/04-modern-python-library-engineering-2026.md), [`docs/research/25`](../research/25-cli-entry-points-and-what-clis-configure.md).
 
 #### `ST-MOD-09` — Keep one module to one component or one part
 
@@ -1903,14 +1906,20 @@ def setup_logging(level): ...
 # Do — one executable dictConfig example in the documentation, and nothing in the package
 ```
 
-_Limits:_ no exceptions. No `basicConfig`, no `dictConfig`, no `captureWarnings`, no `setLevel` on
-any logger including our own root, no environment variable that configures logging, and no
-`setup_logging()`-style helper. A `QueueHandler` is recommended in the documentation because the
-standard handlers block the event loop, and the `QueueListener` and its thread belong to the
-application.
-_Tier:_ `tool` — `semgrep:ST-LOG-10` over the four calls, and the smoke import asserting that
-importing `aiommbot` adds exactly one handler, a `NullHandler`, and changes no level.
-_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [`docs/research/24`](../research/24-library-logging-design.md).
+_Limits:_ **one exception, and it is not the library.** No `basicConfig`, no `dictConfig`, no
+`captureWarnings`, no `setLevel` on any logger including our own root, no environment variable that
+configures logging, and no `setup_logging()`-style helper — anywhere in a published module. The
+shipped `aiommbot` command may call `logging.config.dictConfig` exactly once, on exactly the file
+the operator named in `--log-config`, and touches no logging state when the option is absent
+([ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md)): a command is
+the process's entry point, so the prerogative stays with whoever starts it. A `QueueHandler` is
+recommended in the documentation because the standard handlers block the event loop, and the
+`QueueListener` and its thread belong to the application.
+_Tier:_ `tool` — `semgrep:ST-LOG-10` over the four calls, with one allowed path for the command's
+module; the smoke import asserting that importing `aiommbot` adds exactly one handler, a
+`NullHandler`, and changes no level; and a test asserting that `aiommbot check` without
+`--log-config` changes no logger's level and adds no handler.
+_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [`docs/research/24`](../research/24-library-logging-design.md), [`docs/research/25`](../research/25-cli-entry-points-and-what-clis-configure.md).
 
 ## 10. Documentation — `ST-DOC`
 
@@ -2331,9 +2340,9 @@ when the pull request changes the component's contract or its document.
 - [ ] No handler swallows an exception it did not expect. `ST-ERR-07`
 - [ ] Names are glossary terms, collide with no `_Avoid_` list, any new concept arrives with its term in this commit, and a new module is singular or plural by what it holds. `ST-NAM-01`, `ST-NAM-02`, `ST-NAM-03`, `ST-NAM-06`, `ST-NAM-07`, `ST-NAM-08`
 - [ ] Every configured exception — import contract, lint relaxation, slotscheck exclusion, switched-off rule — carries its reason. `ST-MOD-06`
-- [ ] A deferred import exists only in the constructor of an object needing an optional extra. `ST-MOD-08`
+- [ ] A deferred import exists only in the constructor of an object needing an optional extra, or in the console script's entry point. `ST-MOD-08`
 - [ ] Log lines carry identifiers and not content, no content switch was added, and the redaction list was not bypassed; user-visible failures carry a correlation id. `ST-LOG-01`, `ST-LOG-02`, `ST-LOG-03`, `ST-LOG-06`
-- [ ] A new or moved log record is in its component's catalogue, its level follows the frequency rule, no `exc_info` appeared outside the ErrorBoundary, and no logging configuration was changed. `ST-LOG-07`, `ST-LOG-08`, `ST-LOG-09`, `ST-LOG-10`
+- [ ] A new or moved log record is in its component's catalogue, its level follows the frequency rule, no `exc_info` appeared outside the ErrorBoundary, and no logging configuration was changed outside the command's `--log-config`. `ST-LOG-07`, `ST-LOG-08`, `ST-LOG-09`, `ST-LOG-10`
 - [ ] Comments explain why and cite the source; a `TODO:` names an issue; a public API change records its version. `ST-DOC-04`, `ST-DOC-06`
 - [ ] New tests assert one behaviour each, are parametrised over implementations rather than copied, cover the failure modes the document lists, and report through returned data rather than recorded calls. `ST-TST-03`, `ST-TST-04`, `ST-TST-07`, `ST-TST-08`
 - [ ] A Protocol docstring changed with its contract still states the implementer's contract and names the conformance suite that applies. `ST-DOC-03`

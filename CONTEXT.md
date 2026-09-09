@@ -46,6 +46,14 @@ The typed declaration of what kind of process is starting (at least whether it i
 process), which Checks are evaluated against.
 _Avoid_: mode, role (informal), deployment flag
 
+**Clock**:
+The Core Protocol every duration in the framework is measured and slept through: a monotonic
+reading, a wall-clock reading and a cancellable sleep. The Core ships the standard-library
+implementation and the Testing toolkit ships `FakeClock`, which is how a test advances a timeout, a
+TTL or a backoff without waiting. A Plugin receives one in its settings; a Handler receives one by
+injection.
+_Avoid_: timer, time source, scheduler (there is none), `time` (the module)
+
 **Signal**:
 A typed asynchronous lifecycle notification of the Core or a Transport (started, stopping,
 connected, disconnected, resumed), delivered to every subscriber. Not a platform Event.
@@ -72,6 +80,13 @@ _Avoid_: HTTP transport (that is the seam), callback server, endpoint, ingress
 The composition root: it is configured with an Adapter, Plugins and routers, owns the lifecycle
 and runs the dispatch loop. One Bot per process is the documented model.
 _Avoid_: app, application, dispatcher (the Dispatcher is a component inside the Bot)
+
+**Command line**:
+The one console script the distribution installs, `aiommbot`, with the two subcommands `check` and
+`run` over an import string. It arrives behind the Extra named after its argument parser, starts no
+server, and configures logging only when the operator names a file.
+_Avoid_: CLI (as the name), command (a slash command is the platform's), console script, runner,
+entry point (that is the packaging artefact)
 
 **Dispatcher**:
 The Core component the Bot feeds every Event to: it drives the Inbound middleware, walks the Router
@@ -253,7 +268,8 @@ _Avoid_: storage key, session id, chat id
 
 **StateKeyProvider**:
 The Core Protocol through which the Adapter builds a StateKey from an Event according to the
-strategy the State plugin is configured with. The State plugin consumes keys and never derives them.
+strategy the asking Plugin is configured with. State and FloodControl consume keys and never derive
+them.
 _Avoid_: key builder, key strategy (that is the setting), key factory
 
 **Flow**:
@@ -337,6 +353,33 @@ _Avoid_: shim, wrapper module, compat layer (as a general term)
 The first-party Plugin that gives a conversation a finite-state machine and per-key event
 isolation over an explicitly chosen storage backend.
 _Avoid_: FSM plugin, context storage, session
+
+**FloodControl**:
+The first-party generic Plugin that decides, before the Router walk, whether an Event is processed
+at all — because it came too soon after the last one, or because this delivery has been seen. Two
+Inbound middlewares over a KeyValueStore, keyed through the StateKeyProvider seam, both failing
+open when the store is unreachable.
+_Avoid_: throttle, rate limit (that is the outbound concern), ban, guard, backpressure (that is the
+Transport's queue)
+
+**Cooldown**:
+The Flag a Handler carries at its subscription to declare the shortest interval between two Events
+that may reach it for one chat identity. Its absence means no limit; the Flag without the
+FloodControl Plugin is a start-up error.
+_Avoid_: throttle, delay, debounce, rate limit
+
+**DeliveryDedup**:
+FloodControl's second Inbound middleware: it declines an Event whose delivery has already been
+processed, identified by a value only the platform knows and read through a typed callable in the
+Plugin's settings. Distinct from the WebSocketTransport's in-memory replay dedup, which is bounded
+by one connection.
+_Avoid_: idempotency, replay cache, NonceStore (that is the Callback token's), deduplication (bare)
+
+**Suppression**:
+The frozen Event-scope value FloodControl publishes when it declines an Event, naming which of the
+two rules refused it and under which key. The Outcome stays `Unhandled`; a Middleware registered
+outside FloodControl reads the publication to count it.
+_Avoid_: rejection, drop (that is the Transport's OverflowPolicy), block, throttled
 
 **API client**:
 The typed, standalone Mattermost REST client of the Adapter — `MattermostClient` and its
@@ -444,6 +487,20 @@ The frozen typed reading of every bounded resource in the process — the WebSoc
 the Sync executor's pool — answered by `bot.stats()` and assembled from the parts that contribute
 one. Read when asked, never pushed, and the source of every gauge.
 _Avoid_: metrics, gauge, health check (that is a runtime probe), introspection
+
+**Health**:
+The first-party generic Plugin that answers a runtime probe: a bare ASGI callable serving one
+liveness path, which runs no check and survives the drain, and one readiness path, which is true
+only while the Bot is started, not draining, every Transport connected and every ReadinessCheck
+passing. It starts no server and its response body is always empty.
+_Avoid_: healthcheck (as the name), probe (that is the caller), liveness/readiness (as the
+component), actuator, Stats snapshot (that is the bounded-resource reading)
+
+**ReadinessCheck**:
+The frozen named check an application puts in the Health Plugin's settings: a name, a coroutine
+function and its own timeout. Checks run concurrently under one deadline; one that fails or raises
+is one failed check and one WARNING record, never a failed endpoint.
+_Avoid_: health indicator, condition, probe, Check (that is the start-up validation)
 
 **Log correlation**:
 The three layers that put the identity of one delivery on a log record: the fields a call passes in

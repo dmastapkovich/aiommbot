@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
-amended-by: [ADR-0030, ADR-0049, ADR-0050]
+amended-by: [ADR-0030, ADR-0049, ADR-0050, ADR-0060]
 ---
 
 # The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
@@ -34,8 +34,9 @@ the design of the `WebSocketTransport` plugin:
   by `(connection_id, seq)` in memory. A `hello` carrying a new `connection_id` means state was
   lost: the sequence resets and the `Resynced(since=…)` Signal fires with the loss window;
   backfilling posts over REST is a first-party plugin or recipe on that Signal, because only the
-  application knows what matters. Cross-resync dedup by `post.id` is an optional Inbound
-  middleware on `KeyValueStore`.
+  application knows what matters. Cross-resync dedup by `post.id` is the FloodControl Plugin's
+  optional Inbound middleware over `KeyValueStore`
+  ([ADR-0060](0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md)).
 - **The reader never stalls.** A full server send queue (256) drops the connection and the resume
   window, so the reader always drains the socket into a bounded queue served by N consumer
   coroutines, the Dispatch concurrency (a thin concurrency cap). Overflow is a typed

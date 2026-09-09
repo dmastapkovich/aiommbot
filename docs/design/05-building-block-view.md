@@ -113,7 +113,7 @@ Two directions, in the vocabulary UML gives them
 
 - **required** — the Core calls out through the Protocol and an outside party implements it. This is
   the single point of dependency inversion
-  ([ADR-0006](../adr/0006-architectural-tenets-of-the-core.md) tenet 2), and eleven of the twelve
+  ([ADR-0006](../adr/0006-architectural-tenets-of-the-core.md) tenet 2), and twelve of the thirteen
   rows are of this kind.
 - **provided** — the Core hands user code an object typed by the Protocol, and user code calls it.
   One row today, and the design expects no second.
@@ -130,12 +130,13 @@ ADR-0038).
 |---|---|---|---|---|---|
 | `Transport` | required | Dispatcher | WebSocketTransport, Webhook | `dispatcher.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md) |
 | `DependencyProvider` | required | Bot | the Core's own resolver; dishka and wireup bridges | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
-| `KeyValueStore` | required | State, Webhook, IdentityCache | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| `Clock` | required | Bot, WebSocketTransport, Webhook, State, FloodControl, Health, API client | the Core's own over the standard library; `FakeClock` | `bot.md` | [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md) |
+| `KeyValueStore` | required | State, Webhook, IdentityCache, FloodControl | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `LockProvider` | required | State, WebSocketTransport | in-memory, Redis | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `Codec` | required | API client, Transports, State | `MsgspecCodec` | `codec.md` | [ADR-0025](../adr/0025-generated-dataclass-models-with-a-codec-protocol.md) |
 | `HTTPTransport`, `SyncHTTPTransport` | required | Face | httpx2; the in-memory double implements both in one class | `face.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `WebSocketConnection` | required | WebSocketTransport | `websockets` primary, `picows` extra, the in-memory double | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
-| `StateKeyProvider` | required | State | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| `StateKeyProvider` | required | State, FloodControl | the Adapter's | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `TokenProvider`, `SyncTokenProvider` | required | WebSocketTransport, API client, Face | none — the application's | `face.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | `CallbackTokenCodec` | required | Webhook | stdlib HMAC-SHA256; `pyseto` PASETO extra | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | `RequestObserver`, `SyncRequestObserver` | required | API client | none by default; the Observability plugin | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
@@ -182,7 +183,7 @@ C4Component
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
 | **Bot** | component | Composition root: gathers plugin contributions, orders them topologically, runs the three-phase compose → check → start, owns the lifecycle and the entry points | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
-| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()` | part | The plugin declaration, the typed check objects, the process role, the two entry points | `bot.md` | same |
+| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()`, the `aiommbot` command, the standard-library `Clock` | part | The plugin declaration, the typed check objects, the process role, the two entry points, the console script that runs `check` and `run` behind the `click` extra, and the Core's own implementation of the `Clock` seam | `bot.md` | same, plus [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md) |
 | **Dispatcher** | component | Receives every Event the Bot feeds it, drives Inbound then Handler middleware, walks the Router tree to the first match, resolves parameters, returns the typed `Outcome` to the Transport | `dispatcher.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
 | `Outcome`, `MatchedHandler`, `Skip` | part | The typed dispatch result, the Event-scoped publication after a match, the `Skip` exception that continues the walk | `dispatcher.md` | same |
 | **Router** | component | The handler tree: registration by annotation, adapter aliases, filter gates, freeze, `bot.routes()`, unreachable-handler check | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
@@ -257,9 +258,12 @@ Bound to the Core only. They may not import the Adapter
 C4Component
     title Components of the generic plugins
     Component(state, "State", "Plugin", "Flow, StateContext, isolation, schema versions, TTL")
+    Component(flood, "FloodControl", "Plugin", "Cooldown Flag and delivery dedup, before the Router walk")
     Component(backends, "KeyValueStore and LockProvider backends", "Plugin", "In-memory and Redis")
+    Component(health, "Health", "Plugin", "Liveness and readiness as a bare ASGI application")
     Component(obs, "Observability plugin", "Plugin", "Prometheus and OpenTelemetry over what the framework already exposes")
     Rel(state, backends, "stores and locks through", "Core Protocols, never by import")
+    Rel(flood, backends, "compares and sets through", "Core Protocols, never by import")
     Rel(obs, backends, "decorates an implementation of", "Core Protocols, never by import")
 ```
 
@@ -268,17 +272,25 @@ Protocol, never by importing the plugin that also implements it.
 
 State is the case that proves the rank of
 [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md): it consumes the Core
-`StateKeyProvider` seam and receives the Adapter's implementation by injection. The Observability
-plugin is the second case, and the reason `bot.stats()` exists: it needs the WebSocketTransport's
-queue depth and may not import an adapter-specific plugin, so it reads the Bot's aggregate instead
+`StateKeyProvider` seam and receives the Adapter's implementation by injection. FloodControl is the
+same case twice over — it reaches a chat identity through that seam and a platform delivery id
+through a callable its settings receive, never by importing the Adapter
+([ADR-0060](../adr/0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md)). The
+Observability plugin is the third case, and the reason `bot.stats()` exists: it needs the
+WebSocketTransport's queue depth and may not import an adapter-specific plugin, so it reads the
+Bot's aggregate instead
 ([ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md)).
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
 | **State** | component | Conversation state: `Flow[Data]`, `StateContext`, the `InState` filter, per-key isolation as Inbound middleware, compare-and-set writes, schema versions, the sliding logical TTL | `state.md` | [ADR-0003](../adr/0003-stateless-core-state-plugin-with-explicit-backend.md), [ADR-0022](../adr/0022-state-plugin-model.md) |
 | `StateKey`, `Flow`, `StateContext`, the isolation middleware, `Conflict`, `StaleState` | part | The key and its strategy, the typed flow and its versioned data, the handle a handler receives, and the two typed failure outcomes | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| **FloodControl** | component | Admitting an Event to the Router walk or declining it: the `Cooldown` Flag and its Inbound middleware over a compare-and-set, the delivery-dedup middleware the platform identity feeds, the declared order between them, the fail-open rule and the Checks on the backend | `flood-control.md` | [ADR-0060](../adr/0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md) |
+| `Cooldown`, `Suppression`, the platform-identity callable | part | The Flag a Handler carries, the Event-scope value published when an Event is declined, and the typed setting through which a generic plugin learns a platform delivery id | `flood-control.md` | [ADR-0060](../adr/0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md) |
 | **KeyValueStore** and **LockProvider** backends | component | The two first-party implementations of both storage seams — in-memory for a declared single process, Redis for TTL and distributed locks — plus the conformance suite external backends must pass | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | dishka and wireup bridges | part | Serving dependencies from an external container behind `DependencyProvider`, shipped as extras | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
+| **Health** | component | The two probe paths as a bare ASGI callable: liveness that runs no check and survives the drain, readiness as the conjunction of the Bot's phase, the Transports' Signals and the application's own checks, run concurrently under per-check timeouts with a cached aggregate and an always-empty body | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
+| `health_app(bot)`, `HealthPaths`, `ReadinessCheck` | part | The ASGI callable the application hosts, the two configurable paths, and the frozen named check with its own timeout that the settings receive | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
 | **Observability plugin** | component | `PrometheusPlugin` and `OpenTelemetryPlugin`, each behind the extra named after its library: two Middleware over the dispatch layers, an implementation of the `RequestObserver` pair, subscribers to the Signals, `ObservedKeyValueStore` and `ObservedLockProvider`, a collector reading the Stats snapshot, and an `HTTPTransport` decorator injecting `traceparent`. Takes its registry as an argument and touches no process-global state | `observability.md` | [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md), [ADR-0051](../adr/0051-first-party-observability-plugin.md) |
 
 ## 5.8 Level 3 — adapter-specific plugins
@@ -335,12 +347,12 @@ implements through that object's ports; there is no second double of Mattermost 
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
-| **Testing toolkit** | component | Everything a test needs that is not the platform: the wrapper that runs a composed Bot, the thirteen conformance suites, the typed event builders, the recording Reply channel, the two small doubles, the routing assertion and the pytest plugin | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| **Testing toolkit** | component | Everything a test needs that is not the platform: the wrapper that runs a composed Bot, the fourteen conformance suites, the typed event builders, the recording Reply channel, the two small doubles, the routing assertion and the pytest plugin | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
 | `TestBot` | part | The wrapper over a composed Bot: typed overrides by key before the start, an asynchronous context manager running check and start with no Transport, `feed` returning the typed `Outcome`, and typed records of outcomes, replies and Signals | `testing-toolkit.md` | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md) |
-| The thirteen conformance suites | part | One factory per seam row of 5.4 plus the plugin lifecycle, each taking the implementer's factory and the capabilities it declines, and reporting a named case's expectation and observation as typed data | `testing-toolkit.md` | [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| The fourteen conformance suites | part | One factory per seam row of 5.4 plus the plugin lifecycle, each taking the implementer's factory and the capabilities it declines, and reporting a named case's expectation and observation as typed data | `testing-toolkit.md` | [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
 | Event builders | part | One typed constructor per first-class payload, filling `EventMeta` and validating what the envelope deliberately does not; the server produces its events through the same builders | `testing-toolkit.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
 | Recording `ReplyChannel` slot | part | The second implementation of the one provided seam, generic in `R`, over which the `ReplyChannel` suite is parametrised alongside the Webhook's two slots | `testing-toolkit.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
-| `FakeAdapter` and `FakeClock` | part | The Adapter double a Core-only test composes, and the clock every timeout, TTL and backoff is driven by instead of sleeping (`ST-TST-09`) | `testing-toolkit.md` | [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md) |
+| `FakeAdapter` and `FakeClock` | part | The Adapter double a Core-only test composes, and the second shipped implementation of the `Clock` seam, by which every timeout, TTL and backoff is driven instead of sleeping (`ST-TST-09`) | `testing-toolkit.md` | [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md) |
 | `assert_matches(event, handler)` | part | Shadowing between arbitrary filters, which start-up cannot decide | `testing-toolkit.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
 | The typed name-parity test of the two Faces | part | Holding duality by mechanism rather than review | `testing-toolkit.md` | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | The pytest plugin and its three fixtures | part | `fake_mattermost`, `test_bot` and `fake_clock`, named in `pytest_plugins`, adding no option, marker or hook | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) |
@@ -351,8 +363,8 @@ implements through that object's ports; there is no second double of Mattermost 
 
 ## 5.10 Inventory summary
 
-30 components, 30 part rows, and fifteen Protocols on twelve seam rows — eleven of those rows
-required and one provided (5.4). The count matters in one way only: **30 `LLD: <component>`
+32 components, 32 part rows, and sixteen Protocols on thirteen seam rows — twelve of those rows
+required and one provided (5.4). The count matters in one way only: **32 `LLD: <component>`
 tickets**. Parts and seams generate nothing; they are specified inside the document named beside
 them.
 
@@ -360,7 +372,7 @@ them.
 |---|---|
 | Core | Bot, Dispatcher, Router, Filter, Extractor, Middleware, ErrorBoundary, DependencyProvider, Signal, Sync executor, Event |
 | Adapter | EventRegistry, Model generator, Generated model, Codec, API client, Exchange, Face, Workspace, Runtime, AuthLossDetector |
-| Generic plugins | State, KeyValueStore and LockProvider backends, Observability plugin |
+| Generic plugins | State, FloodControl, KeyValueStore and LockProvider backends, Health, Observability plugin |
 | Adapter-specific plugins | WebSocketTransport, Webhook, Callback token, IdentityCache |
 | Testing toolkit | Testing toolkit, FakeMattermost |
 

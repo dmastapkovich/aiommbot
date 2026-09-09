@@ -2,10 +2,10 @@
 status: accepted
 date: 2026-09-08
 ticket: "#84"
-amended-by: [ADR-0048]
+amended-by: [ADR-0048, ADR-0059]
 ---
 
-# The Core's seam inventory records the direction of the call — eleven required Protocols and one provided
+# The Core's seam inventory records the direction of the call — twelve required Protocols and one provided
 
 [ADR-0036](0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) makes
 `ReplyChannel[R]` the Core's twelfth seam, and [§5.4](../design/05-building-block-view.md) has to
@@ -32,7 +32,7 @@ decided:
   in one hexagon, separated by position rather than by artefact. A second table would also make one
   row a section of its own, and §5.4's job is to be the single place a reader can count the
   substitution surface.
-- **The count is stated as "fifteen Protocols on twelve seams — eleven required, one provided".**
+- **The count is stated as "sixteen Protocols on thirteen seams — twelve required, one provided".**
   Rows and Protocols differ because three rows pair an asynchronous and a synchronous Protocol
   (`HTTPTransport`/`SyncHTTPTransport`, `TokenProvider`/`SyncTokenProvider`,
   `RequestObserver`/`SyncRequestObserver`). Wherever the figure is

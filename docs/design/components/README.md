@@ -43,3 +43,5 @@ status line and `TRACKER.md` §C.
 | FakeMattermost | Testing toolkit | `fake-mattermost.md` | 6 | #88 |
 | Testing toolkit | Testing toolkit | `testing-toolkit.md` | 7 | #89 |
 | Observability plugin | Generic plugin | `observability.md` | 7 | #92 |
+| FloodControl | Generic plugin | `flood-control.md` | 7 | #96 |
+| Health | Generic plugin | `health.md` | 7 | #97 |

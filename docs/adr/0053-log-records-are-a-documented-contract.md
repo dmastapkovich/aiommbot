@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
+amended-by: [ADR-0058]
 ---
 
 # The set of log records is a documented contract checked against the code in both directions, and the framework never configures logging, ships no handler beyond `NullHandler` and offers no helper
@@ -29,7 +30,11 @@ about configuration:
   loggers the framework creates are exactly the loggers the documentation names.
 - **The framework changes no logging state.** No `basicConfig`, no `dictConfig`, no
   `captureWarnings`, no `setLevel` on any logger including our own root, no environment variable
-  that configures logging, and no `setup_logging()`-style helper. "The configuration of handlers is
+  that configures logging, and no `setup_logging()`-style helper. The one thing that is not the
+  library is the shipped command, which applies exactly the configuration the operator names in
+  `--log-config` and touches nothing when the option is absent
+  ([ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md)) — the prerogative
+  stays with whoever starts the process. "The configuration of handlers is
   the prerogative of the application developer who uses your library", and every mechanism in the
   survey's right-hand column is a library doing something to state it does not own — uvicorn calling
   `dictConfig`, Celery hijacking the root logger, openai reading `OPENAI_LOG`, and the helper that

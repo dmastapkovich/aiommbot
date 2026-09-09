@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#20"
-amended-by: [ADR-0036]
+amended-by: [ADR-0036, ADR-0058, ADR-0061]
 ---
 
 # Interactive callbacks are events with a payload-bound reply channel; the webhook plugin is a bare ASGI callable; authenticity is a default-on self-issued HMAC token with no expiry unless configured
@@ -37,10 +37,13 @@ non-200 into a user-visible error; field errors of a dialog are expressible only
 - **Bare ASGI callable.** The webhook plugin exposes `webhook_app(bot) -> ASGIApp` — one POST route
   written as an ASGI function with no framework and no added dependency (Bolt and hikari precedent,
   [`docs/research/11`](../research/11-webhook-ingress-patterns.md)) — plus `handle_callback(body,
-  headers) -> CallbackResponse` for non-ASGI hosts and tests, and a tiny health route. The
-  application hands it to uvicorn or hypercorn or mounts it in its FastAPI or Litestar app; starting
-  a server from the CLI is the CLI extra's business (#30), never the plugin's or the Core's
-  ([ADR-0002](0002-core-scope-two-condition-test.md)).
+  headers) -> CallbackResponse` for non-ASGI hosts and tests. It carries no health route: the probe
+  paths are the Health Plugin's, mounted beside it
+  ([ADR-0061](0061-health-is-a-generic-plugin-over-application-supplied-checks.md)). The application
+  hands the callable to uvicorn or hypercorn or mounts it in its FastAPI or Litestar app; **nothing
+  in the distribution starts a server** — not the plugin, not the Core and not the shipped command
+  ([ADR-0002](0002-core-scope-two-condition-test.md),
+  [ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md)).
 - **Authenticity is default-on.** The server signs nothing towards an external URL, so RFC 9421 and
   Standard Webhooks do not apply as transport schemes; the only credential is what the bot places in
   button `context` and dialog `state`, which the server keeps from clients. Following CISA's and

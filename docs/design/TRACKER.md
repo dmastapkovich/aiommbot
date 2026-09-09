@@ -18,7 +18,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | 4 | `04-solution-strategy.md` | reviewed | #38 | same |
 | 5 | `05-building-block-view.md` | reviewed | #38 | same |
 | 6 | `06-runtime-view.md` | not started | #39 | #38 #16 #17 |
-| 7 | `07-deployment-view.md` | in progress | #40 | #38 #24 #29 #30 |
+| 7 | `07-deployment-view.md` | in progress | #40 | #38 #24 #29 |
 | 8 | `08-cross-cutting-concepts.md` | not started | #40 | same |
 | 9 | `docs/adr/` | rolling | every grilling ticket | not started |
 | 10 | `10-quality-requirements.md` | not started | #37 | #13 |
@@ -94,7 +94,12 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Log records as a documented contract; no logging configuration by us | #29 | 0053 | reviewed |
 | Log correlation: `extra`, the task name, a contextvar with a shipped filter | #29 | 0054 | reviewed |
 | Redaction list: two sinks, forty names, exact normalised matching | #29 | 0055 | reviewed |
-| Scheduling, reliability middlewares, CLI boundaries | #30 | | not started |
+| No scheduler: a periodic task is a Plugin lifecycle, a calendar schedule is a process beside the bot | #30 | 0056 | reviewed |
+| Retries of a delivery, dead-letter, circuit breaking and error reporting stay outside, and the breaker recipe names no library | #30 | 0057 | reviewed |
+| The `aiommbot` command: a console script behind the `click` extra, no server, `--log-config` only | #30 | 0058 | reviewed |
+| `Clock` as the Core's thirteenth seam, with `FakeClock` as its second implementation | #30 | 0059 | reviewed |
+| Flood control and delivery dedup as one generic Plugin, and a declined Event as `Unhandled` plus a published `Suppression` | #30 | 0060 | reviewed |
+| Health as a generic Plugin over `/livez` and `/readyz`, with application-supplied `ReadinessCheck`s | #30 | 0061 | reviewed |
 | Engineering style and ideology: rule form, pattern tiers, derived review checklist | #36 | 0033 | reviewed |
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | | not started |
@@ -109,8 +114,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 
 ## C. Component design documents (LLD)
 
-§5.10 of `05-building-block-view.md` lists **30 components** across five layers, with 30 part
-rows and fifteen Protocols on twelve *seam* rows — eleven required, one provided — that get no
+§5.10 of `05-building-block-view.md` lists **32 components** across five layers, with 32 part
+rows and sixteen Protocols on thirteen *seam* rows — twelve required, one provided — that get no
 document of their own. One row per component here and one `LLD: <component>` ticket each. The file
 name is the `CONTEXT.md` term in kebab-case.
 
@@ -144,6 +149,8 @@ name is the `CONTEXT.md` term in kebab-case.
 | Bot | Core | `components/bot.md` | not started | #82 |
 | State | Generic plugin | `components/state.md` | not started | #83 |
 | Observability plugin | Generic plugin | `components/observability.md` | not started | #92 |
+| FloodControl | Generic plugin | `components/flood-control.md` | not started | #96 |
+| Health | Generic plugin | `components/health.md` | not started | #97 |
 | FakeMattermost | Testing toolkit | `components/fake-mattermost.md` | not started | #88 |
 | Testing toolkit | Testing toolkit | `components/testing-toolkit.md` | not started | #89 |
 
@@ -154,20 +161,21 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|
 | Typing discipline and banned patterns | ADR-0009, ADR-0010, ADR-0011 (mechanics), ADR-0033 (rule form) | style §4, §3.3; §8 | | in progress (§10 scenario pending #37) |
-| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`), ADR-0034 (which mechanism) | style §6; §8 | | in progress (§10 scenario pending #37) |
-| Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), #19 | style §5; §8 | | in progress (§10 scenario pending #37) |
+| Error taxonomy (domain / validation / dependency / retryable / permanent / user-visible) | ADR-0014 (values), ADR-0021 (boundary, `FatalError`), ADR-0027 (API exceptions, `retryable`), ADR-0034 (which mechanism), ADR-0057 (what the framework refuses to do about a failure) | style §6; §8 | | in progress (§10 scenario pending #37) |
+| Async, cancellation, timeouts, structured concurrency | ADR-0031 (stdlib asyncio, TaskGroup ownership, explicit timeouts, no `CancelledError` capture, `shield` only in drain, exception-group unwrapping), ADR-0030 (uncancellable threads), ADR-0059 (`Clock` as the seam every duration is measured and slept through), #19 | style §5; §8 | | in progress (§10 scenario pending #37) |
 | Configuration and settings, plugin-contributed settings | ADR-0015 (typed frozen settings objects; loading is the app's) | §8 | | in progress |
-| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), ADR-0033 (the rulebook), ADR-0052 (levels), ADR-0053 (the record catalogue, no configuration), ADR-0054 (correlation), ADR-0055 (the forty names over two sinks) | style §9, §10 (`ST-DOC-08`); §8 | | in progress (§10 scenario pending #37) |
-| Observability seam and naming | ADR-0048 (no Core Protocol; the `RequestObserver` pair), ADR-0049 (what is observable), ADR-0050 (`bot.stats()`), ADR-0051 (extras, OpenTelemetry conventions, registry, cardinality), research 17, 23 | §8; `components/observability.md` | | in progress (§10 scenario pending #37) |
+| Logging and redaction (no message text, tokens, PII) | ADR-0026 (client: never bodies, headers, tokens), ADR-0033 (the rulebook), ADR-0052 (levels), ADR-0053 (the record catalogue, no configuration), ADR-0054 (correlation), ADR-0055 (the forty names over two sinks), ADR-0058 (the command's `--log-config`, the one exception) | style §9, §10 (`ST-DOC-08`); §8 | | in progress (§10 scenario pending #37) |
+| Observability seam and naming | ADR-0048 (no Core Protocol; the `RequestObserver` pair), ADR-0049 (what is observable), ADR-0050 (`bot.stats()`), ADR-0051 (extras, OpenTelemetry conventions, registry, cardinality), ADR-0061 (the probe paths as the sixth mechanism), research 17, 23 | §8; `components/observability.md` | | in progress (§10 scenario pending #37) |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules) | §8 | | in progress |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019 | §8 | | in progress |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0032 (layers and direction), ADR-0040 (directories and contract shape) | style §8; §5, §8 | | in progress |
 | Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours) | §8 | | in progress |
 | Testing strategy (unit / contract / integration / typing / property) | ADR-0033 and style §11 (how tests are written), ADR-0044 (packaging and activation), ADR-0045 (the platform double), ADR-0046 (`TestBot`), ADR-0047 (conformance suites) | style §11; §5.9; §8 | | in progress (§10 scenario pending #37) |
-| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start) | §8, gateway LLD | | in progress |
-| Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events) | §8 | | in progress |
-| Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), #40 | §7 | | in progress |
-| Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here) | §6, §8 | | in progress |
+| Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start), ADR-0060 (declining a delivery before the walk, keyed on chat identity) | §8, gateway LLD | | in progress |
+| Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events), ADR-0060 (delivery dedup by platform identity, failing open) | §8 | | in progress |
+| Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), ADR-0056 (no second single-instance process of ours), ADR-0061 (readiness as the only rollout signal a Pod with no Service has), #40 | §7 | | in progress |
+| Graceful shutdown and drain | ADR-0023 (close first, drain ≤ 25 s, `DrainTimedOut`), ADR-0030 (a synchronous Handler is abandoned, `HandlerAbandoned`), ADR-0031 (bounded cleanup, `shield` only here), ADR-0061 (readiness turns false at the drain, liveness does not) | §6, §8 | | in progress |
+| Runtime probes: liveness, readiness and what a prober may learn | ADR-0061 (the two paths, the empty body, the cached aggregate, application-supplied checks), research 26, 27 | §7, §8; `components/health.md` | | in progress |
 | Deprecation and public-API definition for semver | ADR-0007 (the four criteria of public), ADR-0042 (the documented path), ADR-0043 (re-export form, reference page, internal-API page), ADR-0047 (what tightening a conformance suite means), research 22 §6.4 (the shim shape), #28 (semver and deprecation window) | style §8, §10 | | in progress |
 
 ## E. Fog and backlog

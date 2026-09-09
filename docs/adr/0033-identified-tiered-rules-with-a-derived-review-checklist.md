@@ -10,7 +10,7 @@ amended-by: [ADR-0048]
 [ADR-0006](0006-architectural-tenets-of-the-core.md) fixed the tenets and sent them to this ticket
 to become rules; [ADR-0011](0011-lint-format-and-architecture-toolchain.md) fixed the tools and
 asked for a human-readable list of banned patterns to write semgrep rules against. A rulebook that
-30 component design documents and later every pull request must obey is only usable if a rule can be
+32 component design documents and later every pull request must obey is only usable if a rule can be
 *cited* rather than paraphrased, and only honest if a reader can tell a rule that already blocks CI
 from a rule that lives on a reviewer's attention. We decided the shape of
 [`docs/design/engineering-style.md`](../design/engineering-style.md):
@@ -65,7 +65,7 @@ architecture as nine commented `import-linter` contracts instead
 
 ## Considered options
 
-- *Headings only, cited by section number* — rejected: a citation from 30 component documents
+- *Headings only, cited by section number* — rejected: a citation from 32 component documents
   breaks the moment a section is inserted, and semgrep rules would need names of their own.
 - *Identifiers without an enforcement tier* — rejected: it removes any risk of drifting from
   [ADR-0011](0011-lint-format-and-architecture-toolchain.md), but a reviewer then cannot tell which

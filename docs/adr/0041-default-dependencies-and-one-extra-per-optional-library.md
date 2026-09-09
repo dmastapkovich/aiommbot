@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#24"
-amended-by: [ADR-0044, ADR-0051]
+amended-by: [ADR-0044, ADR-0051, ADR-0058]
 ---
 
 # The distribution installs the four libraries a Mattermost bot cannot run without, and every other library is an extra named after it
@@ -34,12 +34,20 @@ replaceable seams have two.
 | `pytest` | `pytest` | `aiommbot.testing`, which imports it ([ADR-0044](0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md)) |
 | `opentelemetry` | `opentelemetry-api` | the `OpenTelemetryPlugin` ([ADR-0051](0051-first-party-observability-plugin.md)) |
 | `prometheus` | `prometheus-client` | the `PrometheusPlugin` (ADR-0051) |
+| `click` | `click` | the `aiommbot` command ([ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md)) |
 
 `paseto` is the one extra named for a standard rather than a package, because that is the word the
-person asking for it uses; ADR-0024 fixed the name and it stays. Two more extras join the table
+person asking for it uses; ADR-0024 fixed the name and it stays. Three more extras join the table
 under the same rule, in the spelling the ecosystem uses for the library: `opentelemetry` installs
 `opentelemetry-api` and `prometheus` installs `prometheus-client`, both for the observability Plugin
-([ADR-0051](0051-first-party-observability-plugin.md)).
+([ADR-0051](0051-first-party-observability-plugin.md)), and `click` installs the argument parser the
+`aiommbot` command is written on
+([ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md)).
+
+`click` is the one extra whose absence a **console script** reports rather than a constructor,
+because an extra cannot gate an entry point
+([`docs/research/25`](../research/25-cli-entry-points-and-what-clis-configure.md) §1); ADR-0058
+states that limit of `ST-MOD-08`.
 
 **No aggregate extra.** `websockets` and `picows` are alternatives, so are `dishka` and `wireup`; an
 `all` that installs both halves of two either-or choices teaches nobody anything and becomes the
