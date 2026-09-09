@@ -1,8 +1,9 @@
 # Research notes
 
 Findings gathered from primary sources (official docs, source code, RFCs) for the 0.5.0 design.
-Each file answers one question and ends with a Sources section. They are inputs to decisions, not
-decisions — see `docs/adr/` for what was actually decided.
+Each file answers one question, carries a source per claim, marks what it could not verify and ends
+with a Sources section. Notes are inputs to decisions, not decisions: where an ADR decided
+otherwise, the note points at the ADR (`docs/documentation-style.md` §8, §9).
 
 | File | Question |
 |------|----------|

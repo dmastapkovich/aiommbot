@@ -22,6 +22,11 @@ index (`README.md`). A new document goes into an existing type or the type is ad
 | Glossary | `CONTEXT.md` (root) | the ubiquitous language | format in `.agents/domain.md` |
 | User documentation | `tutorials/ how-to/ reference/ explanation/` (later) | one Diátaxis quadrant each | decided by ticket #26 |
 
+`docs/` holds only the project: decisions, the architecture document, component documents, the
+rulebooks, the research the decisions cite and this standard. How a session works — playbook,
+checklist, tracker conventions, glossary format — lives in `.agents/` beside the skills and is
+never written under `docs/`.
+
 Prototypes and sketches made while resolving a ticket are attached to the ticket; they are never
 committed.
 
@@ -96,6 +101,13 @@ English. Active voice, present tense. Short sentences; one idea each. Concrete o
 name the component, the constant, the source. Say *why* next to *what*. Quote constants and
 version numbers from primary sources with a link; mark anything unverified as such. Prefer a table
 when three or more things are compared on the same attributes. No marketing language.
+
+Mechanics: prose wraps at 100 columns (table rows, headings and link-only lines are exempt);
+identifiers, paths and code go in code spans; no emoji; no placeholder text ("TBD", "to be
+written") — an unfinished document says so in its status line and nowhere else. A research note
+records findings with a source per claim and marks what it could not verify; it never argues
+against a decision that was taken after it — where an ADR decided otherwise, the note points at
+the ADR.
 
 ## 9. Target state only
 

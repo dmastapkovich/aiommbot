@@ -36,7 +36,7 @@ Every other document that describes the warm-up points here instead of repeating
 | Documentation standard (types, naming, status, linking, target-state rule, discovery protocol) | `docs/documentation-style.md` | fixed |
 | Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
-| Tracker conventions | `.agents/issue-tracker.md`, `.agents/domain.md` | fixed |
+| Process documents for agents (playbook, checklist, tracker conventions, glossary format) | `.agents/*.md` | fixed |
 | Backlog ideas that are not decisions | GitHub issues labelled `enhancement` + a fog line in #1 | maintainer |
 
 ## Standing rules
@@ -51,6 +51,9 @@ Every other document that describes the warm-up points here instead of repeating
   an internal deployment or bot, a local path, or compatibility with anything outside this
   repository. Evidence from such sources may inform the session and is never written down. Git is
   the history (`docs/documentation-style.md` §9).
+- **`docs/` holds only the project.** Decisions, the architecture document, component documents,
+  rulebooks, research and the documentation standard. Anything about how a session works lives in
+  `.agents/`; nothing under `docs/` describes process.
 - **No junk.** No placeholders, no "TBD", no dated amendment sections, no workaround notes, no
   copy of a rule that lives elsewhere. If a document cannot be finished, its status line says
   `in progress (#N)` and the ticket says why.

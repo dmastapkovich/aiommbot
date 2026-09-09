@@ -15,6 +15,10 @@ deferral in the ticket, not silently skipped.
 - Every decision it relies on is linked to its ADR; the document never restates the decision.
 - Every fact it relies on is linked to a `docs/research/` file or a primary source.
 - Every ticket reference points at open work; closed work is stated as a decision with its link.
+- Every relative link resolves to a committed file; a planned document is named in a code span,
+  unlinked, until its file exists (`docs/documentation-style.md` §6).
+- Prose wraps at 100 columns; no placeholder text; identifiers in code spans
+  (`docs/documentation-style.md` §8).
 - Diagrams are Mermaid, follow `docs/design/diagrams.md`, and agree with the building-block view.
 - No secret, token, private URL, local path or personal data.
 - English; committed with `docs(<area>): … (#N)` and the `TRACKER.md` row in the same commit.
