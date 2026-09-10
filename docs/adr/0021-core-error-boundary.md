@@ -53,3 +53,13 @@ We decided:
   the transport loop down and lose queued events.
 - *A default user-facing reply from the Core* — rejected: the Core knows neither the platform nor
   the user's language.
+
+## Consequences
+
+- The traceback in the boundary's single ERROR record is what an error tracker turns into a report
+  with no integration of ours installed at all: `sentry-sdk`'s logging integration is on by default
+  at `ERROR`, and it hooks `logging.Logger.callHandlers` rather than installing a handler, so no
+  logging configuration opts out of it
+  ([`docs/research/31`](../research/31-error-tracker-integration-anatomy.md)). What follows for an
+  operator — whether a second report arrives from a Middleware doing the same job, and who isolates
+  the tracker's scope per Event — is **#104**'s, and the record itself is unchanged by it.

@@ -31,10 +31,16 @@ the reason is specific rather than a rule:
   twenty-two months
   ([`docs/research/26`](../research/26-schedule-reliability-and-probe-primitives.md) §6). The how-to
   therefore shows the decorator and the three states, and leaves the choice open.
-- **Error reporting needs nothing from us.** `Failed(error)` carries the exception to Middleware, so
-  a Sentry adapter is `sentry_sdk.capture_exception(outcome.error)` in five lines the application
-  writes once. `sentry-sdk` ships 71 integration modules and not one for a chat platform, and it
-  captures a caught exception with no integration at all (same note, §6).
+- **Error reporting is not a Plugin of ours.** `Failed(error)` carries the exception to Middleware,
+  which is where an application attaches a tracker, and `sentry-sdk` ships integration modules for
+  dozens of frameworks and not one for a chat platform, with no discovery mechanism that would
+  auto-enable ours if we wrote it
+  ([`docs/research/31`](../research/31-error-tracker-integration-anatomy.md)). What the application
+  has to write is **decided by #104**: the tracker turns the ErrorBoundary's single ERROR record
+  into an event through a default integration ([ADR-0021](0021-core-error-boundary.md),
+  [ADR-0052](0052-log-levels-by-frequency-and-audience.md)),
+  so a `capture_exception` Middleware produces a second event rather than the first, and the
+  isolation-scope fork per Event is the part no call site supplies.
 
 Outbound rate limiting is not reopened: the client already honours `Retry-After` and
 `X-RateLimit-Reset` (ADR-0026), and a client-side token bucket was rejected there.
@@ -48,8 +54,10 @@ replicas.
 
 ## Considered options
 
-- *A thin first-party `sentry` extra* — rejected: the whole adapter is the five lines above, and an
-  extra would freeze one vendor's name into the distribution for everybody.
+- *A thin first-party `sentry` extra* — rejected: an extra would freeze one vendor's name into the
+  distribution for everybody, and the SDK has no way to auto-enable an integration it does not
+  itself ship, so ours would be opt-in in the application's `init()` either way. What such an
+  integration would add over a call site is #104's.
 - *Naming `purgatory` in the breaker how-to, as
   [`docs/research/08`](../research/08-peer-responsibility-boundaries.md) §5 suggested* — rejected on
   the maintenance evidence gathered since.
