@@ -19,6 +19,7 @@ drafted into a file first.
 |---|---|
 | Create a ticket | `gh api repos/<owner>/<repo>/issues -f title="…" -F body=@body.md -f 'labels[]=wayfinder:<type>'` |
 | Make it a child of the map | `gh api --method POST repos/<owner>/<repo>/issues/1/sub_issues -F sub_issue_id=<db-id>` |
+| Detach a resolved ticket from the map | `gh api --method DELETE repos/<owner>/<repo>/issues/1/sub_issue -F sub_issue_id=<db-id>` |
 | Block it on another ticket | `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>` |
 | Claim | `gh api --method PATCH repos/<owner>/<repo>/issues/<n> -f 'assignees[]=<login>'` |
 | Comment | `gh api --method POST repos/<owner>/<repo>/issues/<n>/comments -F body=@comment.md` |
@@ -28,7 +29,11 @@ drafted into a file first.
 ## Wayfinding vocabulary
 
 - **Map**: the single issue labelled `wayfinder:map`, holding Destination, Notes, Decisions so far,
-  Not yet specified and Out of scope.
+  Not yet specified and Out of scope. GitHub caps a parent at **100 sub-issues** and counts closed
+  ones, so the map keeps only the open ones: the *Close* step detaches the ticket it just closed,
+  whose record is then its line under *Decisions so far* plus the `Part of #1` line in its own body.
+  A batch of detachments is one `gh api graphql` call over aliased `removeSubIssue` mutations —
+  `gh` inside a shell loop does not run here.
 - **Ticket**: a sub-issue of the map with one `wayfinder:<type>` label — `research`, `grilling`,
   `prototype`, `task` or `lld`. An `lld` ticket is titled `LLD: <component>`, one per component of
   §5.10 of the building-block view; it writes `docs/design/components/<term>.md` and its
@@ -40,4 +45,5 @@ drafted into a file first.
 - **Frontier**: the open sub-issues of the map with no open blocker and no assignee, in map order.
 - **Claim**: the assignee. An open, unassigned ticket is unclaimed; the claim is the session's first
   write.
-- **Resolve**: a `## Resolution` comment, then close, then the map line under *Decisions so far*.
+- **Resolve**: a `## Resolution` comment, then close, then the map line under *Decisions so far*,
+  then detach the ticket from the map.

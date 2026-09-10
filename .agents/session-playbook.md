@@ -20,9 +20,10 @@ label; the `design-session` skill runs these steps.
    research it used. Message: `docs(<area>): <what was decided> (#N)`. Push. *Done when
    `git status` is clean and the push succeeded.*
 6. **Close.** Draft the `## Resolution` comment (gist plus links to the files) and the map line
-   into files first; then post the comment, close the ticket, and add the line to the map's
-   *Decisions so far*: the title as a link, a gist of at most two lines, the file pointers. *Done
-   when the map body shows the new line.*
+   into files first; then post the comment, close the ticket, add the line to the map's
+   *Decisions so far* — the title as a link, a gist of at most two lines, the file pointers — and
+   detach the ticket from the map, which keeps only open sub-issues
+   (`.agents/issue-tracker.md`). *Done when the map body shows the new line.*
 7. **Clear the fog.** Graduate anything the answer made specifiable into new tickets (create, then
    wire `blocked_by`, then add as sub-issues of #1); remove the graduated line from *Not yet
    specified*; rule mis-scoped tickets out of scope by closing them with a line in *Out of scope*;
