@@ -14,6 +14,7 @@ are reviewed in pull requests and are diffed like code. No images, no binary dia
 | Layers | `05-building-block-view.md` §5.3 | `C4Component` | the five layers of a process as boxes; arrows are the import direction |
 | Component | `05-building-block-view.md`, each `components/*.md` | `C4Component` | the modules inside a container and their dependencies |
 | Code | `components/*.md` when it helps | `classDiagram` | Protocols, key classes, generics |
+| Deployment | `07-deployment-view.md` | `C4Deployment` | infrastructure nodes and which processes run on them |
 | Dynamic | `06-runtime-view.md`, `components/*.md` | `sequenceDiagram` | one scenario end to end |
 | State | `components/*.md` for stateful nodes | `stateDiagram-v2` | lifecycle and FSM states |
 
@@ -25,9 +26,12 @@ are reviewed in pull requests and are diffed like code. No images, no binary dia
   and that row links to the box's document (Mermaid's C4 boxes carry no reliable link on GitHub).
   Every arrow is labelled with the verb and, for async paths, the mechanism (`await`, `queue`,
   `task`).
-- Arrows are imports: an arrow from A to B means A may import B, so every arrow points towards the
-  Core and none leaves it. A diagram that contradicts the import-linter contracts is a bug in one
-  of them.
+- Arrows are imports **on a Component or Layers diagram**: an arrow from A to B means A may import
+  B, so every arrow points towards the Core and none leaves it. A diagram that contradicts the
+  import-linter contracts is a bug in one of them.
+- Arrows are traffic on a Context, Container or Deployment diagram, and the label names the
+  protocol. A Deployment diagram nests `Deployment_Node` for infrastructure and puts a `Container`
+  inside the node that runs it; it shows no module and repeats no import direction.
 - Sequence diagrams show failure paths (`alt`/`else`) for the scenarios that motivate the design:
   reconnect, timeout, cancellation, storage unavailable.
 
@@ -37,6 +41,10 @@ are reviewed in pull requests and are diffed like code. No images, no binary dia
   and state optionality in the table instead.
 - `Container_Boundary` does not render inside `C4Component`.
 - C4 boxes carry no reliable hyperlink on GitHub; the inventory table holds the link.
+- Mermaid carries a standing caveat on all five C4 diagram types — "This is an experimental diagram
+  for now. The syntax and properties can change in future releases"
+  ([mermaid.js.org/syntax/c4](https://mermaid.js.org/syntax/c4.html)) — so a C4 block stays inside
+  the shapes already used in this catalogue and adopts no property a section does not need.
 
 ## Example
 

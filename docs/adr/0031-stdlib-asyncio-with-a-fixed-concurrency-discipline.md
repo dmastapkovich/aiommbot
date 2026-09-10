@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-04
 ticket: "#22"
+amended-by: [ADR-0063, ADR-0064]
 ---
 
 # The Core runs on standard-library asyncio under a fixed structured-concurrency discipline, and the framework never chooses the event loop
@@ -26,9 +27,10 @@ silently prefers uvloop whenever the import succeeds without logging the decisio
   `__anext__`: a bounded queue sits between a producer and its consumer, so a cancellation cannot
   finalise an async generator mid-iteration (PEP 789).
 - **`CancelledError` is never caught.** Cleanup is `try/finally` and `except*`, and it is bounded in
-  time — an unbounded `finally` is how a graceful stop becomes a SIGKILL. `asyncio.shield` is
-  permitted in exactly one named place: the drain of
-  [ADR-0023](0023-websocket-gateway-resilience.md).
+  time by the Bot's `stop_timeout`
+  ([ADR-0063](0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md)) — an
+  unbounded `finally` is how a graceful stop becomes a SIGKILL. `asyncio.shield` is permitted in
+  exactly one named place: the Drain of [ADR-0023](0023-websocket-gateway-resilience.md).
 - **Exception groups are unwrapped without loss.** A solitary exception is lifted out of a
   `BaseExceptionGroup` with `__cause__` and `__context__` preserved before it reaches user-facing
   API; sibling exceptions are never discarded.
@@ -36,7 +38,9 @@ silently prefers uvloop whenever the import succeeds without logging the decisio
   only synchronous `def` of the framework — a process boundary, not a Face (it has no synchronous
   pair, so [ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) does not apply
   to it). `serve()` is the coroutine for embedding a Bot in a loop the application already runs.
-  Start-up remains compose → check → start ([ADR-0016](0016-three-phase-start-with-checks.md)).
+  Start-up remains compose → check → start ([ADR-0016](0016-three-phase-start-with-checks.md)), and
+  the stop signals belong to `run()` alone
+  ([ADR-0064](0064-run-owns-the-stop-signals-and-serve-owns-none.md)).
 - **The loop belongs to the application.** No `uvloop`/`winloop` extra, no auto-installation, no
   event-loop policy — that API is deprecated for removal in 3.16
   ([`docs/research/06`](../research/06-dual-sync-async-api.md)). `loop_factory` takes a plain
@@ -67,6 +71,10 @@ silently prefers uvloop whenever the import succeeds without logging the decisio
 - The rules above are the `ST-ASY` rules of [`engineering-style.md`](../design/engineering-style.md)
   ([ADR-0033](0033-identified-tiered-rules-with-a-derived-review-checklist.md)), and every LLD
   answers them in its typing-and-async section.
-- Deployment documentation must state that the process's graceful-shutdown budget has to exceed the
-  [ADR-0023](0023-websocket-gateway-resilience.md) drain deadline, or `lifespan`-equivalent shutdown
-  never runs — uvicorn's default is to wait forever and lose it (#40).
+- The process's shutdown budget has to exceed the
+  [ADR-0023](0023-websocket-gateway-resilience.md) Drain deadline, and that is enforced by a Check
+  over the declared `ProcessProfile.shutdown_budget` rather than by prose
+  ([ADR-0063](0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md)). No
+  ASGI host bounds a `lifespan` shutdown: uvicorn and granian wait for it without a deadline
+  ([`docs/research/29`](../research/29-kubernetes-fields-a-drain-depends-on.md) §10), so an embedded
+  Bot's own `stop_timeout` is the only bound before the host's kill.

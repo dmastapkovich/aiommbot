@@ -10,7 +10,7 @@ amends: [ADR-0006, ADR-0038, ADR-0047, ADR-0048, ADR-0050]
 `ST-TST-09` requires every timeout, TTL and backoff to be driven by `FakeClock` instead of sleeping,
 and `FakeClock` was listed as a part of the testing toolkit — but nothing said what it
 *substitutes*. The framework is full of durations a test must be able to advance without waiting:
-the 30 s heartbeat and the 60 s silence monitor, full-jitter backoff to 300 s and the 25 s drain
+the 30 s heartbeat and the 60 s silence monitor, full-jitter backoff to 300 s and the 25 s Drain
 ([ADR-0023](0023-websocket-gateway-resilience.md)), the 10 s reply deadline and the token's
 `clock_leeway` ([ADR-0024](0024-webhook-ingress-and-callback-security.md)), the sliding one-hour
 state TTL ([ADR-0022](0022-state-plugin-model.md)) and the retry backoff of

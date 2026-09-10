@@ -3,6 +3,7 @@ status: accepted
 date: 2026-09-09
 ticket: "#30"
 amends: [ADR-0024, ADR-0049]
+amended-by: [ADR-0065]
 ---
 
 # Health is a generic Plugin serving `/livez` and `/readyz` as a bare ASGI application: liveness runs no check, readiness derives from the Signals plus checks the application supplies, and the aggregate is cached
@@ -27,19 +28,24 @@ We decided:
   since v1.16**, and the two Spring Boot publishes under `add-additional-paths`. `/livez` is the
   restart signal and `/readyz` the traffic signal, in Kubernetes' own words.
 - **Liveness runs no check and reads no dependency.** It answers 204 for as long as the process can
-  still make progress — *including for the whole drain* — and 503 only once the Bot has stopped on a
-  `FatalError` ([ADR-0021](0021-core-error-boundary.md)) while the process is still up. A liveness
-  probe that fails during a graceful stop asks the kubelet to kill a container that is already
-  finishing correctly, and with the default `failureThreshold` × `periodSeconds` of 30 s against our
-  25 s drain ([ADR-0023](0023-websocket-gateway-resilience.md)) it would land exactly on the last
-  events. Spring keeps liveness `CORRECT` across shutdown for this reason, and Kubernetes requires a
-  liveness probe to indicate only an unrecoverable failure.
+  still make progress — *including for the whole Drain* — and 503 only once the Bot has stopped on a
+  `FatalError` ([ADR-0021](0021-core-error-boundary.md)) while the process is still up. Kubernetes
+  requires a liveness probe to indicate only an unrecoverable failure, and Spring keeps liveness
+  `CORRECT` across a graceful shutdown for the same reason. The rule earns its keep away from
+  Kubernetes: the kubelet stops liveness and startup probes at the first step of termination, so
+  there it cannot kill a draining container at all
+  ([`docs/research/29`](../research/29-kubernetes-fields-a-drain-depends-on.md) §5) — but a
+  container-level health check, a service manager or a supervisor keeps probing throughout, and a
+  liveness that failed on the Drain would restart a bot that is finishing its last events.
 - **Readiness is the conjunction of four things**: the Bot is started, it is not draining, every
-  Transport in the plugin list is connected as its Signals last reported
-  ([ADR-0017](0017-typed-async-lifecycle-signals.md), ADR-0023), and every check the application
-  supplied passes. A Transport that publishes neither `Connected` nor `Disconnected` counts as ready
-  from the start, and a process with no Transport is ready as soon as it has started. Readiness
-  turns false the moment the drain begins — the half no project in the survey implements.
+  Transport in the plugin list is connected or `Standby` as its Signals last reported
+  ([ADR-0017](0017-typed-async-lifecycle-signals.md), ADR-0023,
+  [ADR-0065](0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md)), and
+  every check the application supplied passes. A Transport that publishes no state at all counts as
+  ready from the start, and a process with no Transport is ready as soon as it has started.
+  Readiness turns false the moment the Drain begins — the half no project in the survey implements —
+  and the readiness probe is the one that keeps running through termination
+  ([`docs/research/29`](../research/29-kubernetes-fields-a-drain-depends-on.md) §5).
 - **A check is a named object with its own bound, and it arrives in the settings.** A frozen
   `ReadinessCheck(name, run, timeout)` in `Health(checks=(...))`; there is **no eighth
   `Contributes*` Protocol** and no registry, so
@@ -55,9 +61,9 @@ We decided:
   endpoint down before 4.x fixed it (same note, §4).
 - **The aggregate is cached for `cache_ttl`.** A probe arrives every 10 s by default, per replica
   and per probe kind, and re-running a dependency check on each is how a health endpoint becomes
-  load — `django-health-check` documents its own endpoint as a denial-of-service vector for exactly this.
-  Nothing in maintained Python caches a health result; the two mechanisms that avoid the cost are
-  ASP.NET Core's timer-driven publisher and arq's Redis key with a TTL, and a short TTL over the
+  load — `django-health-check` documents its own endpoint as a denial-of-service vector for exactly
+  this. Nothing in maintained Python caches a health result; the two mechanisms that avoid the cost
+  are ASP.NET Core's timer-driven publisher and arq's Redis key with a TTL, and a short TTL over the
   pull path is the cheaper of the two because it introduces no task of ours.
 - **The body is empty and stays empty.** Kubernetes reads only the status code, counts 200–399 as
   success and stops reading a body at 10 KiB. The name of a failing check goes to the log, never to

@@ -14,7 +14,7 @@ infrastructure.
 |---|---|---|
 | Mattermost user | ↔ Bot | Writes posts and direct messages, clicks the buttons of an interactive attachment, submits a dialog. Receives answers, thread replies, post updates, ephemeral notices and dialogs. Never addresses the bot outside Mattermost. |
 | Application developer | → Bot | Composes the Bot — one Adapter, a list of Plugins, a tree of Routers — and writes the Handlers, Providers and services that hold the business logic. Owns everything the framework refuses (ADR-0002). |
-| Operator | ↔ Bot process | Starts the processes, supplies the token and the backend addresses, reads the structured logs and whatever the Observability plugin is wired to, and stops the process within its drain budget. |
+| Operator | ↔ Bot process | Starts the processes, supplies the token and the backend addresses, reads the structured logs and whatever the Observability plugin is wired to, and stops the process within the Shutdown budget it promised. |
 | Mattermost administrator | → Mattermost | Creates the bot account and its personal access token, enables interactive dialogs, and is the only party who can revoke a bot's access — deleting or disabling the token, disabling the bot or deactivating the user ([`docs/research/15`](../research/15-mattermost-session-revocation.md)). |
 | Observability backend | Bot → | Receives whatever the Observability plugin sends it, or whatever the application forwards from the Middleware layers, the `RequestObserver` pair and the Signals. Optional, and the application's own. |
 | Credential source | → Bot | Supplies the bot token through `TokenProvider` on every connection and request. Optional; the application's vault or environment. |

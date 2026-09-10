@@ -23,7 +23,7 @@ single-process declaration. → [ADR-0003](../adr/0003-stateless-core-state-plug
 Dispatch is asyncio-only on the standard library, under a fixed structured-concurrency discipline,
 and the framework never chooses the event loop. A synchronous Handler or Provider is accepted only
 by an explicit `sync_to_thread` declaration, runs in the Sync executor and may be
-abandoned at drain; Filters and Extractors run inline; everything else the framework calls is a
+abandoned at the Drain; Filters and Extractors run inline; everything else the framework calls is a
 coroutine function. The synchronous Face covers the API client and the Event-free Workspace and is
 a thin I/O layer over a sans-I/O Exchange, not generated.
 → [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md),
@@ -100,7 +100,7 @@ every record with a sliding logical TTL of one hour by default. In-memory and Re
 
 One supervised reconnect loop per socket with resume and sequence continuity, a heartbeat and
 silence monitor, a reader that never stalls into a bounded queue with typed per-kind overflow, a
-graceful drain, a declared single consumer with an optional lease, and auth-loss detection that ends
+Drain, a declared single consumer with an optional lease, and auth-loss detection that ends
 in `FatalError(AuthRevoked)`; the socket library sits behind one Core Protocol.
 → [ADR-0023](../adr/0023-websocket-gateway-resilience.md)
 

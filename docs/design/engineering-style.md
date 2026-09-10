@@ -907,7 +907,7 @@ own.
 _Tier:_ `tool` — ruff, `semgrep:ST-ASY-04`. _Checked in:_ LLD, PR.
 _From:_ [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md).
 
-#### `ST-ASY-05` — Use `asyncio.shield` only in the drain
+#### `ST-ASY-05` — Use `asyncio.shield` only in the Drain
 
 _Reason:_ shielding is how a component keeps working after the process asked it to stop, so exactly
 one place in the design is allowed to want that.
@@ -916,12 +916,12 @@ one place in the design is allowed to want that.
 # Don't
 await asyncio.shield(self._flush_metrics())
 
-# Do — inside the drain of the WebSocketTransport, and nowhere else
+# Do — inside the Drain of the WebSocketTransport, and nowhere else
 await asyncio.shield(self._finish_inflight())
 ```
 
-_Limits:_ the drain of [ADR-0023](../adr/0023-websocket-gateway-resilience.md), bounded by the
-drain deadline that ADR fixes. No other use.
+_Limits:_ the Drain of [ADR-0023](../adr/0023-websocket-gateway-resilience.md), bounded by the
+Drain deadline that ADR fixes. No other use.
 _Tier:_ `tool` — `semgrep:ST-ASY-05`. _Checked in:_ LLD, PR.
 _From:_ [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md).
 
@@ -986,7 +986,7 @@ _From:_ [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md)
 
 #### `ST-ASY-09` — Make a synchronous Handler idempotent, and say so where it is documented
 
-_Reason:_ nobody can stop a running thread, so at the drain deadline the wait is dropped and the
+_Reason:_ nobody can stop a running thread, so at the Drain deadline the wait is dropped and the
 thread is abandoned — the handler may therefore run to completion after the chain around it is gone.
 
 ```python
@@ -2311,7 +2311,7 @@ Every rule tagged `LLD`, whatever its tier: at design time no tool has run.
 - [ ] The contract has no `Any`, no `cast`, no `TYPE_CHECKING` import and no open signature; values crossing the seam are frozen; annotations are read through the one helper; state is never stashed on a foreign object; an Event is enriched only through `derive`. `ST-TYP-03`, `ST-TYP-04`, `ST-TYP-05`, `ST-TYP-10`, `ST-TYP-11`, `ST-TYP-12`, `ST-TYP-16`, `ST-TYP-17`
 - [ ] Post-floor typing names come from the compat module; public generics have typing tests, negative cases included; suppressions appear only in Quarantine and `tests/typing/`. `ST-TYP-09`, `ST-TYP-13`, `ST-TYP-14`
 - [ ] A parameter that changes the return type is exposed as an overload on a `Literal`, so the call site declares which contract it wants. `ST-TYP-15`
-- [ ] Every task has a named owner in a `TaskGroup`; every I/O await has a named-duration timeout and none wraps `__anext__`; cancellation passes; `shield` appears only in the drain; exception groups lose no sibling. `ST-ASY-01` … `ST-ASY-06`
+- [ ] Every task has a named owner in a `TaskGroup`; every I/O await has a named-duration timeout and none wraps `__anext__`; cancellation passes; `shield` appears only in the Drain; exception groups lose no sibling. `ST-ASY-01` … `ST-ASY-06`
 - [ ] The colour of every callable the framework invokes is stated: synchronous Handlers and Providers are declared and idempotent, everything else is a coroutine function, blocking work goes to `asyncio.to_thread`, and the loop belongs to the application. `ST-ASY-07`, `ST-ASY-08`, `ST-ASY-09`, `ST-ASY-10`, `ST-ASY-12`
 - [ ] Each failure the document lists says whether it is a typed outcome or an exception, and which boundary converts it; exhausted alternatives convert at the chain boundary; cardinality matches the mechanism; each failure has one representation. `ST-ERR-01` … `ST-ERR-05`
 - [ ] A bad composition stops the start with the full list; unexpected exceptions reach the ErrorBoundary; exceptions carry no content and are rooted at `AiommbotError`, warnings at `AiommbotWarning`, with `retryable` as a property. `ST-ERR-06` … `ST-ERR-10`

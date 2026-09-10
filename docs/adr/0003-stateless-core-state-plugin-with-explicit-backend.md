@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#13"
-amended-by: [ADR-0022]
+amended-by: [ADR-0022, ADR-0066]
 ---
 
 # The core is stateless; conversation state is a plugin that cannot start without an explicit backend
@@ -17,7 +17,9 @@ holds no state between events**. It defines only the Protocols — `KeyValueStor
 backends live in the first-party **State** Plugin ([ADR-0022](0022-state-plugin-model.md)), which
 refuses to start without an explicit backend. An in-memory backend exists for tests and local
 development and requires an explicit single-process declaration; without it a start-up Check
-([ADR-0016](0016-three-phase-start-with-checks.md)) fails fast.
+([ADR-0016](0016-three-phase-start-with-checks.md)) fails fast. That Check belongs to the in-memory
+backend itself, so every consumer of the storage seams inherits it
+([ADR-0066](0066-the-in-memory-backends-own-the-single-process-check.md)).
 
 ## Considered options
 

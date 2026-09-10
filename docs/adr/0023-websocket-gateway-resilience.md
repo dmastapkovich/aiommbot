@@ -2,10 +2,10 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
-amended-by: [ADR-0030, ADR-0049, ADR-0050, ADR-0060]
+amended-by: [ADR-0030, ADR-0049, ADR-0050, ADR-0060, ADR-0063, ADR-0065]
 ---
 
-# The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a graceful drain
+# The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a Drain
 
 A bot lives on one WebSocket for weeks. The Mattermost protocol facts
 ([`docs/research/01`](../research/01-mattermost-websocket-protocol.md)) and the mechanics of mature
@@ -46,18 +46,23 @@ the design of the `WebSocketTransport` plugin:
   snapshot the Transport contributes to `bot.stats()`
   ([ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md)); sizes, N and policies are
   settings.
-- **Graceful drain.** On stop: close the socket first (1000/1001) so the server stops queueing for
-  us, drain the queue and in-flight handlers within a grace period (default 25 s inside the 30 s
-  Kubernetes budget), then cancel the rest with `DrainTimedOut(count)`. Plugins stop in reverse
-  topological order ([ADR-0015](0015-plugin-contract-and-composition.md)). A synchronous Handler
-  running in the Sync executor cannot be cancelled by anyone: the drain drops the wait on the
+- **The Drain.** On stop: close the socket first (1000/1001) so the server stops queueing for
+  us, work the queue and the in-flight Handlers within a grace period (default 25 s), then cancel
+  the rest with `DrainTimedOut(count)`. The Drain and the plugin stops that follow it run inside the
+  Bot's `stop_timeout`, which is inside the budget the process declares
+  ([ADR-0063](0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md)).
+  Plugins stop in reverse topological order
+  ([ADR-0015](0015-plugin-contract-and-composition.md)). A synchronous Handler
+  running in the Sync executor cannot be cancelled by anyone: the Drain drops the wait on the
   deadline, keeps the grace period, and reports the abandoned thread with the `HandlerAbandoned`
   Signal — see [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md).
 - **Single consumer.** The transport requires `ProcessProfile.websocket_consumer=True` (a check
   error otherwise, so no process raises a socket without declaring the role). With a distributed
   `LockProvider` configured it takes a renewed single-consumer lease; a second replica waits in
-  standby and takes over when the lease lapses — failover for free. Without a distributed lock, the
-  declaration alone applies.
+  `Standby` and takes over when the lease lapses — failover for free, and readiness counts a standby
+  Transport as connected
+  ([ADR-0065](0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md)).
+  Without a distributed lock, the declaration alone applies.
 - **Authentication.** Bearer token on the handshake so `hello` arrives at once;
   `authentication_challenge` only as an option for header-stripping proxies. The token comes from
   the `TokenProvider` Protocol on every connection (static token trivial, vault rotation the
@@ -92,8 +97,9 @@ the design of the `WebSocketTransport` plugin:
   ([`docs/research/14`](../research/14-websocket-client-libraries.md)). The REST side of the same
   research is decided in
   [ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md).
-- **Signals**: `Connected`, `Disconnected(reason)`, `Resumed`, `Resynced(since)`, `Degraded`,
-  `Dropped(kind, count)`, `DrainTimedOut(count)`. `HandlerAbandoned` is the Bot's Signal, emitted by
+- **Signals**: `Connected`, `Standby`, `Disconnected(reason)`, `Resumed`, `Resynced(since)`,
+  `Degraded`, `Dropped(kind, count)`, `DrainTimedOut(count)`. `HandlerAbandoned` is the Bot's
+  Signal, emitted by
   the Sync executor ([ADR-0030](0030-synchronous-callables-by-explicit-declaration.md)), not the
   Transport's.
 

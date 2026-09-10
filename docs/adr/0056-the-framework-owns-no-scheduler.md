@@ -22,7 +22,7 @@ expressible:
 - **A periodic coroutine is an ordinary Plugin.** `HasLifecycle`
   ([ADR-0015](0015-plugin-contract-and-composition.md)) gives it a start and a stop inside the Bot's
   own `TaskGroup` ([ADR-0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md)), so it is
-  cancelled by the same drain as everything else and needs nothing from us but the contract it
+  cancelled by the same Drain as everything else and needs nothing from us but the contract it
   already has.
 - **A calendar schedule is a second process.** It publishes into whatever the application already
   runs, and the constraint that exactly one scheduler instance may run — "you'd end up with

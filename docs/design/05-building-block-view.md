@@ -71,8 +71,8 @@ C4Container
 | Webhook process | Serves interactive callbacks within the reply deadline | `Webhook` in the plugin list; the application's ASGI server hosts it | yes, behind a load balancer |
 | Worker or script | Acts on Mattermost with no inbound events | no Transport at all; `Workspace` or `SyncWorkspace` | yes |
 
-All three collapse into one process in the all-in-one shape; which shape to run, and the
-Kubernetes consequences of the drain budget, are [§7](07-deployment-view.md).
+All three collapse into one process in the all-in-one Process shape; which shape to run, what a host
+must give each of them, and the arithmetic of the Drain are [§7](07-deployment-view.md).
 
 ## 5.3 Level 2 opened — the layers inside a process
 
@@ -120,9 +120,9 @@ Two directions, in the vocabulary UML gives them
 
 A Core-owned Protocol that *is* a component or a part of one is not a row here: `Filter`,
 `Extractor` and `Middleware` are components, `Provider` and `Check` are parts, and the IdentityCache
-Protocol is the Adapter's rather than the Core's (5.8). The *Specified in* column is **authoritative**
-about where a contract lives — it is not always the consumer's document, and for a provided seam the
-consumer is user code and has no document
+Protocol is the Adapter's rather than the Core's (5.8). The *Specified in* column is
+**authoritative** about where a contract lives — it is not always the consumer's document, and for a
+provided seam the consumer is user code and has no document
 ([ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
 ADR-0038).
 
@@ -162,7 +162,7 @@ C4Component
     Component(extractor, "Extractor", "Typed parser", "Value, NoMatch or Invalid")
     Component(di, "DependencyProvider", "Resolver", "Type-keyed providers, two Scopes, compiled plans")
     Component(signal, "Signal", "Observer", "Typed asynchronous lifecycle notifications")
-    Component(executor, "Sync executor", "Bounded pool", "Runs declared synchronous callables; abandons at drain")
+    Component(executor, "Sync executor", "Bounded pool", "Runs declared synchronous callables; abandons at the Drain")
     Component(event, "Event", "Immutable envelope", "Event[P, R], EventMeta, ReplyAlreadySent")
     Rel(bot, dispatcher, "starts and feeds", "TaskGroup")
     Rel(bot, signal, "publishes lifecycle")
@@ -183,7 +183,7 @@ C4Component
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
 | **Bot** | component | Composition root: gathers plugin contributions, orders them topologically, runs the three-phase compose → check → start, owns the lifecycle and the entry points | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
-| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()`, the `aiommbot` command, the standard-library `Clock` | part | The plugin declaration, the typed check objects, the process role, the two entry points, the console script that runs `check` and `run` behind the `click` extra, and the Core's own implementation of the `Clock` seam | `bot.md` | same, plus [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md) |
+| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()`, the stop signals and `stop_timeout`, the `aiommbot` command, the standard-library `Clock` | part | The plugin declaration, the typed check objects, the process role and its Shutdown budget, the two entry points, the signal handlers `run()` owns and the bound it puts on the whole stop phase, the console script that runs `check` and `run` behind the `click` extra, and the Core's own implementation of the `Clock` seam | `bot.md` | same, plus [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md), [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md), [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |
 | **Dispatcher** | component | Receives every Event the Bot feeds it, drives Inbound then Handler middleware, walks the Router tree to the first match, resolves parameters, returns the typed `Outcome` to the Transport | `dispatcher.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
 | `Outcome`, `MatchedHandler`, `Skip` | part | The typed dispatch result, the Event-scoped publication after a match, the `Skip` exception that continues the walk | `dispatcher.md` | same |
 | **Router** | component | The handler tree: registration by annotation, adapter aliases, filter gates, freeze, `bot.routes()`, unreachable-handler check | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
@@ -196,7 +196,7 @@ C4Component
 | **DependencyProvider** | component | The Core's small type-keyed resolver behind the Protocol of the same name: providers, two Scopes, graph validation and per-handler resolution plans compiled at check time | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md), [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md) |
 | `Provider`, `Qualifier`, `Scope`, `Resolution plan`, the built-in set, dishka and wireup bridges | part | The declaration, the homonym marker, the two lifetimes, the compiled plan, what the Core injects, and the two bridge plugins | `dependency-provider.md` | same |
 | **Signal** | component | `Signal[T]`: typed asynchronous lifecycle notification, every subscriber runs, failures collected not swallowed | `signal.md` | [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md) |
-| **Sync executor** | component | The Bot's own bounded thread pool: colour resolution at registration, `sync_to_thread` warnings, `contextvars` copying, dropping the wait at drain with `HandlerAbandoned` | `sync-executor.md` | [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
+| **Sync executor** | component | The Bot's own bounded thread pool: colour resolution at registration, `sync_to_thread` warnings, `contextvars` copying, dropping the wait at the Drain with `HandlerAbandoned` | `sync-executor.md` | [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
 | **Event** | component | The immutable generic envelope and its metadata; the only Core type every other block reads | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md) |
 | `EventMeta`, `CorrelationId`, `ReplyAlreadySent` | part | Transport, receive time, correlation, sequence, raw data, the optional typed Reply slot, and the fieldless marker `send` returns once the slot is claimed | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 
@@ -287,9 +287,9 @@ Bot's aggregate instead
 | `StateKey`, `Flow`, `StateContext`, the isolation middleware, `Conflict`, `StaleState` | part | The key and its strategy, the typed flow and its versioned data, the handle a handler receives, and the two typed failure outcomes | `state.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
 | **FloodControl** | component | Admitting an Event to the Router walk or declining it: the `Cooldown` Flag and its Inbound middleware over a compare-and-set, the delivery-dedup middleware the platform identity feeds, the declared order between them, the fail-open rule and the Checks on the backend | `flood-control.md` | [ADR-0060](../adr/0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md) |
 | `Cooldown`, `Suppression`, the platform-identity callable | part | The Flag a Handler carries, the Event-scope value published when an Event is declined, and the typed setting through which a generic plugin learns a platform delivery id | `flood-control.md` | [ADR-0060](../adr/0060-flood-control-and-delivery-dedup-are-one-generic-plugin.md) |
-| **KeyValueStore** and **LockProvider** backends | component | The two first-party implementations of both storage seams — in-memory for a declared single process, Redis for TTL and distributed locks — plus the conformance suite external backends must pass | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md) |
+| **KeyValueStore** and **LockProvider** backends | component | The two first-party implementations of both storage seams — in-memory for a declared single process, Redis for TTL and distributed locks — the Check by which the in-memory pair refuses a replicated process on behalf of every consumer, plus the conformance suite external backends must pass | `key-value-store.md` | [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0066](../adr/0066-the-in-memory-backends-own-the-single-process-check.md) |
 | dishka and wireup bridges | part | Serving dependencies from an external container behind `DependencyProvider`, shipped as extras | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md) |
-| **Health** | component | The two probe paths as a bare ASGI callable: liveness that runs no check and survives the drain, readiness as the conjunction of the Bot's phase, the Transports' Signals and the application's own checks, run concurrently under per-check timeouts with a cached aggregate and an always-empty body | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
+| **Health** | component | The two probe paths as a bare ASGI callable: liveness that runs no check and survives the Drain, readiness as the conjunction of the Bot's phase, the Transports' Signals and the application's own checks, run concurrently under per-check timeouts with a cached aggregate and an always-empty body | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
 | `health_app(bot)`, `HealthPaths`, `ReadinessCheck` | part | The ASGI callable the application hosts, the two configurable paths, and the frozen named check with its own timeout that the settings receive | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
 | **Observability plugin** | component | `PrometheusPlugin` and `OpenTelemetryPlugin`, each behind the extra named after its library: two Middleware over the dispatch layers, an implementation of the `RequestObserver` pair, subscribers to the Signals, `ObservedKeyValueStore` and `ObservedLockProvider`, a collector reading the Stats snapshot, and an `HTTPTransport` decorator injecting `traceparent`. Takes its registry as an argument and touches no process-global state | `observability.md` | [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md), [ADR-0051](../adr/0051-first-party-observability-plugin.md) |
 
@@ -300,7 +300,7 @@ Bound to the Mattermost Adapter; each implements the Core `Transport` seam or ex
 ```mermaid
 C4Component
     title Components of the adapter-specific plugins
-    Component(ws, "WebSocketTransport", "Transport", "One supervised reconnect loop, resume, bounded queue, drain")
+    Component(ws, "WebSocketTransport", "Transport", "One supervised reconnect loop, resume, bounded queue, Drain")
     Component(webhook, "Webhook", "Transport", "Bare ASGI callable, Reply channel, verification before an Event exists")
     Component(token, "Callback token", "Authenticity", "Self-issued signed credential in button context and dialog state")
     Component(cache, "IdentityCache", "Optional", "Resolved users and direct channels on a KeyValueStore")
@@ -312,8 +312,8 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
-| **WebSocketTransport** | component | One reconnect loop with a `TaskGroup` per connection, the transient/resumable/fatal exit table, heartbeat and silence monitor, full-jitter backoff, resume with sequence continuity, a reader that never stalls, the graceful drain, the single-consumer declaration and optional lease | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
-| The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the drain, the `websockets`/`picows` bindings, the Transport's Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s drain, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
+| **WebSocketTransport** | component | One reconnect loop with a `TaskGroup` per connection, the transient/resumable/fatal exit table, heartbeat and silence monitor, full-jitter backoff, resume with sequence continuity, a reader that never stalls, the Drain, the single-consumer declaration and optional lease | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md) |
+| The bounded queue and `OverflowPolicy`, the dedup of `(connection_id, seq)`, the Drain, the consumer lease and its `Standby` state, the `websockets`/`picows` bindings, the Transport's Signals | part | Backpressure with a typed per-kind policy, replay dedup, the 25 s Drain, the lease a second replica waits on, the two `WebSocketConnection` implementations, and `Connected`…`DrainTimedOut` | `websocket-transport.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0065](../adr/0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md) |
 | Resync backfill | part | Recovering the loss window a `Resynced(since)` Signal reports; first-party plugin or documented recipe is #55's decision | deferred to #55 | [ADR-0023](../adr/0023-websocket-gateway-resilience.md) |
 | **Webhook** | component | `webhook_app(bot) -> ASGIApp` and `handle_callback`, the payload-bound single-use Reply channel with its 10 s deadline and empty-200 default, verification before an Event exists, the 1 MiB reply cap, the logging rules | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | The reply values `ActionReply` and `DialogReply` with the deadline behaviour, `StaleAction` | part | The two `ReplyChannel` implementations bound to the payload — `ReplyAlreadySent` is the Core's — and the routable event an expired or replayed token produces | `webhook.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |

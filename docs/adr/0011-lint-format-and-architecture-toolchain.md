@@ -33,7 +33,7 @@ the mechanisms and the way they are run:
   guard against god objects, long signatures and meaningless names.
 - **semgrep** with repository rules in `.semgrep/` for what ruff cannot express — dynamic
   `getattr`/`hasattr`/`setattr`, `Any` in expressions, bare `type: ignore`, direct `__annotations__`
-  access, mutable module globals, `asyncio.shield` anywhere but the drain
+  access, mutable module globals, `asyncio.shield` anywhere but the Drain
   ([ADR-0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md)), `unittest.mock` and
   `monkeypatch` outside third-party seams and Quarantine tests — each rule with a "do this instead"
   message and covered by `semgrep --test`; plus the public `p/python` and `p/security-audit` rule

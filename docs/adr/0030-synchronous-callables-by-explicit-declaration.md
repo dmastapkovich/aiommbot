@@ -53,11 +53,11 @@ the side effect happened and its acknowledgement never did. We decided:
   anyio's arbitrary 40 tokens, undocumented in FastAPI, or CPython's `min(32, cpu + 4)`; Starlette
   1.4.0 gave gzip its own limiter for exactly this reason
   ([`docs/research/18`](../research/18-execution-model-in-practice.md)).
-- **At drain the wait is dropped, the thread is abandoned, and the abandonment is reported.** Nobody
-  can stop the thread, so the only real choice is whether the drain waits for it — and waiting turns
-  a promised 25-second grace period into an unbounded one. The standard-library
+- **At the Drain the wait is dropped, the thread is abandoned, and the abandonment is reported.**
+  Nobody can stop the thread, so the only real choice is whether the Drain waits for it — and
+  waiting turns a promised 25-second grace period into an unbounded one. The standard-library
   `loop.run_in_executor` future is therefore dropped on the deadline instead of deferring the
-  cancellation as anyio's default does: the drain completes on time
+  cancellation as anyio's default does: the Drain completes on time
   ([ADR-0023](0023-websocket-gateway-resilience.md)), the abandoned thread runs on as a daemon, and
   a typed `HandlerAbandoned` Signal makes it visible rather than silent. The documentation states
   the contract plainly — **a synchronous Handler must be idempotent, because it may be abandoned** —
@@ -78,7 +78,7 @@ the side effect happened and its acknowledgement never did. We decided:
   relaxed later without breaking users.
 - *Requiring `sync_to_thread` as a hard registration error* — rejected: a warning already forces the
   decision, and an error would greet a newcomer's first `def` with a traceback.
-- *Waiting for in-flight threads at drain* — rejected: FastStream #1648 is the record of exactly
+- *Waiting for in-flight threads at the Drain* — rejected: FastStream #1648 is the record of exactly
   this wait; a grace period that must exceed the slowest possible handler is not a grace period.
 - *The loop's default executor* — rejected: [ADR-0023](0023-websocket-gateway-resilience.md)
   promises a Dispatch concurrency of N and per-kind overflow policies, and a shared invisible pool
@@ -94,5 +94,5 @@ the side effect happened and its acknowledgement never did. We decided:
 - The explained ruff ignores this decision needs, `ASYNC109` and `RUF029`, are recorded with their
   reasons in [ADR-0011](0011-lint-format-and-architecture-toolchain.md).
 - The Sync executor's size, the Check and the `HandlerAbandoned` Signal join the settings model, the
-  Check catalogue and the Signal list; the drain contract is a §6 runtime view and a §10 quality
+  Check catalogue and the Signal list; the Drain contract is a §6 runtime view and a §10 quality
   scenario.

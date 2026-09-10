@@ -3,7 +3,7 @@ status: accepted
 date: 2026-09-03
 ticket: "#18"
 amends: [ADR-0003]
-amended-by: [ADR-0048, ADR-0060]
+amended-by: [ADR-0048, ADR-0060, ADR-0066]
 ---
 
 # Conversation state is a typed `Flow[Data]` keyed by a `StateKey`, stored through two Core Protocols with compare-and-set, isolated per key by default
@@ -47,7 +47,9 @@ at every step.
   ([ADR-0052](0052-log-levels-by-frequency-and-audience.md)), never a leaked lock
   (aiogram's unfixed clean-up TODO). Isolation is on unless disabled explicitly; an in-memory lock
   is legal only under the single-process declaration
-  ([ADR-0003](0003-stateless-core-state-plugin-with-explicit-backend.md)).
+  ([ADR-0003](0003-stateless-core-state-plugin-with-explicit-backend.md)), which the in-memory
+  backend enforces with a Check of its own
+  ([ADR-0066](0066-the-in-memory-backends-own-the-single-process-check.md)).
 - **Writes are compare-and-set.** `StateContext` reads a versioned record and writes through CAS;
   under the isolation lock a conflict cannot happen, without it the caller receives a typed
   `Conflict` with the current record and decides. No silent last-write-wins.

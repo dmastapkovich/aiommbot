@@ -18,7 +18,7 @@ questions in it — how often, and for whom:
   routing decision. No exceptions: a per-delivery record above DEBUG is what makes a bot's log
   unusable at the volume `typing` and `status_change` events arrive in.
 - **INFO** — only transitions whose frequency is bounded by the lifetime of the process or of a
-  connection: the Bot started and stopping, connected, disconnected, resumed, resynced, drain
+  connection: the Bot started and stopping, connected, disconnected, resumed, resynced, Drain
   finished. Each sits **beside** the Signal for the same fact rather than replacing it, and this is
   the one place in the design where one fact travels two ways on purpose — a Signal is for a
   program, a line is for a person. One further record belongs here: a single start-up line carrying
@@ -26,7 +26,7 @@ questions in it — how often, and for whom:
   any incident asks for and it happens once in a process's life.
 - **WARNING** — a degradation the operator can act on that the process survived: a retry scheduled,
   a drop under an `OverflowPolicy`, an observer that raised, a synchronous Handler abandoned at
-  drain, the loss window of a resync, a token refreshed after an authentication failure.
+  Drain, the loss window of a resync, a token refreshed after an authentication failure.
 - **ERROR** — exactly once per escaped exception, from the ErrorBoundary
   ([ADR-0021](0021-core-error-boundary.md)), and that is also the only place in the framework
   allowed to pass `exc_info`: a traceback ends in `str(exc)`, so it is itself a content channel

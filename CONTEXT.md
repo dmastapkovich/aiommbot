@@ -42,9 +42,34 @@ full list of failures.
 _Avoid_: validation, assertion, health check (that is a runtime probe)
 
 **ProcessProfile**:
-The typed declaration of what kind of process is starting (at least whether it is a single
-process), which Checks are evaluated against.
+The typed declaration of what kind of process is starting and what its host promises it: whether it
+is a single process, whether it is the WebSocket consumer, and its Shutdown budget. Checks are
+evaluated against it.
 _Avoid_: mode, role (informal), deployment flag
+
+**Process shape**:
+The set of processes a deployment runs and what each of them composes: all in one process; split
+into one WebSocket consumer and replicated Webhook processes; or either of those with workers beside
+it. Every shape is the same Bot object with a different plugin list and a different ProcessProfile,
+never a different build.
+_Avoid_: topology, deployment mode, architecture, profile (that is the ProcessProfile), container
+(that is the C4 box)
+
+**Shutdown budget**:
+The time a process's host promises between the signal telling it to stop and the kill that ends it.
+It is a field of the ProcessProfile because no process can read it from its host, and a start-up
+Check compares it with the Drain deadline and the Bot's stop timeout. The declaration is a promise
+the framework cannot verify.
+_Avoid_: grace period (that is the Drain's own deadline), termination period, timeout,
+`terminationGracePeriodSeconds` (that is one host's field name)
+
+**Drain**:
+The part of stopping in which no new Event is accepted and the ones already taken are finished: the
+WebSocketTransport closes its socket first so the server stops queueing for it, then works the
+bounded queue and the in-flight Handlers to its grace period and cancels the rest with
+`DrainTimedOut`. It runs inside the Bot's stop timeout, which runs inside the Shutdown budget.
+_Avoid_: graceful shutdown (that is the whole stop phase), teardown, quiesce, cooldown (Cooldown is
+FloodControl's Flag)
 
 **Clock**:
 The Core Protocol every duration in the framework is measured and slept through: a monotonic
@@ -68,8 +93,16 @@ _Avoid_: channel (reserved for the Mattermost channel), ingress, source, gateway
 **WebSocketTransport**:
 The adapter-specific Plugin that holds the one long-lived Mattermost socket: a supervised reconnect
 loop, heartbeat and silence monitor, resume with sequence continuity, a reader that never stalls
-into a bounded queue, and a graceful drain. Exactly one per bot account.
+into a bounded queue, and a Drain. Exactly one per bot account holds the socket.
 _Avoid_: gateway, socket client, listener, consumer (that is the process role)
+
+**Standby**:
+The state of a WebSocketTransport configured with a distributed LockProvider that does not hold the
+consumer lease: it holds no socket, processes no Event and waits to take over. It is published as a
+Signal, and readiness counts it as connected, because waiting for the lease is the role the process
+was deployed to perform.
+_Avoid_: idle, passive, follower, hot spare, replica (that is the process), Disconnected (that is a
+lost socket)
 
 **Webhook**:
 The adapter-specific Plugin that turns an inbound interactive callback into an Event with a Reply
@@ -103,7 +136,7 @@ _Avoid_: worker count (workers are processes), workers (for coroutines), pool si
 
 **Sync executor**:
 The Bot's own bounded thread pool, the only place a declared synchronous Handler or Provider runs.
-Its size is a setting checked against the Dispatch concurrency; at drain the wait is dropped
+Its size is a setting checked against the Dispatch concurrency; at the Drain the wait is dropped
 and the thread abandoned with a `HandlerAbandoned` Signal, so such a Handler must be idempotent.
 _Avoid_: thread pool (bare), worker pool (workers are processes), executor (bare), offloading
 
@@ -251,8 +284,8 @@ _Avoid_: client (that is the API client), API manager, bot runtime, SyncRuntime 
 **Workspace**:
 The Event-free handle on one Mattermost server: send to a channel, send a direct message, an
 ephemeral post, upload and download a file, resolve a UserRef, open a direct channel. A script or a
-worker constructs it on its own; the Runtime composes it; together with the API client it is the only
-layer carrying a synchronous face (`SyncWorkspace`).
+worker constructs it on its own; the Runtime composes it; together with the API client it is the
+only layer carrying a synchronous face (`SyncWorkspace`).
 _Avoid_: messaging, outbound, session, bot runtime
 
 **Handler**:
@@ -304,10 +337,10 @@ channel occupies.
 _Avoid_: response (bare), ack (that is the default reply), HTTP response
 
 **Callback token**:
-The self-issued signed credential the bot places in a button `context` or dialog `state` and verifies
-when the callback returns: versioned, keyed by `kid`, HMAC-SHA256 by default, with optional expiry,
-actor binding and nonce. The only authenticity primitive Mattermost leaves to an external bot.
-_Avoid_: signature (of the request), secret, cookie
+The self-issued signed credential the bot places in a button `context` or dialog `state` and
+verifies when the callback returns: versioned, keyed by `kid`, HMAC-SHA256 by default, with optional
+expiry, actor binding and nonce. The only authenticity primitive Mattermost leaves to an external
+bot. _Avoid_: signature (of the request), secret, cookie
 
 **CallbackTokenCodec**:
 The Core Protocol that issues and verifies a Callback token, returning a typed union —
@@ -326,9 +359,9 @@ tells the user the action has expired and disables the buttons.
 _Avoid_: stale callback, dead button, timeout (bare)
 
 **Resync**:
-The moment the server hands the WebSocketTransport a fresh `connection_id` after an unrecoverable gap: buffered
-events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the loss window so a
-plugin or the application can backfill over REST.
+The moment the server hands the WebSocketTransport a fresh `connection_id` after an unrecoverable
+gap: buffered events are lost, the sequence restarts, and the `Resynced(since)` Signal reports the
+loss window so a plugin or the application can backfill over REST.
 _Avoid_: reconnect (that may resume without loss), full sync, catch-up (bare)
 
 **WebSocketConnection**:
@@ -490,7 +523,7 @@ _Avoid_: metrics, gauge, health check (that is a runtime probe), introspection
 
 **Health**:
 The first-party generic Plugin that answers a runtime probe: a bare ASGI callable serving one
-liveness path, which runs no check and survives the drain, and one readiness path, which is true
+liveness path, which runs no check and survives the Drain, and one readiness path, which is true
 only while the Bot is started, not draining, every Transport connected and every ReadinessCheck
 passing. It starts no server and its response body is always empty.
 _Avoid_: healthcheck (as the name), probe (that is the caller), liveness/readiness (as the
