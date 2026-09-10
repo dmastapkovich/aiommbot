@@ -2586,9 +2586,9 @@ whole-disable values are exactly three
 So `__all__`, `1` and `true` disable every plugin; any other value is read as a comma-separated list
 of entry-point *names* to skip. The comparison is exact and case-sensitive — `TRUE` and `yes` are
 not accepted, and would be treated as a plugin name. There is no documentation page to check this
-against: `pydantic/plugin/__init__.py` still points at `[Build a
-Plugin](../concepts/plugins.md#build-a-plugin)`, but `docs/concepts/plugins.md` does not exist in
-the repository and is absent from the `mkdocs.yml` nav
+against: `pydantic/plugin/__init__.py` still points at
+`[Build a Plugin](../concepts/plugins.md#build-a-plugin)`, but `docs/concepts/plugins.md` does not
+exist in the repository and is absent from the `mkdocs.yml` nav
 ([`pydantic/plugin/__init__.py`](https://github.com/pydantic/pydantic/blob/main/pydantic/plugin/__init__.py#L1-L4)).
 The loader is the only authority for these values. A plugin that fails to import is downgraded to a
 warning rather than a refusal, and only for two exception types:
