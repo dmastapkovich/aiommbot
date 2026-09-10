@@ -506,7 +506,43 @@ Stability](https://docs.python.org/3/c-api/stable.html#c.Py_LIMITED_API)). This 
 version, declared by the plugin, checked by the compiler and encoded in the filename — and it exists
 only for C extensions.
 
-## 7 The incident: pytest 8.1.0, yanked for breaking plugins
+## 7 What the standard library offers a host that must compare versions itself
+
+The hosts above split into two groups: those that delegate version comparison to `packaging` or to
+`AwesomeVersion`, and those that hand-roll it and carry a quiet bug. A host whose own dependency
+policy admits neither library is left with what the language ships, and the language ships less
+than it used to.
+
+**The one version-comparison helper the standard library had is gone, at 3.12.** `distutils.version`
+held `LooseVersion` and `StrictVersion`; [PEP 632](https://peps.python.org/pep-0632/) removed the
+whole `distutils` package, and Python 3.12's own release notes list it among the important removals:
+"Of note, the `distutils` package has been removed from the standard library", with
+"[PEP 632](https://peps.python.org/pep-0632/): Remove the `distutils` package"
+([*What's New In Python 3.12*](https://docs.python.org/3/whatsnew/3.12.html)). The PEP's migration
+advice names the replacement in one line, under the heading for modules whose substitute is a
+Python Packaging Authority package rather than a standard-library one:
+
+> `distutils.version` — use the `packaging` package
+
+**`importlib.metadata` reads a version and does not order one.** `version(distribution_name)`
+returns the distribution version as the string recorded in the metadata, and the module documents no
+comparison, parsing or specifier API at all
+([`importlib.metadata`](https://docs.python.org/3/library/importlib.metadata.html)).
+
+**What is left is tuple comparison.** The language reference states it as a rule of the built-in
+containers — "Sequences compare lexicographically using comparison of corresponding elements"
+([*Comparisons*](https://docs.python.org/3/reference/expressions.html#comparisons)) — and the
+standard library uses it for exactly this purpose itself: the documentation of `sys.version_info`
+compares it as a tuple, `sys.version_info >= (3, 5)`
+([`sys.version_info`](https://docs.python.org/3/library/sys.html#sys.version_info)). An integer, or
+a tuple of integers, is orderable with no library and no parser; a version *string* is not.
+
+**The library the PEP points at costs one dependency and no transitive ones.** `packaging` 26.3
+declares `requires_dist: null` and `requires_python: ">=3.9"` — no runtime dependencies at all
+([PyPI JSON](https://pypi.org/pypi/packaging/json)). Whether a host may take it is therefore a
+question of its own policy rather than of what the dependency would drag in.
+
+## 8 The incident: pytest 8.1.0, yanked for breaking plugins
 
 pytest 8.1.0 removed deprecated APIs whose warnings had not been firing, broke plugins that were
 still using them, and was pulled from PyPI. The changelog entry is unambiguous ([pytest
@@ -551,7 +587,7 @@ RuntimeError: Event loop is closed )". Siblings carry the reasons "crashes Home 
 Without a contract number the host cannot express "plugins built for the old API stay on the old
 path", so it hard-codes a per-plugin floor after each incident.
 
-## 8 Comparison across hosts
+## 9 Comparison across hosts
 
 | Host | What carries the number | Granularity | Comparison rule | When checked | Failure looks like | Who moves it |
 |---|---|---|---|---|---|---|
@@ -567,7 +603,7 @@ path", so it hard-codes a per-plugin floor after each incident.
 | pytest | nothing | — | — | — | plugin breaks at runtime; recovery is a PyPI yank | nobody |
 | Python packaging | nothing (`Provides-Dist` under "Rarely Used Fields" is the nearest shape) | — | — | install-time resolution of `Requires-Dist` only | pip resolver conflict | nobody |
 
-## 9 mypy: the host hands the plugin its version, then hashes the plugin behind its back
+## 10 mypy: the host hands the plugin its version, then hashes the plugin behind its back
 
 mypy is an in-process, pip-installed Python host, and it has a load-time gate. The gate is not a
 version comparison. It is a six-step refusal ladder over the *shape* of the entry point, plus a
@@ -793,7 +829,7 @@ used to incorporate external configuration information that might require change
 invalidation the plugin drives, checked in `validate_meta` right after the snapshot with the log
 line `Metadata abandoned for {id}: plugin configuration differs`.
 
-## 10 The worked example: pydantic's mypy plugin declares a cache generation, not a compatibility range
+## 11 The worked example: pydantic's mypy plugin declares a cache generation, not a compatibility range
 
 pydantic is the reference third-party consumer of that contract, and what it does with each half is
 the finding.
@@ -855,7 +891,7 @@ and once with one (an optional module `__version__`, which pydantic supplies and
 purpose is cache invalidation). The file hash is the floor; the declared integer covers the changes
 the hash cannot see.
 
-## 11 The load-time gate that is structural rather than numeric: pluggy
+## 12 The load-time gate that is structural rather than numeric: pluggy
 
 The other in-process Python host with a real gate at registration is pluggy, and it checks argument
 names against the hookspec rather than any number. `_verify_hook` runs inside `register()`
@@ -905,7 +941,7 @@ whenever any plugin implements the hook requesting one of the specified paramete
 pytest's tree for `warn_on_impl` returns nothing — pytest specifies no deprecated hook or argument
 through the mechanism its own engine provides.
 
-## 12 The Protocol-shaped hosts: no version member anywhere
+## 13 The Protocol-shaped hosts: no version member anywhere
 
 Three hosts not tested above carry no contract number at all, and in two of them the
 plugin contract is a `Protocol`.
@@ -978,7 +1014,7 @@ private".
 Django and mypy are the two ends of the axis. Neither has a number; Django promises that code
 written against one release keeps working, and mypy promises the opposite in as many words.
 
-## 13 The four in-process Python hosts, compared
+## 14 The four in-process Python hosts, compared
 
 | Host | Load-time gate | What the plugin declares | Comparison | Failure | Compatibility promise |
 |---|---|---|---|---|---|
@@ -988,7 +1024,7 @@ written against one release keeps working, and mypy promises the opposite in as 
 | pydantic | none | nothing; `PydanticPluginProtocol` is not `@runtime_checkable` | none | `warnings.warn` on `ImportError`/`AttributeError` only; anything else propagates | none stated in the plugin module |
 | Django (apps) | app label validity and uniqueness only | nothing; eight documented `AppConfig` attributes, none a version | none | — | "code you develop against a version of Django will continue to work with future releases"; deprecation kept "at least two feature releases" |
 
-## 14 What the in-process Python hosts change
+## 15 What the in-process Python hosts change
 
 The conclusion that "only Terraform versions the interface independently" holds for *versioning*,
 but the survey of mechanism shapes above was incomplete: mypy is a fourth shape, and it inverts the
@@ -1007,7 +1043,7 @@ difference against the hookspec, and Litestar's `isinstance` — and where no st
 (pydantic, Django's registry) the host relies wholly on a written promise, which Django states as
 strongly as mypy disclaims it.
 
-## 15 What the evidence supports
+## 16 What the evidence supports
 
 - **A separate contract number is rare.** Of the six hosts with any gate, only Terraform versions
   the interface independently of both the host release and the plugin release. Sphinx, Home
@@ -1056,6 +1092,12 @@ strongly as mypy disclaims it.
   per-plugin-type, Sphinx's `env_version` is per-extension-stored-data, and everything else is a
   single number for the whole surface.
 
+- **The standard library stopped offering version comparison at 3.12.** `distutils.version` was the
+  only helper it had, PEP 632 removed the package at exactly that release, and its migration advice
+  points at `packaging`; `importlib.metadata` reads a version without ordering one. A host that may
+  not take `packaging` can order an integer or a tuple of integers, which the language compares
+  lexicographically, and nothing else — which is what makes the choice between a bare number and a
+  version string a choice about the comparison rule as much as about the declaration.
 - **When the comparison rule is written by hand, it goes wrong quietly.** Sphinx's `needs_sphinx`
   compares version strings lexicographically, so `'10.0' > '8.3.0'` is `False` and the gate does not
   fire; `require_sphinx()` truncates to `(major, minor)`, so a patch-level requirement cannot be
@@ -1063,7 +1105,7 @@ strongly as mypy disclaims it.
   `required_plugins`, `minversion`) or to `AwesomeVersion` (Home Assistant) do not have this class
   of bug.
 
-## 16 What these findings establish across the five notes
+## 17 What these findings establish across the five notes
 
 The sections above close with what their own hosts establish. Three patterns hold across the family
 and belong to no single note.
@@ -1077,7 +1119,7 @@ and belong to no single note.
 - **The gate that catches host-plugin skew in Python is structural, not numeric.** pluggy's
   per-argument set difference against the hookspec, Litestar's `isinstance` against six
   `@runtime_checkable` Protocols and mypy's six-step ladder over the shape of the entry point are
-  the three that actually fire, and none of them compares a version (§1 above,
+  the three that actually fire, and none of them compares a version (§10 and §12 above,
   [`33`](33-the-plugin-to-plugin-channel.md)).
 - **A written compatibility window carries the weight a number does not, and warnings alone have a
   recorded failure.** Sphinx keeps a deprecated feature "during 2 MAJOR releases at least", Django
@@ -1162,6 +1204,7 @@ Python packaging and PEPs:
   <https://packaging.python.org/en/latest/specifications/entry-points/> ·
   <https://peps.python.org/pep-0384/>
 - <https://peps.python.org/pep-0425/>
+- <https://peps.python.org/pep-0632/> · <https://pypi.org/pypi/packaging/json>
 
 VS Code:
 
@@ -1191,3 +1234,7 @@ Obsidian:
 CPython:
 
 - <https://docs.python.org/3/c-api/stable.html#c.Py_LIMITED_API>
+- <https://docs.python.org/3/whatsnew/3.12.html> ·
+  <https://docs.python.org/3/library/importlib.metadata.html> ·
+  <https://docs.python.org/3/library/sys.html#sys.version_info>
+- <https://docs.python.org/3/reference/expressions.html#comparisons>
