@@ -100,6 +100,9 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | `Clock` as the Core's thirteenth seam, with `FakeClock` as its second implementation | #30 | 0059 | reviewed |
 | Flood control and delivery dedup as one generic Plugin, and a declined Event as `Unhandled` plus a published `Suppression` | #30 | 0060 | reviewed |
 | Health as a generic Plugin over `/livez` and `/readyz`, with application-supplied `ReadinessCheck`s | #30 | 0061 | reviewed |
+| Plugin contract mechanics: the contract version, the collaboration channel, `provides`, the conflict matrix and what a Plugin may not do | #102 | | not started |
+| Plugin lifecycle failure, settings field names under the semver promise, and the third-party author's kit | #103 | | not started |
+| Error-tracker integration: whether ADR-0057 stands, and who forks the isolation scope per Event | #104 | | not started |
 | Engineering style and ideology: rule form, pattern tiers, derived review checklist | #36 | 0033 | reviewed |
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | | not started |
