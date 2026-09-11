@@ -28,7 +28,11 @@ table: piece → responsibility → why it is separate.
 ## 5. Interactions
 
 `sequenceDiagram`s for the main scenario and each failure scenario this component is designed
-around. Name the collaborating components with their `CONTEXT.md` terms.
+around. Name the collaborating components with their `CONTEXT.md` terms. Where
+[§6](../06-runtime-view.md) already carries the order this component takes part in, draw only what
+is invisible from outside the box — an internal state, a part, an invariant of this component's own
+— and link to the scenario for the rest
+([ADR-0067](../../adr/0067-a-runtime-scenario-is-one-order-between-boxes.md)).
 
 ## 6. Design patterns
 

@@ -94,5 +94,6 @@ the side effect happened and its acknowledgement never did. We decided:
 - The explained ruff ignores this decision needs, `ASYNC109` and `RUF029`, are recorded with their
   reasons in [ADR-0011](0011-lint-format-and-architecture-toolchain.md).
 - The Sync executor's size, the Check and the `HandlerAbandoned` Signal join the settings model, the
-  Check catalogue and the Signal list; the Drain contract is a §6 runtime view and a §10 quality
+  Check catalogue and the Signal list; the Drain contract is
+  [§6.6](../design/06-runtime-view.md#66-graceful-shutdown-and-the-drain) and a §10 quality
   scenario.

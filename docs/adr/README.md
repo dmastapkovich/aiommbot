@@ -75,3 +75,4 @@ ticket owns which decision.
 | [0064](0064-run-owns-the-stop-signals-and-serve-owns-none.md) | `run()` installs the SIGINT and SIGTERM handlers on the loop it owns, `serve()` installs none, and a second signal ends the stop at once (amends 0031) | accepted |
 | [0065](0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md) | A WebSocketTransport waiting on the consumer lease is `Standby`, and readiness counts a standby Transport as connected (amends 0023, 0061) | accepted |
 | [0066](0066-the-in-memory-backends-own-the-single-process-check.md) | The in-memory storage backends contribute the single-process Check themselves, so every consumer of the seam inherits it (amends 0003, 0016, 0022) | accepted |
+| [0067](0067-a-runtime-scenario-is-one-order-between-boxes.md) | A §6 scenario is one order between boxes, drawn once, with the branch that motivated the design in the picture and the rest in a table | accepted |

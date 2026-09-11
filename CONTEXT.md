@@ -55,6 +55,13 @@ never a different build.
 _Avoid_: topology, deployment mode, architecture, profile (that is the ProcessProfile), container
 (that is the C4 box)
 
+**Process host**:
+Whatever starts a Bot process, delivers the signal that tells it to stop and kills it when the
+Shutdown budget runs out — an orchestrator, a service manager or one machine. The design places
+requirements on it and can verify none of them; it is the outside party every process lifecycle
+begins and ends at.
+_Avoid_: orchestrator, platform, supervisor, runtime (that is the Adapter's Runtime), environment
+
 **Shutdown budget**:
 The time a process's host promises between the signal telling it to stop and the kill that ends it.
 It is a field of the ProcessProfile because no process can read it from its host, and a start-up

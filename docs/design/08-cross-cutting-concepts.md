@@ -243,8 +243,9 @@ _Decided in_: [ADR-0023](../adr/0023-websocket-gateway-resilience.md),
 [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md),
 [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §5.
-_Carried by_: Bot, WebSocketTransport, Webhook, Sync executor, Health. Numbers and the host's part:
-[§7](07-deployment-view.md).
+_Carried by_: Bot, WebSocketTransport, Webhook, Sync executor, Health. The order and where it
+branches: [§6.6](06-runtime-view.md#66-graceful-shutdown-and-the-drain). Numbers and the host's
+part: [§7](07-deployment-view.md).
 
 ## 8.11 Runtime probes
 

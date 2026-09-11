@@ -17,7 +17,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | 3 | `03-context-and-scope.md` | reviewed | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
 | 4 | `04-solution-strategy.md` | reviewed | #38 | same |
 | 5 | `05-building-block-view.md` | reviewed | #38 | same |
-| 6 | `06-runtime-view.md` | not started | #39 | #38 #16 #17 |
+| 6 | `06-runtime-view.md` | reviewed | #39 | #38 #16 #17 |
 | 7 | `07-deployment-view.md` | reviewed | #40 | #38 #24 #29 |
 | 8 | `08-cross-cutting-concepts.md` | reviewed | #40 | same |
 | 9 | `docs/adr/` | rolling | every grilling ticket | not started |
@@ -101,6 +101,8 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Flood control and delivery dedup as one generic Plugin, and a declined Event as `Unhandled` plus a published `Suppression` | #30 | 0060 | reviewed |
 | Health as a generic Plugin over `/livez` and `/readyz`, with application-supplied `ReadinessCheck`s | #30 | 0061 | reviewed |
 | What a §8 concept contains once the decision, the rule and the term live elsewhere | #40 | 0062 | reviewed |
+| What a §6 scenario is, how a failure branch is split between the picture and a table, and the line between §6, §8 and §10 | #39 | 0067 | reviewed |
+| What a storage-backed Plugin does when its backend is unreachable at runtime | #107 | | not started |
 | `ProcessProfile`'s full field list, the declared shutdown budget and the bounded stop phase | #40 | 0063 | reviewed |
 | Which entry point owns the stop signals, and what a second signal means | #40 | 0064 | reviewed |
 | `Standby` as a third Transport state, and what readiness reports for a waiting consumer | #40 | 0065 | reviewed |
