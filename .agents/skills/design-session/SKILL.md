@@ -1,6 +1,6 @@
 ---
 name: design-session
-description: "Use when working any ticket of the aiommbot 0.5.0 wayfinder map (GitHub issue 1) — research, grilling, prototype, LLD or task — or when the maintainer says take the next ticket, продолжим карту, or names an issue number."
+description: "Use when working any ticket of the aiommbot 0.5.0 wayfinder map (GitHub issue 1) — research, grilling, prototype, HLD, LLD or task — or when the maintainer says take the next ticket, продолжим карту, or names an issue number."
 ---
 
 # Design session
@@ -15,7 +15,9 @@ guardrails that keep sessions identical in shape.
    open blocker and no assignee (`issue_dependencies_summary.blocked_by == 0`). Claim it through
    `gh api` (`.agents/issue-tracker.md`, *Writes*).
 3. Resolve per the playbook section for the ticket's `wayfinder:*` label. For `wayfinder:lld` the
-   *Resolve* step is the `lld-author` skill.
+   *Resolve* step is the `lld-author` skill; for a ticket that writes a numbered arc42 section under
+   `docs/design/` it is the `hld-author` skill, whatever the label — that skill carries the rules of
+   the template itself.
 4. Verify every touched document against `.agents/design-quality-checklist.md`; then record in
    one commit and push; then close, update the map, clear the fog, report in Russian, stop. One
    ticket per session.

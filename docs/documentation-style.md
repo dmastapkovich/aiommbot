@@ -17,7 +17,8 @@ index (`README.md`). A new document goes into an existing type or the type is ad
 | Rulebook | `design/engineering-style.md`, `design/diagrams.md` | one set of rules for one activity | — |
 | Readiness tracker | `design/TRACKER.md` | the single status view | — |
 | Decision record | `adr/NNNN-<slug>.md` | one decision | `adr/_template.md` |
-| Research note | `research/NN-<slug>.md` | one question answered from primary sources | see `research/README.md` |
+| Research note | `research/NN-<slug>.md` | one question about the product, answered from primary sources | see `research/README.md` |
+| Documentation-engineering note | `.agents/research/NN-<slug>.md` | one question about how this catalogue is written, answered from primary sources | see `.agents/research/README.md` |
 | Agent process document | `.agents/*.md` (repository root) | one process question | — |
 | Glossary | `CONTEXT.md` (root) | the ubiquitous language | format in `.agents/domain.md` |
 | User documentation | `tutorials/ how-to/ reference/ explanation/` (later) | one Diátaxis quadrant each | decided by ticket #26 |
@@ -25,7 +26,13 @@ index (`README.md`). A new document goes into an existing type or the type is ad
 `docs/` holds only the project: decisions, the architecture document, component documents, the
 rulebooks, the research the decisions cite and this standard. How a session works — playbook,
 checklist, tracker conventions, glossary format — lives in `.agents/` beside the skills and is
-never written under `docs/`.
+never written under `docs/`. Research about **writing** a document lives there too: a note that
+measures what the arc42 template requires, or what a diagram renderer can carry, is addressed to the
+author of a section rather than to its reader, so it belongs with the skills that consume it and not
+in the catalogue a reader navigates.
+
+The two research directories share one numbering sequence, so a number identifies a note wherever it
+lives and is never reused.
 
 Prototypes and sketches made while resolving a ticket are attached to the ticket; they are never
 committed.

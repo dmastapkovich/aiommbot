@@ -12,7 +12,8 @@ an ADR, the rule it becomes is an `ST-<AREA>-NN` line of
 §8 that adds a fourth copy breaks the linking rule of
 [`documentation-style.md`](../documentation-style.md) §6; a §8 that only links becomes an index, and
 the one measured arc42 document whose §8 is nothing but links annotates itself "Not written yet"
-([`docs/research/28`](../research/28-arc42-deployment-view-and-cross-cutting-concepts.md) §6.5). We
+([`.agents/research/28`](../../.agents/research/28-arc42-deployment-view-and-cross-cutting-concepts.md)
+§6.5). We
 decided what a concept section contains:
 
 - **One concept per registered concern, and the register is

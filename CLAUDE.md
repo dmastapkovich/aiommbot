@@ -8,7 +8,9 @@ to Claude Code.
   `(Recommended)`, wording in Russian, one round at a time). Free-text answers are common — read
   them fully; they often reshape the question.
 - Project skills are in `.claude/skills/` (symlinks into `.agents/skills/`). `design-session` runs
-  every map ticket; for an `LLD: <component>` ticket it hands the *Resolve* step to `lld-author`.
+  every map ticket; it hands the *Resolve* step to `lld-author` for an `LLD: <component>` ticket and
+  to `hld-author` for a ticket that writes a numbered arc42 section. `hld-author` carries the arc42
+  template's own rules, measured in `.agents/research/`; read the skill, not the note.
 - Fact-finding is yours, not the maintainer's: dispatch a subagent for anything the filesystem,
   `gh`, or the web can answer, and keep only the decision for the human.
 - Long research runs as background agents writing straight into `docs/research/`; finish each per

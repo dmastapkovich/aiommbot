@@ -40,7 +40,9 @@ deferral in the ticket, not silently skipped.
   explicitly), decisions in ADRs.
 - §5 (building blocks): every box has a responsibility, an owner document and an allowed-dependency
   direction consistent with the import-linter contract to be.
-- §6 (runtime): each scenario shows the failure branch that motivated the design.
+- §6 (runtime): every participant is an element of the building block view (arc42 tip 6-1,
+  `essential`); each scenario says why it is architecturally relevant; each shows the failure branch
+  that motivated the design. The template's rules for the section are in the `hld-author` skill.
 - §10 (quality): each scenario is stimulus → response → measure, and at least one scenario exists
   per top quality goal.
 

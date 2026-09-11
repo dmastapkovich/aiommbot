@@ -32,7 +32,8 @@ Every other document that describes the warm-up points here instead of repeating
 | Component design documents (LLD) | `docs/design/components/<term>.md` | `LLD: <component>` tickets |
 | Engineering style rulebook | `docs/design/engineering-style.md` | style ticket |
 | Diagram conventions | `docs/design/diagrams.md` | fixed |
-| Research findings | `docs/research/NN-*.md` | research tickets |
+| Research findings about the product | `docs/research/NN-*.md` | research tickets |
+| Research findings about how a document is written (arc42's own rules, renderer limits) | `.agents/research/NN-*.md` | research tickets |
 | Documentation standard (types, naming, status, linking, target-state rule, discovery protocol) | `docs/documentation-style.md` | fixed |
 | Catalogue index | `docs/README.md` | every new document type |
 | Readiness tracker | `docs/design/TRACKER.md` | every ticket, same commit |
@@ -44,7 +45,8 @@ Every other document that describes the warm-up points here instead of repeating
 
 - **Five ticket types, by label:** `wayfinder:research`, `wayfinder:grilling`, `wayfinder:prototype`,
   `wayfinder:task`, `wayfinder:lld`. The playbook has a section per type; the `design-session` skill
-  runs every type and, for an LLD ticket, hands its *Resolve* step to the `lld-author` skill.
+  runs every type and hands its *Resolve* step to `lld-author` for an `LLD: <component>` ticket and
+  to `hld-author` for a ticket that writes an arc42 section.
 - One ticket per session, claimed before any work. Research tickets are the exception and may run
   in parallel as background agents.
 - **Target state only.** A document says what the design is, never what it was. A changed decision
@@ -53,8 +55,11 @@ Every other document that describes the warm-up points here instead of repeating
   repository. Evidence from such sources may inform the session and is never written down. Git is
   the history (`docs/documentation-style.md` §9).
 - **`docs/` holds only the project.** Decisions, the architecture document, component documents,
-  rulebooks, research and the documentation standard. Anything about how a session works lives in
-  `.agents/`; nothing under `docs/` describes process.
+  rulebooks, research about the product and the documentation standard. Anything about how a session
+  works lives in `.agents/`; nothing under `docs/` describes process. Research about *writing* a
+  document belongs there too — `.agents/research/` measures what the arc42 template requires and
+  what a diagram renderer carries, and a rule it produced is then cited from a rulebook or a skill,
+  never re-derived. **Before writing an arc42 section or a rulebook, read the skill, not the note.**
 - **No junk.** No placeholders, no "TBD", no dated amendment sections, no workaround notes, no
   copy of a rule that lives elsewhere. If a document cannot be finished, its status line says
   `in progress (#N)` and the ticket says why.
@@ -81,5 +86,7 @@ Every other document that describes the warm-up points here instead of repeating
 
 ## Skills in this repository
 
-`.agents/skills/` holds the process skills (`design-session`, `lld-author`); `.claude/skills/`
-symlinks them for Claude Code. They are the executable form of the playbook.
+`.agents/skills/` holds the process skills (`design-session`, `hld-author`, `lld-author`);
+`.claude/skills/` symlinks them for Claude Code. They are the executable form of the playbook, and
+`hld-author` is also where the measured rules of the arc42 template live, so a section is written
+from a skill rather than from a research note.

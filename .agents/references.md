@@ -173,6 +173,19 @@ research note, not here.
 | [pytest-dev/pytest](https://github.com/pytest-dev/pytest) | Plugin API, fixtures and the shape of a distributed testing toolkit |
 | [HypothesisWorks/hypothesis](https://github.com/HypothesisWorks/hypothesis) | Property-based testing — the shape a conformance suite can take |
 
+## Documentation and diagrams
+
+The two sources the catalogue is written against rather than the product. Both earned a row by
+being read across sessions and by being expensive to read: the notes in
+[`research/`](research/README.md) that measured them cost a full network crawl each, because
+neither was cached.
+
+| Source | What it answers |
+|---|---|
+| [arc42/arc42-template](https://github.com/arc42/arc42-template) | What each arc42 section must contain, in the template's own words, and the tips and FAQ that scope it |
+| [arc42/examples.arc42.org-site](https://github.com/arc42/examples.arc42.org-site) | The published arc42 documents, per section, as source — the measured half of every arc42 note |
+| [mermaid-js/mermaid](https://github.com/mermaid-js/mermaid) | The diagram grammar and renderer: which construct exists, since when, and what the parser reserves. Mermaid cannot be rendered locally here, so the grammar is the only check available |
+
 ## Protocols and security specifications
 
 | Source | What it answers |

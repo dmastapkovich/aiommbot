@@ -5,6 +5,11 @@ Each file answers one question, carries a source per claim, marks what it could 
 with a Sources section. Notes are inputs to decisions, not decisions: where an ADR decided
 otherwise, the note points at the ADR (`docs/documentation-style.md` §8, §9).
 
+Every note here answers a question about **the product**. A question about how this catalogue is
+itself written — what an arc42 section must contain, what a diagram renderer can carry — is answered
+in [`.agents/research/`](../../.agents/research/README.md) instead, because `docs/` holds only the
+project. The numbering is one sequence across both directories.
+
 | File | Question |
 |------|----------|
 | [`01-mattermost-websocket-protocol.md`](01-mattermost-websocket-protocol.md) | What must a fault-tolerant Mattermost WebSocket client know and do? |
@@ -33,7 +38,6 @@ otherwise, the note points at the ADR (`docs/documentation-style.md` §8, §9).
 | [`25-cli-entry-points-and-what-clis-configure.md`](25-cli-entry-points-and-what-clis-configure.md) | What does the packaging machinery guarantee about a console script behind an optional dependency, what do peer CLIs contain and configure, and what does an argument parser cost? |
 | [`26-schedule-reliability-and-probe-primitives.md`](26-schedule-reliability-and-probe-primitives.md) | What cron, retry, rate-limiting and circuit-breaking primitives exist in Python, what do peers ship for scheduling and why, and what contract must a health probe satisfy? |
 | [`27-application-contributed-readiness-checks.md`](27-application-contributed-readiness-checks.md) | When a framework ships liveness and readiness endpoints, in what shape does an application contribute its own checks, and what runs them? |
-| [`28-arc42-deployment-view-and-cross-cutting-concepts.md`](28-arc42-deployment-view-and-cross-cutting-concepts.md) | What do arc42 §7 and §8 require, and what is left as §8's own content once a project keeps a decision log? |
 | [`29-kubernetes-fields-a-drain-depends-on.md`](29-kubernetes-fields-a-drain-depends-on.md) | Which Kubernetes fields does a graceful drain depend on, in what order do they fire, and what does each do for a process whose only inbound surface is a probe? |
 | [`30-plugin-contract-versioning.md`](30-plugin-contract-versioning.md) | How does a plugin host version the contract it offers plugins, separately from its own release version, and what happens where it does not? |
 | [`31-error-tracker-integration-anatomy.md`](31-error-tracker-integration-anatomy.md) | What does a first-party error-tracker integration do that `capture_exception` does not, and what does the SDK already do with no framework integration at all? |

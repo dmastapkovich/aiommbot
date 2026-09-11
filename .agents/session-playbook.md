@@ -36,6 +36,10 @@ label; the `design-session` skill runs these steps.
 
 The default type: a decision made in conversation.
 
+A grilling ticket that also writes a numbered arc42 section — as #38, #39 and #40 do — writes it
+with the `hld-author` skill, which carries the template's own measured rules. The grilling below is
+what settles the choices the ADRs leave open; the skill is what shapes the section around them.
+
 1. **Build the design tree** before asking anything: the sub-decisions this ticket implies, which
    are facts (find them yourself — subagent, `gh`, web, primary sources) and which are choices (the
    maintainer's). *Done when every node is labelled fact or choice and every fact has a finder

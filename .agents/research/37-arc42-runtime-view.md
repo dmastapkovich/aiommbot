@@ -316,8 +316,8 @@ increasing documentation and maintenance effort" and gives three:
 > 2. Use activity diagrams or flowcharts with swim-lanes.
 > 3. Use UML sequence diagrams. They can be time-consuming to create and maintain with most
 >    interactive tools, but are an excellent means to show the mapping between building blocks and
->    their actions. See [question F-10 (tools for sequence diagrams)](/questions/F-10) for some tips
->    on tools.
+>    their actions. See [question F-10 (tools for sequence
+>    diagrams)](https://faq.arc42.org/questions/F-10/) for some tips on tools.
 
 That closing clause is where the FAQ hands tool choice on, and
 [F-10](https://faq.arc42.org/questions/F-10/) is the one FAQ page that names tools: PlantUML, DrawIO

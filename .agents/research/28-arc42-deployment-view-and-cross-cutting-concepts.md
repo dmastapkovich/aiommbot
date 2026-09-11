@@ -3,7 +3,7 @@
 **Question.** What does arc42 itself require of a deployment view (§7) and a cross-cutting concepts
 section (§8), and what is left as §8's *own* content once a project keeps a decision log? The
 catalogue rule that a section never restates a decision
-([`documentation-style.md`](../documentation-style.md) §6) makes the second half of that question
+([`documentation-style.md`](../../docs/documentation-style.md) §6) makes the second half of that question
 load-bearing for #40, and the first half decides whether a deployment view carried by a table plus a
 container diagram is inside the template.
 
@@ -553,7 +553,7 @@ isolation** — every permission is scoped to a `tenant:{name}` domain", "**Thre
 model again, in the same words, under **Decision:** "Permissions are expressed as `(subject, domain,
 object, action)` tuples, where the domain is always a tenant (`tenant:{name}`) …". The same subject
 is written twice, 8 KB apart, with no cross-reference in either direction. This is exactly the state
-[`documentation-style.md`](../documentation-style.md) §6 forbids, occurring in a document that is
+[`documentation-style.md`](../../docs/documentation-style.md) §6 forbids, occurring in a document that is
 otherwise complete.
 
 ### 6.4 DokChess — the one-clause hand-off, in both directions
@@ -832,7 +832,7 @@ rendered site as well.
   same device independently — "( → Entscheidung 9.2 „Sind Stellungsobjekte veränderlich oder
   nicht?")" — and uses it from §7 as well as from §8. HSC runs the pointer the other way, from §9
   into a three-line §8 concept. This is the practice
-  [`documentation-style.md`](../documentation-style.md) §6 already allows — "An arc42 section or the
+  [`documentation-style.md`](../../docs/documentation-style.md) §6 already allows — "An arc42 section or the
   tracker may summarise a decision in one sentence next to its link."
 - **arc42's own test for whether a concept survives is explanation length, not subject.**
   [Tip 8-9](https://docs.arc42.org/tips/8-9/): `if (extensive-explanation-required) then concept
