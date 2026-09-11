@@ -17,3 +17,4 @@ once as its provenance. Read a note to change a rule, not to follow one.
 | File | Question |
 |------|----------|
 | [`37-arc42-runtime-view.md`](37-arc42-runtime-view.md) | What does arc42 require of a runtime view (§6), and how do published arc42 documents keep one? |
+| [`38-mermaid-sequence-diagram-limits.md`](38-mermaid-sequence-diagram-limits.md) | Which constructs does a Mermaid sequence diagram support, which are unreliable on the renderers this catalogue is read through, and what limits follow? |
