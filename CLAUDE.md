@@ -3,10 +3,18 @@
 Read `AGENTS.md` first — it is the canonical entry point and this file adds only what is specific
 to Claude Code.
 
+- **Measure `.refs/` before asking anything** (`AGENTS.md`, *Design by reference*). Dispatch
+  read-only background subagents in parallel over the clones, and put the measurement inside the
+  options: which project does it, at which line, and what it cost them. A question is for what the
+  corpus cannot settle; an option nothing demonstrates is labelled as an invention with the size of
+  the search behind it. An absence in the corpus is a finding and is reported as one — including
+  when it contradicts a premise the maintainer or I started from.
 - Ask the maintainer through `AskUserQuestion`, following the rounds rule of
   `.agents/session-playbook.md` (at most four questions, recommended option first and labelled
-  `(Recommended)`, wording in Russian, one round at a time). Free-text answers are common — read
-  them fully; they often reshape the question.
+  `(Recommended)`, wording in Russian, one round at a time). Open every question with the accepted
+  decisions it must not contradict. Free-text answers are common — read them fully; an answer that
+  arrives as a criterion is applied to the measurement and the result comes back as a question with
+  the premise corrected.
 - Project skills are in `.claude/skills/` (symlinks into `.agents/skills/`). `design-session` runs
   every map ticket; it hands the *Resolve* step to `lld-author` for an `LLD: <component>` ticket and
   to `hld-author` for a ticket that writes a numbered arc42 section. `hld-author` carries the arc42

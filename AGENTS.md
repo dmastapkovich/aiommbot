@@ -43,12 +43,21 @@ Every other document that describes the warm-up points here instead of repeating
 
 ## Standing rules
 
-- **Five ticket types, by label:** `wayfinder:research`, `wayfinder:grilling`, `wayfinder:prototype`,
-  `wayfinder:task`, `wayfinder:lld`. The playbook has a section per type; the `design-session` skill
-  runs every type and hands its *Resolve* step to `lld-author` for an `LLD: <component>` ticket and
-  to `hld-author` for a ticket that writes an arc42 section.
+- **Five ticket types, by label:** `wayfinder:research`, `wayfinder:grilling`,
+  `wayfinder:prototype`, `wayfinder:task`, `wayfinder:lld`. The playbook has a section per type;
+  the `design-session` skill runs every type and hands its *Resolve* step to `lld-author` for an
+  `LLD: <component>` ticket and to `hld-author` for a ticket that writes an arc42 section.
 - One ticket per session, claimed before any work. Research tickets are the exception and may run
   in parallel as background agents.
+- **Design by reference.** The curated primary sources of `.agents/references.md`, cloned into
+  `.refs/`, are measured *before* a question is asked, and a sub-decision the corpus answers is
+  settled by the corpus rather than by conversation. Take the shape a mature project already
+  carries, name whose it is, and say what it cost them; where a decision needs several shapes, take
+  each from the project that does that part best. Between two workable shapes the more mature one
+  wins, and a shape a project adopted and publicly regretted is evidence against it. A part nothing
+  demonstrates is an invention and is labelled as one, with the size of the search behind it. No
+  workarounds: a mechanism needing a special case, a flag or an apologetic comment is not the
+  design. The full rule is `.agents/session-playbook.md`, *Design by reference*.
 - **Target state only.** A document says what the design is, never what it was. A changed decision
   rewrites the document it changes in the same commit; nothing refers to a predecessor code base,
   an internal deployment or bot, a local path, or compatibility with anything outside this

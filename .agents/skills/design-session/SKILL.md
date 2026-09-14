@@ -22,7 +22,11 @@ guardrails that keep sessions identical in shape.
    one commit and push; then close, update the map, clear the fog, report in Russian, stop. One
    ticket per session.
 
-Guardrails: decisions are the maintainer's, facts are yours; questions go through
-`AskUserQuestion` in rounds of at most four with the recommendation first; every choice lands in
-an ADR or a glossary term the moment it is made; documents state only the target design and use
-the glossary exactly; documents only — no package code on this map.
+Guardrails: **the references are measured before anything is asked** (`AGENTS.md`, *Design by
+reference*) — a sub-decision the corpus settles is settled by the corpus, recorded with the project
+and the line that settles it, and a shape nothing demonstrates is labelled an invention rather than
+offered as a recommendation; decisions the corpus cannot settle are the maintainer's, and those
+questions go through `AskUserQuestion` in rounds of at most four with the recommendation first and
+the accepted decisions stated up front; every choice lands in an ADR or a glossary term the moment
+it is made; documents state only the target design and use the glossary exactly; documents only —
+no package code on this map.

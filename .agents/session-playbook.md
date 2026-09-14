@@ -32,29 +32,65 @@ label; the `design-session` skill runs these steps.
 8. **Report** to the maintainer in Russian: what was decided, files changed, the next frontier
    tickets. *Done when the message stands alone for someone who did not watch the session.*
 
+## Design by reference
+
+The rule that shapes every ticket type, and the reason the measurement step comes before the
+questions.
+
+- **The references are the material, not the illustration.** `.agents/references.md` names the
+  curated primary sources and `.refs/` holds them. A design question is answered by reading what
+  mature projects already solved and what each solution cost them, not by reasoning from first
+  principles and then looking for agreement.
+- **Reuse the concept; do not reinvent it.** Where a shape is proven, take it and say whose it is.
+  Where a decision needs several, take each from the project that does that part best and attribute
+  them one by one. Assembling proven parts is reuse; a part nothing demonstrates is an invention and
+  is labelled as one, with the size of the search that found nothing.
+- **Maturity is the ranking.** Between two workable shapes, the one to take is the one carried
+  furthest by a serious project — most used, most documented, most repaired. A shape a project
+  adopted and then regretted in writing is evidence against it, and the regret is worth quoting.
+- **No workarounds.** A mechanism that needs a special case, a flag, a second code path or a comment
+  apologising for itself is not the design; find the shape that does not need one, or record
+  plainly that none exists.
+- **Measure the absence too.** "No project in N paths across M clones does this" is a finding of the
+  same standing as a positive one, and it belongs in the ADR where the decision rests on it.
+- **The maintainer decides, the corpus informs, and neither is asked to do the other's job.** A
+  question is for what the corpus cannot settle. An answer that arrives as a criterion rather than a
+  choice is applied to the measurement, and the result comes back as a question with the premise
+  corrected.
+
 ## Grilling ticket (`wayfinder:grilling`)
 
-The default type: a decision made in conversation.
+The default type: a decision the references settle and the maintainer confirms. Conversation is the
+last step rather than the first — see *Design by reference* below.
 
 A grilling ticket that also writes a numbered arc42 section — as #38, #39 and #40 do — writes it
 with the `hld-author` skill, which carries the template's own measured rules. The grilling below is
 what settles the choices the ADRs leave open; the skill is what shapes the section around them.
 
-1. **Build the design tree** before asking anything: the sub-decisions this ticket implies, which
-   are facts (find them yourself — subagent, `gh`, web, primary sources) and which are choices (the
-   maintainer's). *Done when every node is labelled fact or choice and every fact has a finder
-   dispatched or answered.*
-2. **Grill in rounds.** Ask the whole current frontier of choices in one round — at most four
-   questions, in Russian, via `AskUserQuestion`, each with the recommended answer first and the
-   reason in one line, alternatives after. Wait. Recompute the frontier from the answers; a
-   question that depends on an answer still open belongs to a later round. Challenge vague terms
-   and propose the canonical `CONTEXT.md` word on the spot; stress-test relationships with concrete
-   scenarios; check claims against the research. *Done when the frontier is empty and the
-   maintainer confirms shared understanding.*
-3. **Draft the artefacts while grilling**, not after: an ADR paragraph the moment a hard-to-reverse
-   choice lands, a glossary entry the moment a term is resolved. *Done when every choice in the
-   tree maps to an ADR line, a glossary term, or an explicit "easy to reverse, no ADR".*
-4. Continue at *Every ticket*, step 4.
+1. **Build the design tree** before asking anything: the sub-decisions this ticket implies, each
+   labelled with what would settle it. *Done when every node is labelled and every one of them has a
+   finder dispatched or answered.*
+2. **Measure the references before asking anything.** The curated sources of
+   `.agents/references.md`, cloned into `.refs/`, are the material: a sub-decision the corpus
+   answers is answered by the corpus, recorded with the project, the file and the line that answers
+   it, and never put to the maintainer as an open choice. Dispatch background subagents for the
+   measurement, read-only, in parallel, and send them back when an answer arrives as a criterion
+   rather than a choice. *Done when every node of the tree carries either a reference that settles
+   it or the count of paths in which the corpus was searched and found silent.*
+3. **Ask only what the measurement leaves open** — where the corpus is silent, where it is split,
+   or where an accepted ADR of ours contradicts what the field does. In Russian, via
+   `AskUserQuestion`, at most four questions in a round, each opening with the decisions it must not
+   contradict and offering the recommended answer first. Every option names the project it is taken
+   from and the cost it carries; an option no reference demonstrates says so in those words, with
+   the size of the search behind it. Wait, then recompute. Challenge vague terms and propose the
+   canonical `CONTEXT.md` word on the spot. *Done when the frontier is empty and the maintainer
+   confirms shared understanding.*
+4. **Draft the artefacts as the answers land**, not after: an ADR paragraph the moment a
+   hard-to-reverse choice is settled — by the corpus or by the maintainer — and a glossary entry the
+   moment a term is resolved. Each element of the decision names the project it was taken from.
+   *Done when every choice in the tree maps to an ADR line, a glossary term, or an explicit "easy to
+   reverse, no ADR".*
+5. Continue at *Every ticket*, step 4.
 
 ## Research ticket (`wayfinder:research`)
 
@@ -93,8 +129,8 @@ Resolved with the `lld-author` skill inside a `design-session`.
    questions. Draw every diagram per `docs/design/diagrams.md`; use only `CONTEXT.md` terms.
    *Done when every template section is filled.*
 3. Cross-check against the runtime view and the neighbouring component documents that exist; fix
-   whichever is wrong; record each missing neighbour as a deferral in the ticket. Set the status line
-   to `reviewed (#N)` only when the checklist passes. *Done when the component's row in
+   whichever is wrong; record each missing neighbour as a deferral in the ticket. Set the status
+   line to `reviewed (#N)` only when the checklist passes. *Done when the component's row in
    `TRACKER.md` §C reads `reviewed`.*
 4. Continue at *Every ticket*, step 4.
 
