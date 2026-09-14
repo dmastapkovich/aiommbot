@@ -19,9 +19,13 @@ once as its provenance. Read a note to change a rule, not to follow one.
 | 28 | [`../../docs/adr/0062-a-cross-cutting-concept-is-a-mechanism-a-grid-and-a-limit.md`](../../docs/adr/0062-a-cross-cutting-concept-is-a-mechanism-a-grid-and-a-limit.md), [`../skills/hld-author/SKILL.md`](../skills/hld-author/SKILL.md) |
 | 37 | [`../skills/hld-author/SKILL.md`](../skills/hld-author/SKILL.md), [`../design-quality-checklist.md`](../design-quality-checklist.md) |
 | 38 | `docs/design/diagrams.md`, *Renderer limits* — written by [#39](https://github.com/dmastapkovich/aiommbot/issues/39) |
+| 39 | [`../skills/hld-author/SKILL.md`](../skills/hld-author/SKILL.md), the §1 and §2 rows — written by [#37](https://github.com/dmastapkovich/aiommbot/issues/37) |
+| 40 | [`../skills/hld-author/SKILL.md`](../skills/hld-author/SKILL.md), the §10 row, and [`../design-quality-checklist.md`](../design-quality-checklist.md) — written by [#37](https://github.com/dmastapkovich/aiommbot/issues/37) |
 
 | File | Question |
 |------|----------|
 | [`28-arc42-deployment-view-and-cross-cutting-concepts.md`](28-arc42-deployment-view-and-cross-cutting-concepts.md) | What do arc42 §7 and §8 require, and what is left as §8's own content once a project keeps a decision log? |
 | [`37-arc42-runtime-view.md`](37-arc42-runtime-view.md) | What does arc42 require of a runtime view (§6), and how do published arc42 documents keep one? |
 | [`38-mermaid-sequence-diagram-limits.md`](38-mermaid-sequence-diagram-limits.md) | Which constructs does a Mermaid sequence diagram support, which are unreliable on the renderers this catalogue is read through, and what limits follow? |
+| [`39-arc42-goals-and-constraints.md`](39-arc42-goals-and-constraints.md) | What do arc42 §1 and §2 require, and how do published arc42 documents keep them? |
+| [`40-arc42-quality-requirements.md`](40-arc42-quality-requirements.md) | What does arc42 require of §10, what grammar does a quality scenario have, and may a test or a tool gate serve as the measure? |
