@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-04
 ticket: "#38"
+amended-by: [ADR-0070]
 ---
 
 # Imports point at the Core — testing toolkit → adapter-specific plugins → (Adapter · generic plugins) → Core — and a generic Plugin may never import the Adapter
@@ -9,7 +10,7 @@ ticket: "#38"
 [ADR-0002](0002-core-scope-two-condition-test.md) put the Core, the Adapter and the first-party
 Plugins in one distribution and said the boundaries are import-linter contracts;
 [ADR-0015](0015-plugin-contract-and-composition.md) said a Plugin is either generic (depends on the
-Core only) or bound to an adapter, and that plugins collaborate only through Core-owned Protocols.
+Core only) or bound to an adapter, and that plugins never reach one another at all.
 Neither fixed the layer list, and the two statements do not fit one linear order: a generic Plugin
 sits *above* the Core but must not sit above the Adapter. We decided the layer model of the
 building-block view, which is also the import-linter contract to be:
@@ -37,9 +38,11 @@ building-block view, which is also the import-linter contract to be:
   ([ADR-0028](0028-runtime-helpers-and-identity-resolution.md)) — the Protocol is Adapter-owned, so
   the import still runs upward.
 - **Plugins are mutually independent within a rank as well as across ranks** (ADR-0015): an
-  `independence` contract over every first-party Plugin. A plugin needing another plugin's
-  capability depends on the Core Protocol that capability implements — Webhook's nonce store and
-  IdentityCache both reach `KeyValueStore`, never the State plugin that also uses it.
+  `independence` contract over every first-party Plugin. A plugin needing a capability depends on
+  the Core Protocol that capability implements and receives the implementation from the composition
+  ([ADR-0070](0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md)) —
+  Webhook's nonce store and IdentityCache both reach `KeyValueStore`, never the State plugin that
+  also uses it.
 - **The Core imports no third-party package at all**, a `forbidden` contract plus the smoke import
   of ADR-0002; `typing_extensions` is the single exception
   [ADR-0008](0008-python-floor-3-12-with-typing-extensions.md) admits.

@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#17"
-amended-by: [ADR-0048, ADR-0060]
+amended-by: [ADR-0048, ADR-0060, ADR-0073]
 ---
 
 # The Core owns a narrow, non-removable error boundary: log without payload, report, return a typed `Failed`; a failing process is an explicit policy
@@ -15,7 +15,10 @@ that restarts the crashed unit — an asyncio task that dies without a handler i
 
 We decided:
 
-- **An outermost `ErrorBoundary` is part of the Core and cannot be removed.** It catches
+- **An outermost `ErrorBoundary` is part of the Core and cannot be removed** — not from the
+  Middleware chain and not by a Plugin either, because no Contribution Protocol yields it and the
+  Bot installs it outside both layers
+  ([ADR-0073](0073-what-a-plugin-may-not-do.md)). It catches
   `Exception` only; `BaseException` (cancellation, `SystemExit`, `KeyboardInterrupt`) passes
   through untouched.
 - **Its default does exactly two things**: writes one ERROR record **without payload** (event kind,

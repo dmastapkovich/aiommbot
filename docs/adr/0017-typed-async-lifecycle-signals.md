@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0048]
+amended-by: [ADR-0048, ADR-0073]
 ---
 
 # Lifecycle notifications are typed asynchronous Signals separate from platform events
@@ -20,7 +20,9 @@ sync/async duality pluggy and its users retrofit at runtime
 and does not stop other subscribers: it is collected, logged at WARNING and returned in the
 signal's typed outcome, which is what the publisher's caller acts on — an observer, whose caller
 could act on nothing, is only caught and logged
-([ADR-0048](0048-observability-is-not-a-core-seam.md)).
+([ADR-0048](0048-observability-is-not-a-core-seam.md)). A Signal is a notification and not a
+request: a subscriber returns nothing and cannot stop what it was notified about
+([ADR-0073](0073-what-a-plugin-may-not-do.md)).
 
 ## Considered options
 

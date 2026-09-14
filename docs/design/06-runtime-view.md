@@ -52,13 +52,13 @@ sequenceDiagram
     participant TRP as Transport
     participant SIG as Signal
     HOST->>BOT: start the process
-    BOT->>PLG: read every PluginSpec, order by requires and after
+    BOT->>PLG: read every PluginSpec in the order the composition lists them
     BOT->>RTR: take the contributed routers, freeze the tree, build each HandlerSpec
     BOT->>DEP: take the contributed Providers, validate the graph, compile the plans
     BOT->>PLG: collect the contributed Checks
     BOT->>BOT: run every Check against the ProcessProfile, no side effect
     alt every Check passes
-        BOT->>PLG: enter the lifecycles in topological order
+        BOT->>PLG: enter the lifecycles in that same order
         BOT->>TRP: start
         TRP->>SIG: publish Connected
         BOT->>SIG: publish the started lifecycle Signal
@@ -318,7 +318,7 @@ sequenceDiagram
     end
     BOT->>SEX: drop the wait on any declared synchronous Handler
     SEX->>SIG: publish HandlerAbandoned
-    BOT->>PLG: stop in reverse topological order
+    BOT->>PLG: stop in the reverse of the composition order
     BOT-->>HOST: exit inside the Shutdown budget
 ```
 

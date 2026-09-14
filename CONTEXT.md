@@ -19,14 +19,24 @@ _Avoid_: platform, driver, connector, integration
 
 **Plugin**:
 An optional capability enabled by listing it explicitly in the Bot's composition. Carries a frozen
-PluginSpec and implements only the contribution Protocols it needs. Either generic (depends on the
-Core only) or adapter-specific (bound to one Adapter). Never active merely because it is installed.
+PluginSpec and implements only the Contribution Protocols it needs. Either generic (depends on the
+Core only) or adapter-specific (bound to one Adapter). Never active merely because it is installed,
+and never in reach of another Plugin: a capability it consumes arrives in its settings object,
+built by the application.
 _Avoid_: extension, app, addon, module
 
 **PluginSpec**:
-The immutable declaration of a Plugin: name, contract version, `requires` and `after` dependencies
-on other plugins, adapter binding, settings type. Readable without running code.
+The immutable declaration of a Plugin: name, adapter binding and settings type. It carries no
+version and names no other plugin, because the composition's order is the activation order and a
+capability travels in the settings rather than in a declaration. Readable without running code.
 _Avoid_: manifest, metadata, config
+
+**Contribution Protocol**:
+One of the seven narrow Protocols through which a Plugin contributes something to the composition —
+`ContributesRouters`, `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`,
+`ContributesChecks`, `ContributesStats` and `HasLifecycle`. The set is the whole power a Plugin has;
+it grows by gaining a Protocol and never by changing one, and a withdrawn Protocol keeps its name.
+_Avoid_: hook (that is a Signal subscriber), plugin interface, plugin API, extension point
 
 **Extra**:
 An optional dependency of the distribution, published under one name and installed as

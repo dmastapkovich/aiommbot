@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0047, ADR-0050, ADR-0056]
+amended-by: [ADR-0047, ADR-0050, ADR-0056, ADR-0069, ADR-0070, ADR-0071]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -25,27 +25,34 @@ addition, not a rewrite.
   ones in `aiommbot/plugins/`, a sibling of `core/`
   ([ADR-0040](0040-one-package-directory-per-import-rank.md)).
 - **Contract = declaration + narrow Protocols.** A plugin object carries an immutable `PluginSpec`
-  (name, contract version, `requires` and `after` dependencies on other plugins by name, adapter
-  binding, settings type) and implements only the narrow Protocols it needs: `ContributesRouters`,
+  (name, adapter binding, settings type — no version and no dependency on another plugin,
+  [ADR-0069](0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md),
+  [ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)) and
+  implements only the narrow Protocols it needs: `ContributesRouters`,
   `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`, `ContributesChecks`,
   `ContributesStats` (a frozen snapshot of a bounded resource for `bot.stats()`,
   [ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md)),
   `HasLifecycle` (an async context manager for start/stop). No base class, no inheritance
   ([ADR-0006](0006-architectural-tenets-of-the-core.md)); the declaration is readable without
   running code.
-- **Ordering.** `requires` is hard (missing → start-up error), `after` is soft (orders when both
-  are present). Activation is topological with list position as the tie-break; shutdown runs in
-  reverse; a cycle is a start-up error. Plugins collaborate only through Core-owned Protocols,
-  never by importing each other; import-linter's `independence` contract enforces it.
+- **Ordering.** Plugins enter their lifecycles in the order `plugins=[...]` lists them and stop in
+  reverse; no plugin declares a dependency on another and there is no graph to sort
+  ([ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)).
+  Plugins do not collaborate: a capability two of them need is a Core-owned Protocol whose
+  implementation the application constructs and hands to each in its settings
+  ([ADR-0070](0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md)).
+  Importing each other is refused by import-linter's `independence` contract.
 - **Settings.** Each plugin takes a typed frozen settings object in its constructor
-  (`@dataclass(frozen=True, slots=True, kw_only=True)`, validated in `__post_init__`). Where the
-  values come from — environment, a settings library, a vault — is the application's business;
-  the framework documents a recipe and keeps field names stable, so one setting has one name.
+  (`@dataclass(frozen=True, slots=True, kw_only=True)`, validated in `__post_init__`), and that
+  object is also where it receives every capability it consumes (ADR-0070). Where the values come
+  from — environment, a settings library, a vault — is the application's business; the framework
+  documents a recipe and keeps field names stable, so one setting has one name.
 - **Discovery.** A third-party plugin is an ordinary package whose object is imported and placed
   in `plugins=[...]`. Nothing activates by being installed; entry points stay out of 0.5.0.
 - **Contract stability.** The plugin Protocols and `PluginSpec` are public API under semantic
-  versioning; the declared contract version is checked at start-up and an incompatible plugin fails
-  with a clear message. First-party plugins are subpackages of the single distribution, one extra
+  versioning, and the contract grows by adding a Contribution Protocol rather than by changing one
+  ([ADR-0069](0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md)).
+  First-party plugins are subpackages of the single distribution, one extra
   per optional library and a `MissingExtraError` at construction
   ([ADR-0041](0041-default-dependencies-and-one-extra-per-optional-library.md)); each ships with a
   component design document and passes the conformance suite of every Protocol it implements,
@@ -60,8 +67,6 @@ addition, not a rewrite.
   process without a Transport becomes a special case instead of "no transport plugins".
 - *One fat `Plugin` base class* — rejected: inheritance and empty methods in every plugin
   ([ADR-0006](0006-architectural-tenets-of-the-core.md), ISP).
-- *List order only, no declared dependencies* — rejected: the user carries the ordering burden
-  and missing dependencies surface at runtime.
 - *Framework reads environment variables itself* — rejected: a settings library in the Core or
   plugins and hidden configuration.
 - *Entry-point discovery now* — deferred: no demand yet; when it comes, copy pydantic's guards.

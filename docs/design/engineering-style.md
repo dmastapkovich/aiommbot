@@ -10,7 +10,7 @@ a rule somebody can apply to a diff.
 ## How to read a rule
 
 Every rule carries the eight parts [ADR-0033](../adr/0033-identified-tiered-rules-with-a-derived-review-checklist.md)
-fixed. There are 94 rules over ten areas, 44 of them `tool` and 50 `review`; the numbers are
+fixed. There are 96 rules over ten areas, 46 of them `tool` and 50 `review`; the numbers are
 derived from the rules below, and a rule added or withdrawn changes them here in the same commit.
 
 | Part | What it is |
@@ -1661,6 +1661,60 @@ _Limits:_ no exceptions. The five documented forms — the root for the closed h
 _Tier:_ `tool` — the public-surface guard test rejects a page row that names a module.
 _Checked in:_ LLD, PR. _From:_ [ADR-0042](../adr/0042-a-public-name-is-documented-at-its-package-path.md), [`docs/research/22`](../research/22-public-import-surface-of-modern-libraries.md).
 
+#### `ST-MOD-12` — Leave every piece of process-global state to the application
+
+_Reason:_ process-global state is the first thing every surveyed plugin host prohibits, because one
+Plugin that sets it changes the behaviour of code that never composed it and of the application that
+did.
+
+```python
+# Don't — anywhere in a Plugin or in the Adapter
+logging.basicConfig(level=logging.INFO)
+warnings.simplefilter("ignore", DeprecationWarning)
+signal.signal(signal.SIGTERM, self._stop)
+sys.path.insert(0, str(here))
+asyncio.set_event_loop_policy(UvloopPolicy())
+os.environ["TZ"] = "UTC"
+
+# Do — take what the behaviour needs as a typed setting
+def __init__(self, *, settings: HealthSettings) -> None:
+    self._paths = settings.paths
+```
+
+_Limits:_ the closed list is logging configuration, `warnings` filters, `sys.path`, signal handlers,
+the event-loop policy and `os.environ`, and a Plugin has no exception to it. The framework's own two
+operator-opted exceptions are the command's `--log-config`
+([ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md)) and the
+environment variable that silences the implicit-colour warning
+([ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md)); the stop signals belong
+to `run()` ([ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md)).
+_Tier:_ `tool` — a semgrep rule carrying this identifier. _Checked in:_ LLD, PR.
+_From:_ [ADR-0073](../adr/0073-what-a-plugin-may-not-do.md), [`docs/research/34`](../research/34-plugin-conflicts-and-prohibitions.md), [`docs/research/25`](../research/25-cli-entry-points-and-what-clis-configure.md).
+
+#### `ST-MOD-13` — Grow the plugin contract by adding a Contribution Protocol, never by changing one
+
+_Reason:_ a Protocol is satisfied structurally, so a member added to one every Plugin already
+implements breaks every Plugin at once — and the contract carries no version number to refuse them
+with.
+
+```python
+# Don't — a new member on a Protocol plugins already implement
+class ContributesRouters(Protocol):
+    def routers(self) -> Sequence[Router]: ...
+    def route_prefix(self) -> str: ...
+
+# Do — a new Protocol beside it, which an existing Plugin simply does not implement
+class ContributesRoutePrefix(Protocol):
+    def route_prefix(self) -> str: ...
+```
+
+_Limits:_ no exceptions while the Protocol is public. A withdrawn Protocol keeps its name, which is
+never reused; when one may be withdrawn at all is the deprecation policy's (#28) and not this
+rule's.
+_Tier:_ `tool` — a snapshot over the members of every `Contributes*` Protocol: adding a Protocol
+passes, changing one fails. _Checked in:_ LLD, PR.
+_From:_ [ADR-0069](../adr/0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md).
+
 ## 9. Logging and redaction — `ST-LOG`
 
 These rules cover the whole framework, and they are the whole of what it emits without
@@ -2317,6 +2371,7 @@ Every rule tagged `LLD`, whatever its tier: at design time no tool has run.
 - [ ] A bad composition stops the start with the full list; unexpected exceptions reach the ErrorBoundary; exceptions carry no content and are rooted at `AiommbotError`, warnings at `AiommbotWarning`, with `retryable` as a property. `ST-ERR-06` … `ST-ERR-10`
 - [ ] Every name is its `CONTEXT.md` term, collides with no `_Avoid_` list, and any new concept gets its term in this commit; the `Sync` prefix, the module plural and the type-parameter spellings match the decided ones. `ST-NAM-01`, `ST-NAM-02`, `ST-NAM-03`, `ST-NAM-05`, `ST-NAM-06`, `ST-NAM-07`, `ST-NAM-08`
 - [ ] The public surface satisfies all four criteria and everything else is `_internal`; every public name is written at its package path; importing any public module needs no extras and no configuration; a missing extra fails at construction. `ST-MOD-01`, `ST-MOD-02`, `ST-MOD-07`, `ST-MOD-08`, `ST-MOD-11`
+- [ ] The component sets no process-global state, and a capability it adds to the plugin contract is a new Contribution Protocol rather than a member on an existing one. `ST-MOD-12`, `ST-MOD-13`
 - [ ] The document states what is logged and what is not: identifiers only, one logger per component, no content switch, the single redaction list, a correlation id for anything a user sees. `ST-LOG-01` … `ST-LOG-04`, `ST-LOG-06`
 - [ ] It carries the catalogue of every record the component can emit — level, constant message, `extra` fields, trigger — with the levels chosen by frequency, the correlation carried in `extra` and by the task name, and no logging configuration touched. `ST-LOG-07`, `ST-LOG-08`, `ST-LOG-09`, `ST-LOG-10`
 - [ ] Every public name the document introduces is documented, its examples are executable, and each Protocol docstring states the implementer's contract and names the conformance suite. `ST-DOC-01`, `ST-DOC-02`, `ST-DOC-03`

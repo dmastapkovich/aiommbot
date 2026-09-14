@@ -4,7 +4,7 @@
 what moment; can a plugin be disabled or unloaded; and what does a host state that a plugin may
 **not** do?
 
-One of five notes gathered for GitHub issue #100, which asked what a plugin host specifies
+One of five notes on what a plugin host specifies
 beyond an explicit list and a set of narrow Protocols — the mechanics that
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md) states as words rather than as
 mechanisms. The five are
@@ -16,7 +16,9 @@ mechanisms. The five are
 [`docs/research/10`](10-plugin-systems.md) surveyed the same hosts for registration, ordering,
 isolation and settings; it did not ask what a host specifies after those choices.
 
-The decision this note is evidence for is #102.
+The decisions this note is evidence for are
+[ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md)
+and [ADR-0073](../adr/0073-what-a-plugin-may-not-do.md).
 
 Findings only, and no recommendation. Sources are primary — project source at the default branch,
 reference and developer documentation, PEPs, the Python packaging specifications,

@@ -143,23 +143,34 @@ _Carried by_: DependencyProvider, Bot, Dispatcher, Router, Runtime.
 ## 8.6 Extension points and isolation
 
 A capability is enabled by being listed in the composition, never by being installed or imported. A
-Plugin carries a frozen `PluginSpec` and implements only the contribution Protocols it needs;
-`requires` and `after` order the list topologically, and start-up runs compose → check → start with
-stop in reverse. The layers are four import ranks all pointing at the Core, and they are enforced
-rather than agreed: `layers`, `independence`, `protected` and `forbidden` contracts of import-linter
-are what stop a generic Plugin importing the Adapter and what keeps the two Transports apart.
-Substitution happens at the Core's thirteen seam rows and nowhere else; a Plugin that needs a
-platform fact receives it through a seam or a typed setting rather than by importing the layer that
-holds it. **Where it stops**: there is no entry-point discovery, no import-time side effect and no
-plugin-contributed command; a Plugin whose contract version does not match is a check error.
+Plugin carries a frozen `PluginSpec` and implements only the Contribution Protocols it needs; the
+list is the order lifecycles are entered in and the reverse of the order they stop in, and start-up
+runs compose → check → start. Plugins never reach one another: a capability two of them need is a
+Core Protocol, and the application constructs one implementation and hands it to each in its typed
+settings — the check phase verifies that it is the same object the composition lists and that it is
+listed before its consumer. The contract grows only by gaining a Contribution Protocol, so a Plugin
+written against an earlier release goes on satisfying the ones it implements. The layers are four
+import ranks all pointing at the Core, and they are enforced rather than agreed: `layers`,
+`independence`, `protected` and `forbidden` contracts of import-linter are what stop a generic
+Plugin importing the Adapter and what keeps the two Transports apart. Substitution happens at the
+Core's thirteen seam rows and nowhere else. **Where it stops**: there is no entry-point discovery,
+no import-time side effect, no plugin-contributed command and no version number on the contract; a
+Plugin contributes by returning values, so it can neither remove the ErrorBoundary nor compose a
+second Adapter, reach another Plugin's routers or settings, veto a Signal, or touch process-global
+state.
 
 _Decided in_: [ADR-0002](../adr/0002-core-scope-two-condition-test.md),
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0016](../adr/0016-three-phase-start-with-checks.md),
 [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md),
 [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md),
-[ADR-0040](../adr/0040-one-package-directory-per-import-rank.md).
-_Ruled by_: [`engineering-style.md`](engineering-style.md) §8 (`ST-MOD-01`…`ST-MOD-11`).
+[ADR-0040](../adr/0040-one-package-directory-per-import-rank.md),
+[ADR-0069](../adr/0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md),
+[ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md),
+[ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md),
+[ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md),
+[ADR-0073](../adr/0073-what-a-plugin-may-not-do.md).
+_Ruled by_: [`engineering-style.md`](engineering-style.md) §8 (`ST-MOD-01`…`ST-MOD-13`).
 _Carried by_: Bot, Signal, EventRegistry, every Plugin. Structure:
 [§5.3](05-building-block-view.md), [§5.4](05-building-block-view.md).
 
@@ -228,7 +239,7 @@ share one store for each grain: [§7](07-deployment-view.md).
 Stopping is one bounded phase with a fixed order. `run()` catches the stop signal and enters it; the
 WebSocketTransport closes its socket first, so the server stops queueing for a consumer that is
 leaving, then drains its queue and in-flight handlers within its grace period and cancels the rest
-with `DrainTimedOut(count)`. Plugins stop in reverse topological order inside the Bot's
+with `DrainTimedOut(count)`. Plugins stop in the reverse of the composition order inside the Bot's
 `stop_timeout`, which is itself inside the `shutdown_budget` the process declares — an arithmetic a
 start-up Check enforces rather than a document. Readiness turns false the moment the Drain begins;
 liveness does not move. A second stop signal collapses the timeout to zero. **Where it stops**: a

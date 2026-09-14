@@ -3,6 +3,7 @@ status: accepted
 date: 2026-09-09
 ticket: "#30"
 amends: [ADR-0002, ADR-0021, ADR-0022, ADR-0023]
+amended-by: [ADR-0071]
 ---
 
 # Flood control and delivery dedup ship as one generic Plugin of two Inbound middlewares over `KeyValueStore`, and a declined Event is `Unhandled` with a published reason
@@ -42,13 +43,14 @@ store.
   one WARNING and admits the Event. Suppressing traffic because Redis blinked turns a degraded
   dependency into an outage, and a duplicate post is a smaller harm than a lost one.
 - **Order is declared, not implied.** Dedup runs before cooldown — an already-seen delivery should
-  not consume a window — and the Plugin declares that with the `after` mechanism of
-  [ADR-0015](0015-plugin-contract-and-composition.md) rather than relying on list position.
+  not consume a window — and the Plugin declares that through the Middleware ordering of
+  [ADR-0020](0020-two-layer-middleware-chain.md), which is where an order between two Middleware
+  belongs ([ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)).
 
-The Plugin contributes its own Checks: an in-memory backend under a profile that is not a single
-process is an error, as it already is for State
-([ADR-0016](0016-three-phase-start-with-checks.md)), and a `Cooldown` Flag with the Plugin absent is
-the Flag-without-consumer error ADR-0020 already defines.
+A `Cooldown` Flag with the Plugin absent is the Flag-without-consumer error ADR-0020 already
+defines. The Plugin contributes no Check about its store: being process-local is a fact about the
+backend, which refuses a replicated profile on behalf of every consumer of the seam
+([ADR-0066](0066-the-in-memory-backends-own-the-single-process-check.md)).
 
 ## Considered options
 

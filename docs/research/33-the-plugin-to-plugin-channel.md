@@ -4,7 +4,7 @@
 a host that forbids or discourages direct imports between plugins — what is the lookup keyed on,
 what is returned, how is absence expressed, and is the channel typed?
 
-One of five notes gathered for GitHub issue #100, which asked what a plugin host specifies
+One of five notes on what a plugin host specifies
 beyond an explicit list and a set of narrow Protocols — the mechanics that
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md) states as words rather than as
 mechanisms. The five are
@@ -16,7 +16,9 @@ mechanisms. The five are
 [`docs/research/10`](10-plugin-systems.md) surveyed the same hosts for registration, ordering,
 isolation and settings; it did not ask what a host specifies after those choices.
 
-The decision this note is evidence for is #102.
+The decisions this note is evidence for are
+[ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md)
+and [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md).
 
 Findings only, and no recommendation. Sources are primary — project source at the default branch,
 reference and developer documentation, PEPs, the Python packaging specifications,

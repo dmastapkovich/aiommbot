@@ -4,7 +4,7 @@
 start unwound, what does the caller see when several stops fail at once, is there a retry, is the
 failure typed, and what state is the host left in?
 
-One of five notes gathered for GitHub issue #100, which asked what a plugin host specifies
+One of five notes on what a plugin host specifies
 beyond an explicit list and a set of narrow Protocols — the mechanics that
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md) states as words rather than as
 mechanisms. The five are

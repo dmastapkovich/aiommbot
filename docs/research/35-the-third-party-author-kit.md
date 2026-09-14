@@ -4,7 +4,7 @@
 contract test kit, a scaffold, a naming convention, a plugin-API reference page, an instruction on
 what to name a logger, and a promise about configuration field names?
 
-One of five notes gathered for GitHub issue #100, which asked what a plugin host specifies
+One of five notes on what a plugin host specifies
 beyond an explicit list and a set of narrow Protocols — the mechanics that
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md) states as words rather than as
 mechanisms. The five are

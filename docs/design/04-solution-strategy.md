@@ -60,13 +60,20 @@ closed. → [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.
 ## One Adapter, explicit Plugins, three-phase start, typed Signals
 
 Exactly one Adapter supplies the platform vocabulary; every optional capability, transports
-included, is a Plugin with a frozen declaration and narrow contribution Protocols, generic or
-adapter-specific, ordered topologically by declared dependencies and configured through typed
-frozen settings objects. The Bot composes, checks against a ProcessProfile with the full list of
-failures, then starts; lifecycle notifications are typed async Signals.
+included, is a Plugin with a frozen declaration and narrow Contribution Protocols, generic or
+adapter-specific, entered in the order the composition lists them and configured through typed
+frozen settings objects — which is also where a Plugin receives every capability it consumes, since
+Plugins never reach one another and the contract they implement carries no version but only grows.
+The Bot composes, checks against a ProcessProfile with the full list of failures, then starts;
+lifecycle notifications are typed async Signals.
 → [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0016](../adr/0016-three-phase-start-with-checks.md),
-[ADR-0017](../adr/0017-typed-async-lifecycle-signals.md)
+[ADR-0017](../adr/0017-typed-async-lifecycle-signals.md),
+[ADR-0069](../adr/0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md),
+[ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md),
+[ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md),
+[ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md),
+[ADR-0073](../adr/0073-what-a-plugin-may-not-do.md)
 
 ## Core-owned, type-keyed dependency injection
 
@@ -130,12 +137,12 @@ observer that never changes behaviour.
 ## Five layers, four import ranks, one direction
 
 Imports point at the Core: testing toolkit → adapter-specific plugins → (Adapter · generic plugins)
-→ Core, and the Core imports nothing above it. The Adapter and the generic plugins share one rank, so
-a generic Plugin cannot import the Adapter and "generic" stays a checked property; plugins are
-independent of one another and collaborate only through Core-owned Protocols; nothing imports the
-testing toolkit. The building-block view draws exactly this direction and the import-linter contract
-enforces it.
-→ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)
+→ Core, and the Core imports nothing above it. The Adapter and the generic plugins share one rank,
+so a generic Plugin cannot import the Adapter and "generic" stays a checked property; plugins are
+independent of one another and reach each other not at all; nothing imports the testing toolkit. The
+building-block view draws exactly this direction and the import-linter contract enforces it.
+→ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md),
+[ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md)
 
 ## Typed outcomes for caller branches, exceptions for broken contracts
 

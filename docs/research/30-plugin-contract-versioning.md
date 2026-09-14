@@ -4,7 +4,7 @@
 release version — what carries the number, at what granularity, by which comparison rule, checked
 when, failing how, and moved by whom?
 
-One of five notes gathered for GitHub issue #100, which asked what a plugin host specifies
+One of five notes on what a plugin host specifies
 beyond an explicit list and a set of narrow Protocols — the mechanics that
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md) states as words rather than as
 mechanisms. The five are
@@ -18,7 +18,8 @@ isolation and settings; it did not ask what a host specifies after those choices
 
 Ten hosts were read for a number that names the contract offered to plugins. One has it.
 
-The decision this note is evidence for is #102.
+The decision this note is evidence for is
+[ADR-0069](../adr/0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md).
 
 Findings only, and no recommendation. Sources are primary — project source at the default branch,
 reference and developer documentation, PEPs, the Python packaging specifications,
