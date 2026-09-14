@@ -1143,9 +1143,13 @@ def run_checks(checks: Sequence[Check], profile: ProcessProfile) -> CheckReport:
     )
 ```
 
-_Limits:_ no exceptions. This is why the check phase returns every failure and why Signal subscriber
+_Limits:_ a third cardinality exists where the caller has no branch to take and no return value to
+receive it in: several failures of one bounded phase, raised together as an exception group rooted
+at `AiommbotError`. The stop phase is the only such place, because it is also entered through
+`__aexit__` ([ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md)).
+Otherwise no exceptions: this is why the check phase returns every failure and why Signal subscriber
 failures are collected rather than swallowed.
-_Tier:_ `review`. _Checked in:_ LLD. _From:_ [ADR-0034](../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md).
+_Tier:_ `review`. _Checked in:_ LLD. _From:_ [ADR-0034](../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0017](../adr/0017-typed-async-lifecycle-signals.md), [ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md).
 
 #### `ST-ERR-05` — Give each failure exactly one representation
 
@@ -1183,11 +1187,15 @@ return CheckFailure(
 )
 ```
 
-_Limits:_ no exceptions. An unknown handler parameter, a missing plugin dependency, an in-memory
-backend without a single-process declaration, a Flag no Middleware consumes, an unreachable
-Handler and a contradicted import contract all stop the start.
+_Limits:_ no exceptions. An unknown handler parameter, a capability in a Plugin's settings that is
+not the object the composition lists or is listed after its consumer, a duplicate plugin or handler
+name, an in-memory backend without a single-process declaration, a Flag no Middleware consumes, an
+unreachable Handler and a contradicted import contract all stop the start. A Plugin that fails while
+*entering* its lifecycle is past this rule: the composition was valid and a dependency it reached
+during the check phase is gone
+([ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)).
 _Tier:_ `tool` — the check phase. _Checked in:_ LLD, PR.
-_From:_ [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
+_From:_ [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md), [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md).
 
 #### `ST-ERR-07` — Let an unexpected exception reach the ErrorBoundary, which is the one place it becomes an outcome
 
@@ -1725,28 +1733,36 @@ an unconfigured process can produce. The decisions behind them are
 [ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md), over
 [`docs/research/24`](../research/24-library-logging-design.md).
 
-#### `ST-LOG-01` — Log through one logger per component, named `aiommbot.<component>`, with a `NullHandler` on the package root
+#### `ST-LOG-01` — Build one logger per component, named `<package>.<component>`, and write to the one the composition supplied when it did
 
 _Reason:_ an application configures logging, a library does not; per-component names are what let it
-silence the WebSocketTransport without silencing dispatch.
+silence the WebSocketTransport without silencing dispatch, and an application that already owns a
+logger should not have to fight for it.
 
 ```python
 # Don't
 logging.info('connected')                      # the root logger, in a library
 
 # Do
-logger = logging.getLogger('aiommbot.websocket_transport')
+logger = settings.logger or logging.getLogger('aiommbot.websocket_transport')
 # and once, in aiommbot/__init__.py:
 logging.getLogger('aiommbot').addHandler(logging.NullHandler())
 ```
 
-_Limits:_ no exceptions. The component name is its `CONTEXT.md` term in snake case and never a
-module path, so splitting a module (`ST-MOD-09`) never breaks an operator's configuration; a
-component that emits nothing has no logger. The `NullHandler` means silence on purpose — it
-suppresses `logging.lastResort`, which is safe only because every serious failure also arrives as a
-Signal or as `FatalError` ([ADR-0053](../adr/0053-log-records-are-a-documented-contract.md)).
+_Limits:_ no exceptions to the form. The component name is its `CONTEXT.md` term in snake case and
+never a module path, so splitting a module (`ST-MOD-09`) never breaks an operator's configuration;
+a component that emits nothing has no logger. The **package** is whoever built the logger's: ours
+for our components, a third-party Plugin's own top-level package for theirs —
+`aiommbot_metrics.collector` and never `aiommbot.metrics.collector`, because `ST-LOG-08` checks our
+namespace both ways and a record we did not write cannot be in it
+([ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md)). Where the application
+supplied a `logging.Logger` the name is theirs and this rule says nothing about it
+([ADR-0078](../adr/0078-a-logger-is-a-capability-the-composition-supplies.md)). The `NullHandler`
+means silence on purpose — it suppresses `logging.lastResort`, which is safe only because every
+serious failure also arrives as a Signal or as `FatalError`
+([ADR-0053](../adr/0053-log-records-are-a-documented-contract.md)).
 _Tier:_ `tool` — a guard test asserting that the loggers the framework creates are exactly the
-loggers `ST-DOC-08` documents. _Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [`docs/research/24`](../research/24-library-logging-design.md).
+loggers `ST-DOC-08` documents. _Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [ADR-0078](../adr/0078-a-logger-is-a-capability-the-composition-supplies.md), [ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md), [`docs/research/24`](../research/24-library-logging-design.md), [`docs/research/43`](../research/43-who-owns-a-librarys-logger.md).
 
 #### `ST-LOG-02` — Log identifiers, counts and digests; never content
 
@@ -1912,13 +1928,17 @@ logger.warning('resync lost events', extra={'since': since})
 #   | WARNING | 'resync lost events' | since, connection_id | a hello with a new connection_id |
 ```
 
-_Limits:_ no exceptions. The message is a short human phrase, constant and unique within its logger,
-so a line reads under a bare `basicConfig` and groups in a structured pipeline without either being
-privileged. Adding a record, moving it between levels or dropping a field is a change to the
-document and to the public surface on the same terms as a public name (`ST-DOC-06`).
+_Limits:_ no exceptions, and the catalogue binds the records **of this distribution**; a third-party
+Plugin documents its own the same way and we promise nothing on its behalf
+([ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md)). The message is a short
+human phrase, constant and unique within its logger, so a line reads under a bare `basicConfig` and
+groups in a structured pipeline without either being privileged — and it is that constancy, not the
+ownership of the logger object, that keeps the record set finite and the two-way check possible.
+Adding a record, moving it between levels or dropping a field is a change to the document and to the
+public surface on the same terms as a public name (`ST-DOC-06`).
 _Tier:_ `tool` — a test comparing the documented catalogue with the records the code emits **both
 ways**: a record with no row and a row with no record each fail.
-_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md).
+_Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md).
 
 #### `ST-LOG-09` — Pass the identifiers the call site holds in `extra`, and let the task name and the shipped filter carry the rest
 

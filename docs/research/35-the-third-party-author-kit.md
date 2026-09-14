@@ -16,7 +16,12 @@ mechanisms. The five are
 [`docs/research/10`](10-plugin-systems.md) surveyed the same hosts for registration, ordering,
 isolation and settings; it did not ask what a host specifies after those choices.
 
-The decision this note is evidence for is #103.
+The decisions this note is evidence for are
+[ADR-0077](../adr/0077-a-field-of-a-public-frozen-dataclass-is-a-public-name.md),
+[ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md) and
+[ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md). How a documented list
+of fields is kept in step with the code is [`44`](44-keeping-a-documented-field-list-in-step-with-the-code.md)'s,
+and who owns a library's logger object is [`43`](43-who-owns-a-librarys-logger.md)'s.
 
 Findings only, and no recommendation. Sources are primary — project source at the default branch,
 reference and developer documentation, PEPs, the Python packaging specifications,

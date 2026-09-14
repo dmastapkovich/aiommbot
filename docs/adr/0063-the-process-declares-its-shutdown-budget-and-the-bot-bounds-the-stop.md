@@ -3,14 +3,15 @@ status: accepted
 date: 2026-09-10
 ticket: "#40"
 amends: [ADR-0016, ADR-0023, ADR-0031]
+amended-by: [ADR-0074]
 ---
 
 # `ProcessProfile` carries three fields, the third being the budget the host gives the process, and the Bot bounds its whole stop phase inside it
 
 [ADR-0031](0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) requires cleanup to be
 bounded in time, yet only the WebSocketTransport's Drain has a deadline
-([ADR-0023](0023-websocket-gateway-resilience.md)); plugin stop in reverse topological order has
-none, and neither uvicorn nor granian bounds an ASGI lifespan shutdown at all
+([ADR-0023](0023-websocket-gateway-resilience.md)); plugin stop in the reverse of the composition
+order has none, and neither uvicorn nor granian bounds an ASGI lifespan shutdown at all
 ([`docs/research/29`](../research/29-kubernetes-fields-a-drain-depends-on.md) §10). A budget nobody
 compares against a deadline is a comment. We decided:
 
@@ -22,7 +23,8 @@ compares against a deadline is a comment. We decided:
   [ADR-0016](0016-three-phase-start-with-checks.md) deferred here. Its default is **30 s**, which is
   what `terminationGracePeriodSeconds` defaults to (same note, §2).
 - **The Bot's `stop_timeout` bounds the whole stop phase**, under one `asyncio.timeout` around the
-  Drain, the plugin stops and every close. Its default is `shutdown_budget` less a **2 s** reserve
+  Drain, the plugin stops and every close — including the run of that phase a failed start triggers
+  ([ADR-0074](0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)). Its default is `shutdown_budget` less a **2 s** reserve
   for signal delivery and interpreter exit, so the shipped arithmetic is a 25 s Drain inside a 28 s
   stop inside a 30 s budget. On expiry the remaining tasks are cancelled; the Drain's own
   `DrainTimedOut(count)` still reports what it left.

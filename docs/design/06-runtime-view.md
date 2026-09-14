@@ -78,7 +78,7 @@ and exits, which is the same order with the third box left out
 | Branch point | Trigger | Outcome | Detail in |
 |---|---|---|---|
 | `Bot` | a Check has severity *warning* | logged, the start continues | `bot.md` |
-| `Plugin` | a Plugin raises while entering its lifecycle | the plugins already entered stop in reverse order | [#103](https://github.com/dmastapkovich/aiommbot/issues/103) |
+| `Plugin` | a Plugin raises while entering its lifecycle | the start ends and the same stop phase a signal enters runs over whatever started, in reverse; nothing is retried | [ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md) |
 | `Transport` | the socket is refused at start | backoff and retry inside the Transport, `Disconnected` published, the start does not fail | `websocket-transport.md` |
 | `Bot` | the process is embedded through `serve()` | the host owns the signals and the loop; the order above is unchanged | [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |
 
@@ -334,7 +334,7 @@ stopped. What the numbers are, and what happens when the host's clock is shorter
 | Branch point | Trigger | Outcome | Detail in |
 |---|---|---|---|
 | `Process host` | a second stop signal | `stop_timeout` collapses to zero and the phase ends at once | [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |
-| `Plugin` | a Plugin raises while stopping | logged, the remaining plugins still stop | [#103](https://github.com/dmastapkovich/aiommbot/issues/103) |
+| `Plugin` | a Plugin raises while stopping | the remaining Plugins still stop; each failure is wrapped naming its Plugin, one is raised bare and several as one group | [ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md) |
 | `Bot` | `stop_timeout` expires before the plugins are done | cleanup is cut short, still inside the declared budget | [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md) |
 | `Process host` | the budget expires | the process is killed and nothing of ours runs; the budget is a requirement on the host | [§7.4](07-deployment-view.md) |
 | `Bot` | the Bot was embedded through `serve()` | no signal handler of ours exists and the host drives the same phase | [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |

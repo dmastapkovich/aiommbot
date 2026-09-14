@@ -85,8 +85,10 @@ owned by a named component, every await that touches I/O sits under an explicit 
 and `CancelledError` is never caught. Cleanup is `try`/`finally` and `except*`, bounded in time by
 the Bot's `stop_timeout`, and `asyncio.shield` appears in exactly one named place, the Drain. A
 solitary exception is lifted out of a `BaseExceptionGroup` with `__cause__` and `__context__`
-preserved before it reaches a public API, and siblings are never discarded. Every duration — a
-timeout, a TTL, a backoff — is measured and slept through the `Clock` seam, which is why a test
+preserved before it reaches a public API, and siblings are never discarded. A group the framework
+*builds* rather than receives is a class rooted at `AiommbotError` that overrides `derive`, without
+which any `except*` narrower than that root rebuilds it as a plain `ExceptionGroup`. Every duration
+— a timeout, a TTL, a backoff — is measured and slept through the `Clock` seam, which is why a test
 advances time instead of waiting. **Where it stops**: trio is unsupported and `anyio` is never a
 Core dependency; the event loop belongs to the application, which passes a `loop_factory` if it
 wants one of its own.
@@ -94,7 +96,8 @@ wants one of its own.
 _Decided in_: [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md),
 [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md),
 [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md),
-[ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md).
+[ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md),
+[ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §5 (`ST-ASY-01`…`ST-ASY-12`).
 _Carried by_: Bot, Dispatcher, Signal, Sync executor, WebSocketTransport, Webhook, Health.
 
@@ -153,11 +156,16 @@ written against an earlier release goes on satisfying the ones it implements. Th
 import ranks all pointing at the Core, and they are enforced rather than agreed: `layers`,
 `independence`, `protected` and `forbidden` contracts of import-linter are what stop a generic
 Plugin importing the Adapter and what keeps the two Transports apart. Substitution happens at the
-Core's thirteen seam rows and nowhere else. **Where it stops**: there is no entry-point discovery,
-no import-time side effect, no plugin-contributed command and no version number on the contract; a
+Core's thirteen seam rows and nowhere else. A Plugin that raises while entering its lifecycle ends
+the start, and the Bot runs the one Stop phase over whatever started; each failure is wrapped naming
+its Plugin, one is raised bare and several as one group. An author gets the contract, the lifecycle
+conformance suite, a named section of the reference page and a distribution-name convention nothing
+enforces. **Where it stops**: there is no entry-point discovery, no import-time side effect, no
+plugin-contributed command, no version number on the contract and no retry of a failed lifecycle; a
 Plugin contributes by returning values, so it can neither remove the ErrorBoundary nor compose a
-second Adapter, reach another Plugin's routers or settings, veto a Signal, or touch process-global
-state.
+second Adapter, reach another Plugin's routers or settings, veto a Signal, suppress the reason it is
+being stopped, or touch process-global state; and no promise of ours reaches a third-party Plugin's
+own field names or its log records.
 
 _Decided in_: [ADR-0002](../adr/0002-core-scope-two-condition-test.md),
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
@@ -169,7 +177,11 @@ _Decided in_: [ADR-0002](../adr/0002-core-scope-two-condition-test.md),
 [ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md),
 [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md),
 [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md),
-[ADR-0073](../adr/0073-what-a-plugin-may-not-do.md).
+[ADR-0073](../adr/0073-what-a-plugin-may-not-do.md),
+[ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md),
+[ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md),
+[ADR-0076](../adr/0076-a-bot-runs-once.md),
+[ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §8 (`ST-MOD-01`…`ST-MOD-13`).
 _Carried by_: Bot, Signal, EventRegistry, every Plugin. Structure:
 [§5.3](05-building-block-view.md), [§5.4](05-building-block-view.md).
@@ -181,8 +193,12 @@ configures: a Plugin declares its settings type in its `PluginSpec` and receives
 the Bot takes its own. Nothing is configured by a string, a dictionary or a dotted path, and the
 check phase is where a wrong combination is reported — as the full list of failures, not the first.
 Loading — from a file, an environment variable, a secret manager — is the application's, so the
-framework reads no environment variable for configuration and no configuration file of any kind.
-**Where it stops**: two documented exceptions exist and both are opt-in by the operator, the
+framework reads no environment variable for configuration and no configuration file of any kind. A
+field name of such an object is part of the Public surface, carried there by the re-export of its
+type, listed under that type on the reference page and compared with `dataclasses.fields()` in both
+directions by the same guard test that checks the names. **Where it stops**: renaming a field is a
+breaking change with no alias, because a frozen keyword-only dataclass has no seam to put one in;
+and two documented exceptions exist to the no-configuration rule, both opt-in by the operator — the
 `--log-config` file the shipped command applies on request and the environment variable that
 silences the implicit-colour warning for a project.
 
@@ -190,7 +206,8 @@ _Decided in_: [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0016](../adr/0016-three-phase-start-with-checks.md),
 [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md),
 [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md),
-[ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md).
+[ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md),
+[ADR-0077](../adr/0077-a-field-of-a-public-frozen-dataclass-is-a-public-name.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §8.
 _Carried by_: Bot, every Plugin; overridden in a test only through `TestBot`.
 
@@ -236,23 +253,29 @@ share one store for each grain: [§7](07-deployment-view.md).
 
 ## 8.10 Graceful shutdown and the Drain
 
-Stopping is one bounded phase with a fixed order. `run()` catches the stop signal and enters it; the
+Stopping is one bounded Stop phase with a fixed order, entered by a stop signal and by a Plugin that
+failed to start alike. `run()` catches the stop signal and enters it; the
 WebSocketTransport closes its socket first, so the server stops queueing for a consumer that is
 leaving, then drains its queue and in-flight handlers within its grace period and cancels the rest
 with `DrainTimedOut(count)`. Plugins stop in the reverse of the composition order inside the Bot's
 `stop_timeout`, which is itself inside the `shutdown_budget` the process declares — an arithmetic a
-start-up Check enforces rather than a document. Readiness turns false the moment the Drain begins;
-liveness does not move. A second stop signal collapses the timeout to zero. **Where it stops**: a
-synchronous Handler in the Sync executor cannot be cancelled by anyone, so the Drain drops the wait
-on its deadline and reports the abandoned thread with `HandlerAbandoned`; and nothing survives the
-host's kill, which is why the budget is a requirement on the host and not a setting of ours.
+start-up Check enforces rather than a document. Every Plugin's stop is attempted whatever failed
+before it, and the failures are collected and raised once the Bot's own state is already at rest.
+Readiness turns false the moment the Drain begins; liveness does not move. A second stop signal
+collapses the timeout to zero. **Where it stops**: a synchronous Handler in the Sync executor cannot
+be cancelled by anyone, so the Drain drops the wait on its deadline and reports the abandoned thread
+with `HandlerAbandoned`; a Bot that has left the phase never enters it again; and nothing survives
+the host's kill, which is why the budget is a requirement on the host and not a setting of ours.
 
 _Decided in_: [ADR-0023](../adr/0023-websocket-gateway-resilience.md),
 [ADR-0030](../adr/0030-synchronous-callables-by-explicit-declaration.md),
 [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md),
 [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md),
 [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md),
-[ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md).
+[ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md),
+[ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md),
+[ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md),
+[ADR-0076](../adr/0076-a-bot-runs-once.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §5.
 _Carried by_: Bot, WebSocketTransport, Webhook, Sync executor, Health. The order and where it
 branches: [§6.6](06-runtime-view.md#66-graceful-shutdown-and-the-drain). Numbers and the host's
@@ -284,14 +307,19 @@ _Carried by_: Health, Bot, Signal, WebSocketTransport. Hosting and probe fields:
 ## 8.12 Logging and redaction
 
 The framework writes records and configures nothing: no handler beyond `NullHandler`, no level, no
-format, no helper — the application owns its logging, so a library cannot take that decision away. A
+format, no helper — the application owns its logging, so a library cannot take that decision away.
+It builds one `logging.Logger` per component under `<package>.<component>` unless the composition
+handed it one, which arrives in the settings object like every other capability; the package is
+whoever built the logger's, so a third-party Plugin's records stay in that Plugin's own namespace. A
 record's level follows how often the fact happens and who needs it, so nothing per delivery rises
 above DEBUG, INFO marks lifecycle transitions only, and the single ERROR the framework writes is the
 ErrorBoundary's one traceback per escaped exception. Correlation reaches a record in three layers —
 the call's own `extra`, the name of the asyncio task the delivery runs in, and a Core `ContextVar`
 with a filter the application attaches to its own handler — and never through the process-global
-record factory, which has one owner and it is not us. The set of records is a documented catalogue
-checked against the code in both directions. **Where it stops**: `REDACTED_FIELDS` is forty field
+record factory, which has one owner and it is not us. The set of records is a documented Record
+catalogue checked against the code in both directions, and it stays finite because a message is a
+constant phrase — which is also what makes a supplied logger write the same records as a built one.
+**Where it stops**: the catalogue binds this distribution only; `REDACTED_FIELDS` is forty field
 names that may never appear in a log record or a Request record, matched on the normalised name, and
 a safe fact whose name collides is recorded under another key; no switch anywhere adds a body, a
 header, a query string, a URL or a token.
@@ -302,7 +330,9 @@ _Decided in_: [ADR-0021](../adr/0021-core-error-boundary.md),
 [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md),
 [ADR-0054](../adr/0054-correlation-reaches-a-log-record-in-three-layers.md),
 [ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md),
-[ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md).
+[ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md),
+[ADR-0078](../adr/0078-a-logger-is-a-capability-the-composition-supplies.md),
+[ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §9 (`ST-LOG-01`…`ST-LOG-10`), §10
 (`ST-DOC-08`).
 _Carried by_: ErrorBoundary, Bot, API client, AuthLossDetector, WebSocketTransport, Webhook,

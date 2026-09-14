@@ -142,6 +142,13 @@ research note, not here.
 | [prometheus/docs](https://github.com/prometheus/docs) | Naming and instrumentation practice, and cardinality guidance |
 | [trallnag/prometheus-fastapi-instrumentator](https://github.com/trallnag/prometheus-fastapi-instrumentator) | A worked example of framework instrumentation shipped outside the framework |
 | [hynek/structlog](https://github.com/hynek/structlog) | Structured logging that cooperates with the standard library |
+| [Delgan/loguru](https://github.com/Delgan/loguru) | The other popular logging library an application may already use, and how it takes over standard-library records |
+| [microsoft/picologging](https://github.com/microsoft/picologging) | A drop-in replacement for the standard library's `logging`, and where "drop-in" stops |
+| [itamarst/eliot](https://github.com/itamarst/eliot) | Causal, action-scoped structured logging — the furthest a logger can get from a `LogRecord` |
+| [getlogbook/logbook](https://github.com/getlogbook/logbook) | The alternative logging system that predates the structured ones, and its `logging` bridge |
+| [nhairs/python-json-logger](https://github.com/nhairs/python-json-logger) | Structured output as a `Formatter` rather than a logger, and what it reads off a record |
+| [Textualize/rich](https://github.com/Textualize/rich) | `RichHandler`: the commonest reason an application configures logging at all |
+| [pydantic/logfire](https://github.com/pydantic/logfire) | An OpenTelemetry-backed platform that consumes standard-library records through a handler |
 | [getsentry/sentry-python](https://github.com/getsentry/sentry-python) | Integration discovery and how an SDK attaches to frameworks it does not own |
 
 ## Concurrency and the language

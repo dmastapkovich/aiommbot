@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#19"
-amended-by: [ADR-0030, ADR-0049, ADR-0050, ADR-0060, ADR-0063, ADR-0065]
+amended-by: [ADR-0030, ADR-0049, ADR-0050, ADR-0060, ADR-0063, ADR-0065, ADR-0074]
 ---
 
 # The WebSocketTransport is one supervised reconnect loop with heartbeat, resume, seq continuity, a never-stalling reader and a Drain
@@ -51,8 +51,10 @@ the design of the `WebSocketTransport` plugin:
   the rest with `DrainTimedOut(count)`. The Drain and the plugin stops that follow it run inside the
   Bot's `stop_timeout`, which is inside the budget the process declares
   ([ADR-0063](0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md)).
-  Plugins stop in reverse topological order
-  ([ADR-0015](0015-plugin-contract-and-composition.md)). A synchronous Handler
+  Plugins stop in the reverse of the composition order
+  ([ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)), and the
+  same phase is what a failed start runs
+  ([ADR-0074](0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)). A synchronous Handler
   running in the Sync executor cannot be cancelled by anyone: the Drain drops the wait on the
   deadline, keeps the grace period, and reports the abandoned thread with the `HandlerAbandoned`
   Signal — see [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md).

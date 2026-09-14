@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0058, ADR-0063, ADR-0066, ADR-0069, ADR-0071]
+amended-by: [ADR-0058, ADR-0063, ADR-0066, ADR-0069, ADR-0071, ADR-0074]
 ---
 
 # The Bot starts in three phases — compose, check, start — and stops on the full list of check failures
@@ -29,7 +29,11 @@ configuration has been validated as a whole, and problems are reported together.
    [ADR-0066](0066-the-in-memory-backends-own-the-single-process-check.md); Webhook: a
    Callback-token key of sufficient length unless authenticity is explicitly off,
    [ADR-0024](0024-webhook-ingress-and-callback-security.md)).
-3. **Start.** Enter plugin lifecycles in topological order, then transports; stop in reverse.
+3. **Start.** Enter plugin lifecycles in the order the composition lists them
+   ([ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)), then
+   start the Transports; stop in reverse. A lifecycle that raises ends the start, and the Bot runs
+   the same stop phase a stop signal enters over whatever started
+   ([ADR-0074](0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)).
 
 The process declares a typed **`ProcessProfile`** — `single_process`, `websocket_consumer` and
 `shutdown_budget`

@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-04
 ticket: "#22"
-amended-by: [ADR-0063, ADR-0064]
+amended-by: [ADR-0063, ADR-0064, ADR-0075]
 ---
 
 # The Core runs on standard-library asyncio under a fixed structured-concurrency discipline, and the framework never chooses the event loop
@@ -33,7 +33,10 @@ silently prefers uvloop whenever the import succeeds without logging the decisio
   exactly one named place: the Drain of [ADR-0023](0023-websocket-gateway-resilience.md).
 - **Exception groups are unwrapped without loss.** A solitary exception is lifted out of a
   `BaseExceptionGroup` with `__cause__` and `__context__` preserved before it reaches user-facing
-  API; sibling exceptions are never discarded.
+  API; sibling exceptions are never discarded. Where the framework *builds* a group rather than
+  receiving one, the class is rooted at `AiommbotError` and overrides `derive`, without which any
+  `except*` narrower than that root silently rebuilds it as a plain `ExceptionGroup`
+  ([ADR-0075](0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md)).
 - **Two entry points.** `run(*, loop_factory=None)` blocks, owns an `asyncio.Runner`, and is the
   only synchronous `def` of the framework — a process boundary, not a Face (it has no synchronous
   pair, so [ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) does not apply

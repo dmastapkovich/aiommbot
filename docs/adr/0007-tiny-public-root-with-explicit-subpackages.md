@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#13"
+amended-by: [ADR-0077]
 ---
 
 # The public API is a tiny root namespace plus explicit subpackages; everything else is internal
@@ -31,6 +32,11 @@ A name is public when **all four** of these hold, and it is internal the moment 
 2. it lives in a public module — not under `_internal`;
 3. it is re-exported from the subpackage that owns it, explicitly (`X as X`);
 4. it is **documented in the reference documentation**.
+
+A name that is a **public frozen dataclass carries its field names with it**: criterion 3 is
+satisfied for a field by the re-export of its type, because the checkers already treat the keyword
+names as part of the contract
+([ADR-0077](0077-a-field-of-a-public-frozen-dataclass-is-a-public-name.md)).
 
 Criterion 4 makes the reference page load-bearing: a name absent from it is not public even if it
 imports cleanly, which is what keeps the semantic-versioning promise (#28) bounded to a list

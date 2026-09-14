@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0047, ADR-0050, ADR-0056, ADR-0069, ADR-0070, ADR-0071]
+amended-by: [ADR-0047, ADR-0050, ADR-0056, ADR-0069, ADR-0070, ADR-0071, ADR-0077]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -46,7 +46,9 @@ addition, not a rewrite.
   (`@dataclass(frozen=True, slots=True, kw_only=True)`, validated in `__post_init__`), and that
   object is also where it receives every capability it consumes (ADR-0070). Where the values come
   from — environment, a settings library, a vault — is the application's business; the framework
-  documents a recipe and keeps field names stable, so one setting has one name.
+  documents a recipe. A field name is **public API on the same terms as the type that carries it**,
+  listed on the reference page and guarded both ways
+  ([ADR-0077](0077-a-field-of-a-public-frozen-dataclass-is-a-public-name.md)).
 - **Discovery.** A third-party plugin is an ordinary package whose object is imported and placed
   in `plugins=[...]`. Nothing activates by being installed; entry points stay out of 0.5.0.
 - **Contract stability.** The plugin Protocols and `PluginSpec` are public API under semantic

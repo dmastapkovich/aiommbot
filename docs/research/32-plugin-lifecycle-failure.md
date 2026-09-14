@@ -19,7 +19,12 @@ isolation and settings; it did not ask what a host specifies after those choices
 The load-bearing half is the standard library: the documented guarantees of
 `contextlib.AsyncExitStack` and `asyncio.TaskGroup` decide what a host can promise at all.
 
-The decision this note is evidence for is #103.
+The decisions this note is evidence for are
+[ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md),
+[ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md) and
+[ADR-0076](../adr/0076-a-bot-runs-once.md). What it did not ask — how a caller learns *which* unit
+failed — is [`41`](41-reporting-which-lifecycle-unit-failed.md)'s, and the contract a unit is
+promised is [`42`](42-the-lifecycle-contract-of-a-context-manager-unit.md)'s.
 
 Findings only, and no recommendation. Sources are primary — project source at the default branch,
 reference and developer documentation, PEPs, the Python packaging specifications,

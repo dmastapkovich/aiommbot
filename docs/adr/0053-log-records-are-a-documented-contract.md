@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
-amended-by: [ADR-0058]
+amended-by: [ADR-0058, ADR-0078, ADR-0079]
 ---
 
 # The set of log records is a documented contract checked against the code in both directions, and the framework never configures logging, ships no handler beyond `NullHandler` and offers no helper
@@ -21,9 +21,14 @@ about configuration:
   terms as a name ([ADR-0043](0043-explicit-re-export-with-a-reference-page-as-the-public-list.md)),
   and a test checks the catalogue against the code **both ways**: a record with no row and a row
   with no record both fail.
-- **One logger per component that logs, named `aiommbot.<term>`** in the glossary's snake case, with
-  a `NullHandler` on `aiommbot` and no logger anywhere else; a component that emits nothing has no
-  logger, as the `Event` component already states. The names are hand-chosen and are **not** module
+- **One logger per component that logs, named `<package>.<term>`** in the glossary's snake case —
+  `aiommbot` for ours, a third-party Plugin's own package for theirs
+  ([ADR-0079](0079-the-record-catalogue-survives-a-supplied-logger.md)) — with a `NullHandler` on
+  `aiommbot` and no logger anywhere else; a component that emits nothing has no logger, as the
+  `Event` component already states. A component **builds** that logger only when the composition did
+  not hand it one ([ADR-0078](0078-a-logger-is-a-capability-the-composition-supplies.md)); accepting
+  a `logging.Logger` is not configuring logging, and the framework still ships no factory and no
+  helper. The names are hand-chosen and are **not** module
   paths: [ADR-0040](0040-one-package-directory-per-import-rank.md) says a module path is not a
   documented import path, so deriving logger names from `__name__` would make a module split
   (`ST-MOD-09`) a breaking change for every operator's configuration. A guard test asserts that the

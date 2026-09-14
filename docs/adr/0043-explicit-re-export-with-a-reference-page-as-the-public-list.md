@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#24"
+amended-by: [ADR-0077, ADR-0080]
 ---
 
 # A public name is a redundant-alias re-export listed on a hand-written reference page, and the package carries no `__all__`
@@ -20,7 +21,12 @@ that realise those criteria:
   ([pyright, *Typed libraries*](https://microsoft.github.io/pyright/#/typed-libraries)).
 - **The list is a hand-written reference page**, one public name per row and machine-readable, and a
   guard test compares it with what actually imports **in both directions**: a name on the page that
-  does not import fails, and an importable name missing from the page fails. That is what keeps
+  does not import fails, and an importable name missing from the page fails. A row also carries the
+  field list of a public frozen dataclass, compared the same two ways against
+  `dataclasses.fields()`
+  ([ADR-0077](0077-a-field-of-a-public-frozen-dataclass-is-a-public-name.md)), and the audience it
+  is written for, so the plugin API is a named section of the one list rather than a second list
+  beside it ([ADR-0080](0080-the-plugin-api-is-a-section-of-the-reference-page.md)). That is what keeps
   ADR-0007's fourth criterion a decision somebody made on purpose instead of a by-product of the
   code. Which path a row names is
   [ADR-0042](0042-a-public-name-is-documented-at-its-package-path.md)'s; the page's renderer is

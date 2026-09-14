@@ -256,9 +256,19 @@ _Avoid_: result object, `Result`/`Either`, error code, status tuple
 **Public surface**:
 The set of names the semantic-versioning promise covers: no leading underscore, outside
 `_internal`, explicitly re-exported by its subpackage as `X as X`, and present in the reference
-documentation — all four at once. Each such name is documented at exactly one path, its package's;
-everything else may change in a patch release.
+documentation — all four at once. A public frozen dataclass carries its field names into the set
+with it, because the re-export of the type is what satisfies the third condition for them. Each such
+name is documented at exactly one path, its package's; everything else may change in a patch
+release.
 _Avoid_: public API (as the file-level thing), exports, `__all__` (the package carries none)
+
+**Stop phase**:
+The one bounded phase in which a Bot stops: the Transports close and Drain, the Sync executor's wait
+is dropped, and the Plugins stop in the reverse of the composition order, all inside `stop_timeout`.
+A stop signal enters it and so does a Plugin that failed to start — there is no second path and no
+second deadline — and a Bot that has left it never enters it again.
+_Avoid_: shutdown (as the phase — that is the Shutdown budget's word), teardown, cleanup, drain
+(that is the Transport's own step)
 
 **Flag**:
 A typed object attached to a Handler at its subscription to parametrise a Middleware (a timeout, a
@@ -558,6 +568,14 @@ The three layers that put the identity of one delivery on a log record: the fiel
 with the filter callable an application attaches to its own handler. Never a Filter — that word is a
 predicate over an Event — and never the process-global record factory.
 _Avoid_: Filter, log filter, log context, MDC, tracing
+
+**Record catalogue**:
+The documented list of every log record a component can emit — level, constant message, `extra`
+fields and trigger — checked against the code in both directions, so a record with no row and a row
+with no record each fail. It is finite only because a message is a constant phrase with the variable
+data in `extra`, which is also what lets an application supply the logger object without changing
+what is written.
+_Avoid_: log reference, message list, event catalogue, log schema
 
 **Redaction list**:
 The single named constant of field names that may never appear in a log record or a Request record.
