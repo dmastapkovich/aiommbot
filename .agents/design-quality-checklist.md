@@ -43,8 +43,10 @@ deferral in the ticket, not silently skipped.
 - §6 (runtime): every participant is an element of the building block view (arc42 tip 6-1,
   `essential`); each scenario says why it is architecturally relevant; each shows the failure branch
   that motivated the design. The template's rules for the section are in the `hld-author` skill.
-- §10 (quality): each scenario is stimulus → response → measure, and at least one scenario exists
-  per top quality goal.
+- §10 (quality): each scenario is context → stimulus → response → measure — arc42's own short form
+  with the response named separately — its measure is a threshold an ADR fixed or a check named so
+  a reader can run it, and every top quality goal has at least one scenario
+  ([ADR-0068](../docs/adr/0068-a-quality-scenario-is-a-registered-concern-measured-by-a-fixed-number-or-a-named-check.md)).
 
 ## Component design document (LLD)
 

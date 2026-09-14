@@ -59,11 +59,10 @@ configure.
 | Observability | Nothing is emitted by the framework itself; the Middleware layers, the `RequestObserver` pair, the Signals and `bot.stats()` are what a plugin reads | Middleware, `RequestObserver`, Signal, Bot | [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md), [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md) |
 | Process lifecycle | `run(*, loop_factory=None)` blocks; `serve()` embeds in a loop the application owns | Bot | [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md) |
 
-Two properties of the Mattermost side shape more of this design than any other fact: **every
-WebSocket connection of a bot account receives every event**, so identical replicas process each
-message twice ([`docs/research/01`](../research/01-mattermost-websocket-protocol.md), [ADR-0005](../adr/0005-one-ingress-many-workers.md)); and **a revoked session
-keeps its socket open and produces no event**, so silence has to be interpreted ([`docs/research/15`](../research/15-mattermost-session-revocation.md),
-[ADR-0023](../adr/0023-websocket-gateway-resilience.md)).
+The properties of the Mattermost side that shape this design more than any other fact — a bot
+account's every connection receiving every event, a revoked session staying open and silent, a
+callback arriving unsigned over HTTP and never over the stream — are constraints rather than
+interfaces, and they are [§2.1](02-constraints.md#21-platform-constraints)'s.
 
 ## 3.3 Scope: the line between the framework and the application
 

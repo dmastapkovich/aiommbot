@@ -590,3 +590,30 @@ A typed constructor in the Testing toolkit for one first-class Payload, filling 
 producing an Event without a server. FakeMattermost produces the events of its own mutations through
 the same builders, so a built and a provoked Event have one shape.
 _Avoid_: factory (that is a DI Provider), fixture, sample event
+
+**Quality goal**:
+One of the five ranked properties the design is optimised for, each stated as a situation the system
+has to survive rather than as a word. The rank is what decides a conflict between two of them. Every
+registered concern is filed under exactly one goal, and a goal owes at least one Quality scenario.
+_Avoid_: non-functional requirement, NFR, quality attribute, ility, project goal
+
+**Quality scenario**:
+One registered concern written as a context, a stimulus, the response and the measure that decides
+whether it was met. The measure is a threshold an accepted decision already fixed, or the name of a
+check that will run — a Conformance suite, a rulebook rule, a typing test, an import-linter
+contract; a library produces no operational number, so a threshold nobody will measure is not one.
+_Avoid_: acceptance criterion, test case, requirement, SLA, use case
+
+**Constraint**:
+Anything that removes freedom from a later design, implementation or process decision — a fact the
+platform imposes, a technical floor, an organisational rule or a convention this project wrote for
+itself. Effect decides whether something is one; origin does not. A constraint may be negotiated,
+and the decision it shaped lives in its own ADR.
+_Avoid_: requirement, limitation, restriction, non-functional requirement, given
+
+**Stakeholder**:
+A party that needs something from this design catalogue — an application developer, a third-party
+plugin author, a framework contributor, an AI coding agent, an operator. What they expect of it is a
+document, never a behaviour of the running system; the parties a Bot process exchanges messages with
+are its partners instead.
+_Avoid_: actor, audience, user, partner (that is a party of the business context)

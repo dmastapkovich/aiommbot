@@ -95,5 +95,5 @@ the side effect happened and its acknowledgement never did. We decided:
   reasons in [ADR-0011](0011-lint-format-and-architecture-toolchain.md).
 - The Sync executor's size, the Check and the `HandlerAbandoned` Signal join the settings model, the
   Check catalogue and the Signal list; the Drain contract is
-  [§6.6](../design/06-runtime-view.md#66-graceful-shutdown-and-the-drain) and a §10 quality
-  scenario.
+  [§6.6](../design/06-runtime-view.md#66-graceful-shutdown-and-the-drain) and the shutdown scenario
+  of [§10.2](../design/10-quality-requirements.md#102-reliability).

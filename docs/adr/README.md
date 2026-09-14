@@ -76,3 +76,4 @@ ticket owns which decision.
 | [0065](0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md) | A WebSocketTransport waiting on the consumer lease is `Standby`, and readiness counts a standby Transport as connected (amends 0023, 0061) | accepted |
 | [0066](0066-the-in-memory-backends-own-the-single-process-check.md) | The in-memory storage backends contribute the single-process Check themselves, so every consumer of the seam inherits it (amends 0003, 0016, 0022) | accepted |
 | [0067](0067-a-runtime-scenario-is-one-order-between-boxes.md) | A §6 scenario is one order between boxes, drawn once, with the branch that motivated the design in the picture and the rest in a table | accepted |
+| [0068](0068-a-quality-scenario-is-a-registered-concern-measured-by-a-fixed-number-or-a-named-check.md) | A §10 scenario is a registered concern in context, measured by a number an ADR already fixed or by a named check that will run | accepted |
