@@ -58,7 +58,7 @@ closed variant types (`ST-PAT-10`) — are named rather than assumed.
 _Held by:_ `ST-PAT-05`, `ST-PAT-07`, `ST-PAT-08`, `ST-PAT-10`, `ST-TYP-08`, `ST-SOL-02`. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
 
 **The Core owns the Protocols; implementations arrive from outside.** Sixteen Protocols on thirteen
-seams are the whole substitution surface: eleven seams the Core calls out through, and one it hands
+seams are the whole substitution surface: twelve seams the Core calls out through, and one it hands
 to a Handler to call. Imports point at the Core: testing toolkit → adapter-specific plugins →
 (Adapter · generic plugins) → Core. A generic Plugin may not import the Adapter, which is
 what makes "generic" a checked property instead of a claim.
