@@ -65,9 +65,26 @@ which is a reason to measure before *changing* it, not a reason to treat it as m
   document that starts counting at §3 is one out of step with every arc42 reader.
 - **arc42 sanctions no §5 subsection that is not a level** — silent across the 320 pages of the
   template, the tips and the FAQ — yet 3 of the 8 published documents carry one anyway, and the
-  template's own 5.1 owes an `Important Interfaces` slot that `tpu` promotes to a subsection. None
-  of the eight carries a reading guide or a summary inventory; those two are this catalogue's, and
-  ADR-0081 keeps them unnumbered.
+  template's own 5.1 owes an `Important Interfaces` slot that `tpu` promotes to a subsection. The
+  slot is **plural** — `<Name interface 1>` … `<Name interface m>` are sibling subsections of the
+  blackbox descriptions — so 5.1.1, 5.1.2 and so on are the template's own shape, and its admission
+  test is "important interfaces, that are not explained in the black box templates of a building
+  block". None of the eight carries a reading guide or a summary inventory; those two are this
+  catalogue's, and ADR-0081 keeps them unnumbered.
+- **arc42 has no notion of an extension point, and no taxonomy of element kinds.** 0 hits for
+  `extension point|extensib|plug-?in|hook|variability|customi[sz]ation|SPI` across 186 files and
+  12,191 lines of the template in thirteen language editions, 0 across the §5 page and its 28 tips,
+  0 across the §8 page and its 11 tips; 0 of the 8 published documents classify blocks by kind, and
+  whitebox/blackbox plus the levels are the whole apparatus. What arc42 *does* answer: an interface
+  recurring across blocks is described in full **once, where it is actually handled**, and
+  cross-referenced everywhere else (FAQ C-5-10); a contract many blocks share is factored into a §8
+  concept with a stereotype left in §5 (tips 5-10, 5-28, 8-11) — which is what both published
+  extensible systems do, giving the extension contract no §5 row at all. A kind may be marked only
+  with a legend (tips 5-20, 5-24), and FAQ K-2 asks that customisations stay in subsections. So a
+  rank table, a *Direction* column and a reading guide are all this catalogue's own — no inventory
+  anywhere in `.refs/` carries a direction marker — and each has to be defended as such
+  ([ADR-0083](../../../docs/adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md),
+  [ADR-0084](../../../docs/adr/0084-a-rank-is-a-property-of-a-building-block-and-an-interface-carries-none.md)).
 - **§4 names a decision and does not argue it — but never item by item.** The rejected option
   belongs to a decision record and the *how* to §8 (FAQ C-4-2, tip 4-4); what §4 itself owes is the
   motivating sentence, and tip 4-2 — its only `essential` tip — is what ties each approach to a
