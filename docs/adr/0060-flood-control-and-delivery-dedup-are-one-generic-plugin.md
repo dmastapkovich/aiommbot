@@ -71,15 +71,15 @@ backend, which refuses a replicated profile on behalf of every consumer of the s
 
 ## Consequences
 
-- `FloodControl` is a component of §5.7 with a `LLD: FloodControl` ticket in the writing order of
+- `FloodControl` is a component of §5.2.3 with a `LLD: FloodControl` ticket in the writing order of
   [ADR-0035](0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md), after the
   `KeyValueStore` backends, the Router, the Middleware and the State documents whose contracts
   appear in its structural section.
 - `StateKeyProvider` gains a second consumer in
-  [§5.4](../design/05-building-block-view.md#54-the-seams-of-the-core); the seam itself is unchanged
+  [§5.1.1](../design/05-building-block-view.md#511-the-seams-of-the-core); the seam itself is unchanged
   and the count does not move.
 - The generic-plugin diagram of
-  [§5.7](../design/05-building-block-view.md#57-level-3--generic-plugins) gains a box, and the same
+  [§5.2.3](../design/05-building-block-view.md#523-the-generic-plugins) gains a box, and the same
   layering argument applies as for State: it reaches the Adapter's key strategy through a Core
   Protocol and never by import
   ([ADR-0032](0032-layer-model-and-direction-of-allowed-dependencies.md)).

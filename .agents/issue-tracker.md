@@ -36,8 +36,8 @@ drafted into a file first.
   `gh` inside a shell loop does not run here.
 - **Ticket**: a sub-issue of the map with one `wayfinder:<type>` label — `research`, `grilling`,
   `prototype`, `task` or `lld`. An `lld` ticket is titled `LLD: <component>`, one per component of
-  §5.10 of the building-block view; it writes `docs/design/components/<term>.md` and its
-  `blocked_by` edges are the writing order of
+  the inventory summary of the building-block view; it writes `docs/design/components/<term>.md`
+  and its `blocked_by` edges are the writing order of
   [ADR-0035](../docs/adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
   from which the *Wave* column of `docs/design/components/README.md` is derived.
 - **Blocking**: GitHub's native issue dependencies. `issue_dependencies_summary.blocked_by` counts

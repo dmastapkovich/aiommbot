@@ -24,8 +24,9 @@ one states the order and where it splits, [§8](08-cross-cutting-concepts.md) st
 mechanism follows, and §10 states the measurable stimulus and response (ADR-0067).
 
 **Participants.** Every lifeline is an element of the building block view — a component, a part or a
-seam of [§5](05-building-block-view.md), at the level the scenario is about: 6.8 is about two
-processes, so its lifelines are the containers of [§5.2](05-building-block-view.md#52-level-2--containers).
+seam of [§5](05-building-block-view.md), at the granularity the scenario is about: 6.8 is about two
+processes, so its lifelines are the containers
+[§5](05-building-block-view.md#process-shapes-as-containers) draws.
 External lifelines are the partners of [§3](03-context-and-scope.md). `Handler` is the one lifeline
 that is neither: it is the application's own function, which is exactly the boundary
 [§3.3](03-context-and-scope.md#33-scope-the-line-between-the-framework-and-the-application) draws.

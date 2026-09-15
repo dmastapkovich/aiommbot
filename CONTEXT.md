@@ -645,3 +645,10 @@ plugin author, a framework contributor, an AI coding agent, an operator. What th
 document, never a behaviour of the running system; the parties a Bot process exchanges messages with
 are its partners instead.
 _Avoid_: actor, audience, user, partner (that is a party of the business context)
+
+**Building block level**:
+One step of the static decomposition of source code: level 0 is the Bot process as one box, level 1
+is the five layers, level 2 is the components inside each layer. Level n is written in section 5-n
+and no level is skipped. A level is not a layer — the five layers are one level — and what is not a
+step of that hierarchy, a process shape among them, carries no level and no number.
+_Avoid_: layer, tier, depth, level of detail, C4 level

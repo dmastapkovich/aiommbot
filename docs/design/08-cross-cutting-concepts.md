@@ -184,7 +184,7 @@ _Decided in_: [ADR-0002](../adr/0002-core-scope-two-condition-test.md),
 [ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §8 (`ST-MOD-01`…`ST-MOD-13`).
 _Carried by_: Bot, Signal, EventRegistry, every Plugin. Structure:
-[§5.3](05-building-block-view.md), [§5.4](05-building-block-view.md).
+[§5.1](05-building-block-view.md), [§5.1.1](05-building-block-view.md).
 
 ## 8.7 Configuration and settings
 
@@ -410,4 +410,4 @@ _Decided in_:
 [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §11 (`ST-TST-01`…`ST-TST-09`).
 _Carried by_: Testing toolkit, FakeMattermost, and every component through its suite
-([§5.9](05-building-block-view.md)).
+([§5.2.5](05-building-block-view.md)).

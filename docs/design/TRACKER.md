@@ -15,8 +15,8 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | 1 | `01-introduction-and-goals.md` | reviewed | #37 | #13 |
 | 2 | `02-constraints.md` | reviewed | #37 | #13 |
 | 3 | `03-context-and-scope.md` | reviewed | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
-| 4 | `04-solution-strategy.md` | reviewed | #38 | same |
-| 5 | `05-building-block-view.md` | reviewed | #38 | same |
+| 4 | `04-solution-strategy.md` | reviewed | #109 | same |
+| 5 | `05-building-block-view.md` | reviewed | #109 | same |
 | 6 | `06-runtime-view.md` | reviewed | #39 | #38 #16 #17 |
 | 7 | `07-deployment-view.md` | reviewed | #40 | #38 #24 #29 |
 | 8 | `08-cross-cutting-concepts.md` | reviewed | #40 | same |
@@ -113,6 +113,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Engineering style and ideology: rule form, pattern tiers, derived review checklist | #36 | 0033 | reviewed |
 | Error mechanism: typed outcome versus exception | #36 | 0034 | reviewed |
 | Quality goals, constraints, quality scenarios | #37 | 0068 | reviewed |
+| arc42 conformance of §4 and §5: the building block levels, the whitebox rationale, and §4's tie to the quality goals | #109 | 0081, 0082 | reviewed |
 | LLD writing order and parallelism | #41 | 0035 | reviewed |
 | Reply-slot typing: second type parameter declared contravariant, `ReplyChannel` as the Core's twelfth seam, `ReplyAlreadySent` Core-owned | #57 | 0036 | reviewed |
 | Envelope enrichment: `derive(meta: EventMeta[R2])` only; `dataclasses.replace`, `copy.replace` and `__replace__` on an `Event` banned | #57 | 0037 | reviewed |
@@ -124,10 +125,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 
 ## C. Component design documents (LLD)
 
-§5.10 of `05-building-block-view.md` lists **32 components** across five layers, with 32 part
-rows and sixteen Protocols on thirteen *seam* rows — twelve required, one provided — that get no
-document of their own. One row per component here and one `LLD: <component>` ticket each. The file
-name is the `CONTEXT.md` term in kebab-case.
+The inventory summary of `05-building-block-view.md` lists **32 components** across five layers,
+with 32 part rows and sixteen Protocols on thirteen *seam* rows — twelve required, one provided —
+that get no document of their own. One row per component here and one `LLD: <component>` ticket
+each. The file name is the `CONTEXT.md` term in kebab-case.
 
 | Component | Layer | File | Status | Ticket |
 |---|---|---|---|---|
@@ -185,7 +186,7 @@ and every row names a §10 scenario, and neither section holds anything without 
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019, ADR-0046 (overrides exist only in the toolkit) | §8.5 | [§10.3](10-quality-requirements.md#103-correctness-by-mechanism) | reviewed |
 | Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0016 (compose, check, start), ADR-0032 (layers and direction), ADR-0038 (the seam inventory), ADR-0040 (directories and contract shape), ADR-0069 (no version, the contract only grows), ADR-0070 (no channel: the composition hands one instance to each consumer), ADR-0071 (list order, no declared dependency), ADR-0072 (what the check phase refuses and where the catalogue lives), ADR-0073 (what a Plugin may not do), ADR-0074 (a failed start runs the one Stop phase and nothing retries), ADR-0075 (the failure names its Plugin, several are one group), ADR-0076 (a Bot runs once), ADR-0080 (the author's kit: a section of the reference page, a name convention, no scaffold), research 30, 33, 34, 41, 42 | style §8; §5, §8.6 | [§10.5](10-quality-requirements.md#105-modifiability) | reviewed |
 | Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours), ADR-0008 (free threading claimed only where the 3.14t job tests it) | §8.4 | [§10.3](10-quality-requirements.md#103-correctness-by-mechanism) | reviewed |
-| Testing strategy (unit / contract / integration / typing / property) | ADR-0033 and style §11 (how tests are written), ADR-0044 (packaging and activation), ADR-0045 (the platform double), ADR-0046 (`TestBot`), ADR-0047 (conformance suites), ADR-0059 (`FakeClock`) | style §11; §5.9; §8.15 | [§10.4](10-quality-requirements.md#104-testability) | reviewed |
+| Testing strategy (unit / contract / integration / typing / property) | ADR-0033 and style §11 (how tests are written), ADR-0044 (packaging and activation), ADR-0045 (the platform double), ADR-0046 (`TestBot`), ADR-0047 (conformance suites), ADR-0059 (`FakeClock`) | style §11; §5.2.5; §8.15 | [§10.4](10-quality-requirements.md#104-testability) | reviewed |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start), ADR-0050 (depth is read, not pushed), ADR-0060 (declining a delivery before the walk, keyed on chat identity) | §8.8, gateway LLD | [§10.2](10-quality-requirements.md#102-reliability) | reviewed |
 | Idempotency and stale-action handling | ADR-0022 (CAS, locks), ADR-0024 (optional TTL, opt-in nonce store, `StaleAction` events), ADR-0030 (an abandoned synchronous Handler must be idempotent), ADR-0060 (delivery dedup by platform identity, failing open) | §8.9; §7 for which processes must share a store | [§10.2](10-quality-requirements.md#102-reliability) | reviewed |
 | Single WebSocket consumer and horizontal scaling | ADR-0005, ADR-0023 (`ProcessProfile.websocket_consumer` + optional lease), ADR-0056 (no second single-instance process of ours), ADR-0061 (readiness as the only rollout signal a Pod with no Service has), ADR-0065 (`Standby` and what readiness reports for it) | §7 | [§10.2](10-quality-requirements.md#102-reliability) | reviewed |

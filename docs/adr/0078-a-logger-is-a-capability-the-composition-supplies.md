@@ -46,7 +46,7 @@ such a capability, so it arrives the same way.
   `logging.Logger` annotation refuses it at type-check time, and loguru's own `InterceptHandler`
   seam is where loguru's documentation puts a library's records anyway
   ([`docs/research/43`](../research/43-who-owns-a-librarys-logger.md)).
-- **No new seam, and no fifteenth conformance suite.** [§5.4](../design/05-building-block-view.md)
+- **No new seam, and no fifteenth conformance suite.** [§5.1.1](../design/05-building-block-view.md)
   stays thirteen rows and [ADR-0047](0047-a-conformance-suite-per-core-seam.md) fourteen suites. A
   logger Protocol has no conformance test anywhere in seventy-six projects, and CPython declines to
   make its own logger check `runtime_checkable`.

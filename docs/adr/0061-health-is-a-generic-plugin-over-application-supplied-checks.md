@@ -92,7 +92,7 @@ We decided:
 
 ## Consequences
 
-- `Health` is a component of §5.7 with a `LLD: Health` ticket in the writing order of
+- `Health` is a component of §5.2.3 with a `LLD: Health` ticket in the writing order of
   [ADR-0035](0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md), after the
   Signal and Bot documents its readiness is derived from.
 - The Webhook carries no health route of its own

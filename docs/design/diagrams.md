@@ -11,7 +11,7 @@ are reviewed in pull requests and are diffed like code. No images, no binary dia
 |---|---|---|---|
 | System Context | `03-context-and-scope.md` | `C4Context` | the bot, its users, Mattermost, storage, operators |
 | Container | `05-building-block-view.md` | `C4Container` | runnable units and stores in a deployment |
-| Layers | `05-building-block-view.md` §5.3 | `C4Component` | the five layers of a process as boxes; arrows are the import direction |
+| Layers | `05-building-block-view.md` §5.1 | `C4Component` | the five layers of a process as boxes; arrows are the import direction |
 | Component | `05-building-block-view.md`, each `components/*.md` | `C4Component` | the modules inside a container and their dependencies |
 | Code | `components/*.md` when it helps | `classDiagram` | Protocols, key classes, generics |
 | Deployment | `07-deployment-view.md` | `C4Deployment` | infrastructure nodes and which processes run on them |

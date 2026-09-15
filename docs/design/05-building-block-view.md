@@ -1,18 +1,20 @@
 # 5. Building block view
 
-_Status: reviewed (#38)._
+_Status: reviewed (#109)._
 
 The static decomposition, opened one level at a time. It is the **inventory** behind the
 `LLD: <component>` tickets, and the direction of every arrow is the layer
 contract of [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), which
 becomes the import-linter contract.
 
-## 5.0 How to read this section
+## How to read this section
 
-**Levels.** Level 1 is the Bot process as one box — that is [§3](03-context-and-scope.md).
-Level 2 is the containers a deployment runs (5.2). Level 2 is opened once more into the five
-**layers** inside a process (5.3). Level 3 is the components inside each layer, one diagram per
-layer (5.5–5.9), because one diagram answers one question.
+**Levels.** Level 0 is the Bot process as one box — that is [§3](03-context-and-scope.md). Level 1
+is the five **layers** a process is built from (5.1), and level 2 is the components inside each
+layer, one whitebox per layer (5.2.1–5.2.5). The hierarchy is one of source code, so the process
+shapes a deployment runs and the inventory summary carry no level, and the two sections that hold
+them carry no number
+([ADR-0081](../adr/0081-the-building-block-levels-count-source-code-and-level-n-lives-in-section-5-n.md)).
 
 **Three ranks of block.** Every row of every inventory table is one of:
 
@@ -20,7 +22,7 @@ layer (5.5–5.9), because one diagram answers one question.
 |---|---|---|
 | **component** | A designable unit with its own contract, failure modes and pattern story | yes — `components/<term>.md` |
 | **part** | A named piece that only makes sense inside one component | no — described inside that component's document |
-| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.4) | no — described inside the document 5.4's *Specified in* column names, which is authoritative; listed in 5.4, with the two exceptions named under its table |
+| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.1.1) | no — described inside the document 5.1.1's *Specified in* column names, which is authoritative; listed in 5.1.1, with the two exceptions named under its table |
 
 The distinction exists so that `RetryPolicy` and `NonceStore` are documented where they are used
 instead of becoming two-page documents of their own, while `Workspace` and the two Faces — which
@@ -32,49 +34,7 @@ link to every box's document, one row per box ([`diagrams.md`](diagrams.md)).
 
 **Names.** Every block is named with its `CONTEXT.md` term, exactly.
 
-## 5.1 Level 1 — the system
-
-One box: the **Bot** process, an application's code composed with aiommbot. Its partners and its
-interfaces are [§3](03-context-and-scope.md).
-
-## 5.2 Level 2 — containers
-
-The framework has no container of its own; what a deployment runs are processes composed from the
-same `Bot` object, differing only in which Transports are in the plugin list and what the
-`ProcessProfile` declares. Exactly one WebSocket consumer per bot account is the one hard
-constraint ([ADR-0005](../adr/0005-one-ingress-many-workers.md)); the rest replicates.
-
-```mermaid
-C4Container
-    title Containers — a bot deployed in the split shape
-    Person(user, "Mattermost user", "Posts, clicks buttons, submits dialogs")
-    System_Ext(mm, "Mattermost server", "Events, REST API, callbacks")
-    Container_Boundary(deployment, "One bot account") {
-        Container(consumer, "WebSocket consumer", "Python process", "Exactly one. WebSocketTransport plugin; ProcessProfile.websocket_consumer")
-        Container(ingress, "Webhook process", "Python process x N", "Webhook plugin behind an ASGI server the application runs")
-        Container(worker, "Worker or script", "Python process x N", "No Transport. Uses Workspace or SyncWorkspace")
-    }
-    ContainerDb_Ext(redis, "State store", "Redis or any KeyValueStore", "Conversation state, isolation locks, nonces, identity cache")
-    Rel(user, mm, "posts, clicks")
-    Rel(mm, consumer, "events", "WebSocket")
-    Rel(mm, ingress, "callbacks", "HTTPS POST")
-    Rel(consumer, mm, "REST", "HTTPS")
-    Rel(ingress, mm, "reply + REST", "HTTPS")
-    Rel(worker, mm, "REST", "HTTPS")
-    Rel(consumer, redis, "state, locks")
-    Rel(ingress, redis, "state, locks, nonces")
-```
-
-| Container | Responsibility | Composition | Replicates |
-|---|---|---|---|
-| WebSocket consumer | Holds the one long-lived socket, decodes events, dispatches them | `WebSocketTransport` in the plugin list, `websocket_consumer=True` | no — a second replica is a standby behind a `LockProvider` lease |
-| Webhook process | Serves interactive callbacks within the reply deadline | `Webhook` in the plugin list; the application's ASGI server hosts it | yes, behind a load balancer |
-| Worker or script | Acts on Mattermost with no inbound events | no Transport at all; `Workspace` or `SyncWorkspace` | yes |
-
-All three collapse into one process in the all-in-one Process shape; which shape to run, what a host
-must give each of them, and the arithmetic of the Drain are [§7](07-deployment-view.md).
-
-## 5.3 Level 2 opened — the layers inside a process
+## 5.1 Whitebox overall system
 
 ```mermaid
 C4Component
@@ -95,7 +55,9 @@ C4Component
 ```
 
 Five layers, four import ranks: the two middle boxes are **one rank**, so a generic Plugin may not
-import the Adapter, and every arrow points at the Core.
+import the Adapter, and every arrow points at the Core. The cut is the one thing a framework cannot
+retrofit — what a Plugin is allowed to know — so it is made once, here, and enforced by a tool
+rather than by review.
 → [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md),
 [ADR-0015](../adr/0015-plugin-contract-and-composition.md),
 [ADR-0002](../adr/0002-core-scope-two-condition-test.md)
@@ -104,7 +66,15 @@ The layer names and their direction are this section's line; each rank's package
 [ADR-0040](../adr/0040-one-package-directory-per-import-rank.md)'s, and a diagram that disagrees
 with that tree is a bug in one of the two.
 
-## 5.4 The seams of the Core
+| Layer | Responsibility | Opened in | May import |
+|---|---|---|---|
+| **Core** | The event envelope, the routing tree, dispatch with its two middleware layers, dependency injection, the lifecycle and every Protocol the framework owns | 5.2.1 | nothing of ours; the standard library and `typing_extensions` |
+| **Mattermost Adapter** | The platform vocabulary and every call out to one Mattermost server: payload types, generated models, the typed REST client and the two helper layers over it | 5.2.2 | the Core |
+| **Generic plugins** | Optional capabilities that name no platform — conversation state, flood control, storage backends, health probes, observability | 5.2.3 | the Core |
+| **Adapter-specific plugins** | Optional capabilities that do name one: the two Transports, the credential that makes a callback its own, and the identity cache | 5.2.4 | the Adapter and the Core |
+| **Testing toolkit** | Everything a test of any of the above needs, including the one stateful double of the platform | 5.2.5 | every layer; nothing imports it |
+
+### 5.1.1 The seams of the Core
 
 The Protocols the Core owns that are ranked `seam` — neither a component nor a part of one — with
 the direction of the call through each, who implements it, and the document that specifies it.
@@ -120,7 +90,7 @@ Two directions, in the vocabulary UML gives them
 
 A Core-owned Protocol that *is* a component or a part of one is not a row here: `Filter`,
 `Extractor` and `Middleware` are components, `Provider` and `Check` are parts, and the IdentityCache
-Protocol is the Adapter's rather than the Core's (5.8). The *Specified in* column is
+Protocol is the Adapter's rather than the Core's (5.2.4). The *Specified in* column is
 **authoritative** about where a contract lives — it is not always the consumer's document, and for a
 provided seam the consumer is user code and has no document
 ([ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
@@ -148,7 +118,14 @@ their rank is #85's. There is no observability row beyond the one above — a di
 typed `Outcome`, observed by Middleware
 ([ADR-0048](../adr/0048-observability-is-not-a-core-seam.md)).
 
-## 5.5 Level 3 — the Core
+## 5.2 Level 2 — the components of each layer
+
+One whitebox per layer, in the order of the import ranks: the Core first, then the two layers that
+share the second rank, then the plugins bound to the Adapter, then the toolkit that may import them
+all. Each opens into components and parts; no layer is opened further, because a component is where
+a design document takes over.
+
+### 5.2.1 The Core
 
 ```mermaid
 C4Component
@@ -180,6 +157,15 @@ C4Component
     Rel(extractor, event, "reads")
 ```
 
+Eight of the eleven blocks are the path one Event travels, cut where the path changes hands: the
+**Event** enters, the **Dispatcher** drives the two **Middleware** layers inside the
+**ErrorBoundary**, walks the **Router** whose gates are **Filter** and **Extractor**, and resolves
+parameters through the **DependencyProvider**. The other three are there because they belong to the
+process rather than to one Event — the **Bot** that composed it, the **Signal** by which the
+lifecycle is announced, and the **Sync executor** that borrows a thread for a declared synchronous
+callable. Each of the eleven passes the two-condition admission test of
+[ADR-0002](../adr/0002-core-scope-two-condition-test.md); what failed it is a Plugin in 5.2.3.
+
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
 | **Bot** | component | Composition root: gathers plugin contributions in the order the composition lists them, runs the three-phase compose → check → start, owns the lifecycle, the entry points and the catalogue of every refusal the check phase makes | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md), [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md), [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md) |
@@ -200,7 +186,7 @@ C4Component
 | **Event** | component | The immutable generic envelope and its metadata; the only Core type every other block reads | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md) |
 | `EventMeta`, `CorrelationId`, `ReplyAlreadySent` | part | Transport, receive time, correlation, sequence, raw data, the optional typed Reply slot, and the fieldless marker `send` returns once the slot is claimed | `event.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 
-## 5.6 Level 3 — the Mattermost Adapter
+### 5.2.2 The Mattermost Adapter
 
 ```mermaid
 C4Component
@@ -229,6 +215,20 @@ C4Component
     Rel(generator, models, "emits", "build time")
 ```
 
+The Adapter is cut so that what the platform dictates and what we design never share a block. Four
+blocks hold the platform: **Model generator** and **Generated model** are a build-time pair nobody
+edits by hand, **EventRegistry** holds the inbound vocabulary and **Codec** the wire rules, so a
+Mattermost quirk lands in one of those four and nowhere else. Three are cut by I/O rather than by
+feature: **Exchange** decides everything without performing it, **Face** performs it twice — once
+asynchronously, once synchronously — and **API client** is the only block that knows both, which is
+what lets one sans-I/O test cover both faces
+([ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)). **Workspace**
+and **Runtime** are one helper set at two bindings, Event-free and Event-bound
+([ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md)), so a worker that receives no
+events still gets the helpers. **AuthLossDetector** is shared rather than duplicated because the
+socket and the client observe the same revocation
+([ADR-0023](../adr/0023-websocket-gateway-resilience.md)).
+
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
 | **EventRegistry** | component | The platform vocabulary: event name → payload type, explicit registration, duplicate-name check, and the wire quirks handled once at decode | `event-registry.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md) |
@@ -249,7 +249,7 @@ C4Component
 | **Runtime** | component | The Event-bound layer a Handler receives: `answer`, `reply`, `update`, `delete`, `open_dialog`, taking channel, `root_id` and `trigger_id` from the Event; composes a Workspace and exposes `runtime.api` | `runtime.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md), [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) |
 | **AuthLossDetector** | component | Turns a mute socket into a decision: parse every `ping` reply, probe `/users/me`, refresh once, then `FatalError(AuthRevoked)` carrying ids and never the token. Shared by the WebSocketTransport and the API client | `auth-loss-detector.md` | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0027](../adr/0027-api-error-taxonomy.md) |
 
-## 5.7 Level 3 — generic plugins
+### 5.2.3 The generic plugins
 
 Bound to the Core only. They may not import the Adapter
 ([ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)).
@@ -293,7 +293,7 @@ Bot's aggregate instead
 | `health_app(bot)`, `HealthPaths`, `ReadinessCheck` | part | The ASGI callable the application hosts, the two configurable paths, and the frozen named check with its own timeout that the settings receive | `health.md` | [ADR-0061](../adr/0061-health-is-a-generic-plugin-over-application-supplied-checks.md) |
 | **Observability plugin** | component | `PrometheusPlugin` and `OpenTelemetryPlugin`, each behind the extra named after its library: two Middleware over the dispatch layers, an implementation of the `RequestObserver` pair, subscribers to the Signals, `ObservedKeyValueStore` and `ObservedLockProvider`, a collector reading the Stats snapshot, and an `HTTPTransport` decorator injecting `traceparent`. Takes its registry as an argument and touches no process-global state | `observability.md` | [ADR-0049](../adr/0049-what-the-framework-makes-observable.md), [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md), [ADR-0051](../adr/0051-first-party-observability-plugin.md) |
 
-## 5.8 Level 3 — adapter-specific plugins
+### 5.2.4 The adapter-specific plugins
 
 Bound to the Mattermost Adapter; each implements the Core `Transport` seam or extends the Adapter.
 
@@ -321,7 +321,7 @@ Webhook's nonce store and IdentityCache have in common is the Core `KeyValueStor
 | `NonceStore`, the PASETO extra | part | Opt-in single-use enforcement on a `KeyValueStore`, and `pyseto` behind the same `CallbackTokenCodec` | `callback-token.md` | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md) |
 | **IdentityCache** | component | Optional caching of resolved users and direct channels on a `KeyValueStore` with a one-hour TTL and event-driven invalidation; absent, the Workspace queries every time. The Workspace consults it through an **Adapter-owned Protocol**, so the import still points plugin → Adapter and never back | `identity-cache.md` | [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md), [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md) |
 
-## 5.9 Level 3 — the testing toolkit
+### 5.2.5 The testing toolkit
 
 `aiommbot.testing` may import every layer and is imported by none
 ([ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md)). It is the one public
@@ -349,7 +349,7 @@ implements through that object's ports; there is no second double of Mattermost 
 |---|---|---|---|---|
 | **Testing toolkit** | component | Everything a test needs that is not the platform: the wrapper that runs a composed Bot, the fourteen conformance suites, the typed event builders, the recording Reply channel, the two small doubles, the routing assertion and the pytest plugin | `testing-toolkit.md` | [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
 | `TestBot` | part | The wrapper over a composed Bot: typed overrides by key before the start, an asynchronous context manager running check and start with no Transport, `feed` returning the typed `Outcome`, and typed records of outcomes, replies and Signals | `testing-toolkit.md` | [ADR-0019](../adr/0019-handler-parameter-resolution-rules.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md) |
-| The fourteen conformance suites | part | One factory per seam row of 5.4 plus the plugin lifecycle, each taking the implementer's factory and the capabilities it declines, and reporting a named case's expectation and observation as typed data | `testing-toolkit.md` | [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| The fourteen conformance suites | part | One factory per seam row of 5.1.1 plus the plugin lifecycle, each taking the implementer's factory and the capabilities it declines, and reporting a named case's expectation and observation as typed data | `testing-toolkit.md` | [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
 | Event builders | part | One typed constructor per first-class payload, filling `EventMeta` and validating what the envelope deliberately does not; the server produces its events through the same builders | `testing-toolkit.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
 | Recording `ReplyChannel` slot | part | The second implementation of the one provided seam, generic in `R`, over which the `ReplyChannel` suite is parametrised alongside the Webhook's two slots | `testing-toolkit.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md) |
 | `FakeAdapter` and `FakeClock` | part | The Adapter double a Core-only test composes, and the second shipped implementation of the `Clock` seam, by which every timeout, TTL and backoff is driven instead of sleeping (`ST-TST-09`) | `testing-toolkit.md` | [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md) |
@@ -361,10 +361,52 @@ implements through that object's ports; there is no second double of Mattermost 
 | Typed fault injection | part | Scheduled outcomes on an `Operation` and on the socket — a status with an `AppError`, a close code, silence, a revoked session, a sequence gap — which is what removes the need for a scripted transport | `fake-mattermost.md` | [ADR-0027](../adr/0027-api-error-taxonomy.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
 | Seeding, per-`Operation` substitution and the `ApiCall` record | part | How a test prepares its own server and how it asserts on it, with no subclassing of ours anywhere (`ST-PAT-07`) | `fake-mattermost.md` | [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md) |
 
-## 5.10 Inventory summary
+## Process shapes as containers
+
+No building block level, and therefore no number: the hierarchy above is one of source code and
+what a deployment runs are processes (ADR-0081). The view is here rather than in
+[§7](07-deployment-view.md) because it names the blocks 5.1 and 5.2 name — a container is a plugin
+list over one `Bot` object — while §7 says what a host must promise each of them.
+
+The framework has no container of its own. The processes are composed from the same `Bot` object
+and differ only in which Transports are in the plugin list and what the `ProcessProfile` declares.
+Exactly one WebSocket consumer per bot account is the one hard constraint
+([ADR-0005](../adr/0005-one-ingress-many-workers.md)); the rest replicates.
+
+```mermaid
+C4Container
+    title Containers — a bot deployed in the split shape
+    Person(user, "Mattermost user", "Posts, clicks buttons, submits dialogs")
+    System_Ext(mm, "Mattermost server", "Events, REST API, callbacks")
+    Container_Boundary(deployment, "One bot account") {
+        Container(consumer, "WebSocket consumer", "Python process", "Exactly one. WebSocketTransport plugin; ProcessProfile.websocket_consumer")
+        Container(ingress, "Webhook process", "Python process x N", "Webhook plugin behind an ASGI server the application runs")
+        Container(worker, "Worker or script", "Python process x N", "No Transport. Uses Workspace or SyncWorkspace")
+    }
+    ContainerDb_Ext(redis, "State store", "Redis or any KeyValueStore", "Conversation state, isolation locks, nonces, identity cache")
+    Rel(user, mm, "posts, clicks")
+    Rel(mm, consumer, "events", "WebSocket")
+    Rel(mm, ingress, "callbacks", "HTTPS POST")
+    Rel(consumer, mm, "REST", "HTTPS")
+    Rel(ingress, mm, "reply + REST", "HTTPS")
+    Rel(worker, mm, "REST", "HTTPS")
+    Rel(consumer, redis, "state, locks")
+    Rel(ingress, redis, "state, locks, nonces")
+```
+
+| Container | Responsibility | Composition | Replicates |
+|---|---|---|---|
+| WebSocket consumer | Holds the one long-lived socket, decodes events, dispatches them | `WebSocketTransport` in the plugin list, `websocket_consumer=True` | no — a second replica is a standby behind a `LockProvider` lease |
+| Webhook process | Serves interactive callbacks within the reply deadline | `Webhook` in the plugin list; the application's ASGI server hosts it | yes, behind a load balancer |
+| Worker or script | Acts on Mattermost with no inbound events | no Transport at all; `Workspace` or `SyncWorkspace` | yes |
+
+All three collapse into one process in the all-in-one Process shape; which shape to run, what a host
+must give each of them, and the arithmetic of the Drain are [§7](07-deployment-view.md).
+
+## Inventory summary
 
 32 components, 32 part rows, and sixteen Protocols on thirteen seam rows — twelve of those rows
-required and one provided (5.4). The count matters in one way only: **32 `LLD: <component>`
+required and one provided (5.1.1). The count matters in one way only: **32 `LLD: <component>`
 tickets**. Parts and seams generate nothing; they are specified inside the document named beside
 them.
 

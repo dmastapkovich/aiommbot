@@ -121,8 +121,9 @@ class Bot:
     __slots__ = ('_adapter', '_plugins', '_router', '_dispatcher')
 ```
 
-_Limits:_ a component may still hold *parts* ([§5.10 of the building-block view](05-building-block-view.md#510-inventory-summary)) — a part is not a
-second reason to change, it is a named piece of the same one.
+_Limits:_ a component may still hold *parts*
+([the inventory summary of the building-block view](05-building-block-view.md#inventory-summary))
+— a part is not a second reason to change, it is a named piece of the same one.
 _Tier:_ `review`, with WPS as the mechanical floor.
 _Checked in:_ LLD, PR. _From:_ [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md).
 
@@ -2179,7 +2180,7 @@ _Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-document
 ## 11. Tests — `ST-TST`
 
 How tests are written is here; what `aiommbot.testing` provides is
-[§5.9](05-building-block-view.md) and
+[§5.2.5](05-building-block-view.md) and
 [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md) to
 [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md).
 

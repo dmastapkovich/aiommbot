@@ -22,11 +22,11 @@ src/aiommbot/
     __init__.py                      the Core's public surface
     bot.py  dispatcher.py  router.py  middleware.py  error_boundary.py
     dependency_provider.py  signal.py  sync_executor.py  event.py
-    filters.py  extractors.py                      components of §5.5
+    filters.py  extractors.py                      components of §5.2.1
     transport.py  key_value_store.py  lock_provider.py  codec.py
     http_transport.py  websocket_connection.py  state_key_provider.py
     token_provider.py  callback_token_codec.py  request_observer.py
-                                                   seams of §5.4, one Protocol group per module
+                                                   seams of §5.1.1, one Protocol group per module
     log_correlation.py               the contextvar and the filter callable of ADR-0054
     errors.py                        AiommbotError, FatalError, AiommbotWarning, MissingExtraError
     _internal/
@@ -34,7 +34,7 @@ src/aiommbot/
     __init__.py
     event_registry.py  generated_model.py  model_generator.py  codec.py
     api_client.py  exchange.py  face.py  workspace.py  runtime.py
-    auth_loss_detector.py  filters.py                components of §5.6
+    auth_loss_detector.py  filters.py                components of §5.2.2
     _internal/
     plugins/                         the adapter-specific rank
       websocket_transport/  webhook/  callback_token/  identity_cache/
@@ -43,7 +43,7 @@ src/aiommbot/
   testing/                           the testing toolkit rank
     __init__.py                      the toolkit's public surface
     fake_mattermost.py  test_bot.py  fake_adapter.py  fake_clock.py
-    builders.py  assertions.py                     components and parts of §5.9
+    builders.py  assertions.py                     components and parts of §5.2.5
     conformance/                     one module per conformance suite
     plugin.py                        the pytest plugin named in `pytest_plugins`
 ```
@@ -59,7 +59,7 @@ later:
   `executor.py`, which the glossary lists as a word to avoid. A component large enough to need parts
   in their own files becomes a package of the same name (`ST-MOD-09`).
 - **A seam is a module named after its Protocol**, in the rank that owns it — every Core-owned
-  Protocol of §5.4 is a module of `core/`, and the two paired Protocols of one seam share it
+  Protocol of §5.1.1 is a module of `core/`, and the two paired Protocols of one seam share it
   (`http_transport.py` holds `HTTPTransport` and `SyncHTTPTransport`).
 - **Plural marks a family of interchangeable peers**, singular one concept (`ST-NAM-07`):
   `filters.py`, `extractors.py`, `plugins/backends/`.
@@ -96,7 +96,7 @@ language floor lacks and no design at all, so the five layers on four ranks of
 ## Consequences
 
 - `mattermost/plugins/` is named for the rank, not for the declaration: the Callback token is a
-  member of that rank without a `PluginSpec`, composed by the Webhook (§5.8). Anything in the
+  member of that rank without a `PluginSpec`, composed by the Webhook (§5.2.4). Anything in the
   Adapter that needs to issue a token — the message builders of #52 — depends on the Core
   `callback_token_codec` seam and receives the implementation by injection, so the import still runs
   upward.

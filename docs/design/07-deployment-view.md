@@ -31,7 +31,7 @@ host, and the framework cannot verify it — 7.5 names the three ways it becomes
 
 Every process is the same `Bot` object with a different plugin list and a different
 `ProcessProfile`; there is no second build and no framework container image. The shapes are the ones
-[§5.2](05-building-block-view.md) draws as containers.
+[§5](05-building-block-view.md#process-shapes-as-containers) draws as containers.
 
 | Shape | Processes | `ProcessProfile` | When |
 |---|---|---|---|

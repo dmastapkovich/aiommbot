@@ -1,9 +1,25 @@
 # 4. Solution strategy
 
-_Status: reviewed (#38)._
+_Status: reviewed (#109)._
 
 The handful of decisions that shape everything else. Each item is one paragraph and links to the
 ADR that holds the decision.
+
+## What each quality goal is bought with
+
+The five goals of [§1.2](01-introduction-and-goals.md#12-quality-goals), in the order they are
+ranked, against the approaches below that serve them. A goal with no approach beside it would be a
+goal the strategy ignores, which is what this table is here to make visible. The scenarios that
+decide whether a goal is met are [§10](10-quality-requirements.md)'s and are not repeated here
+([ADR-0082](../adr/0082-section-4-ties-its-approaches-to-the-ranked-quality-goals-in-one-table.md)).
+
+| Quality goal | The approaches that serve it | Why those | ADR |
+|---|---|---|---|
+| 1 **Reliability** | A supervised, resumable, never-stalling WebSocketTransport; one consumer and many workers; typed, isolated, bounded conversation state; a narrow error boundary | The failure that hurts a bot is not a crash but an event silently missed, so recovery lives in the transport and memory lives in a store, and both outlive the process that held them | [ADR-0023](../adr/0023-websocket-gateway-resilience.md), [ADR-0005](../adr/0005-one-ingress-many-workers.md), [ADR-0022](../adr/0022-state-plugin-model.md), [ADR-0021](../adr/0021-core-error-boundary.md) |
+| 2 **Correctness by mechanism** | The three-phase start with a check phase that lists every failure; type-driven routing that refuses an unreachable handler; four strict type checkers with no suppressions | Each of them moves a mistake from run time to start-up or to the build, which are the only two places a library gets to refuse one | [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0009](../adr/0009-four-strict-type-checkers.md), [ADR-0010](../adr/0010-zero-suppressions-with-a-quarantine.md) |
+| 3 **Testability** | A sans-I/O Exchange under both Faces; one stateful platform double with a conformance suite per Core seam | What is hard to test is I/O, so the decisions are made where there is none and the one place that performs it is doubled once for everybody | [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md), [ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md), [ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) |
+| 4 **Modifiability** | Composition over Core-owned Protocols; five layers on four import ranks; every optional capability a Plugin; observability over mechanisms that already exist | Replacing a part has to be a change to the composition and nothing else, so each part is a Protocol the Core owns and the build refuses the import that would have defeated the substitution | [ADR-0006](../adr/0006-architectural-tenets-of-the-core.md), [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
+| 5 **Security** | Default-on callback authenticity with an explicit off; a record catalogue the framework writes and never configures, guarded by a redaction list | A callback arrives from outside and a log leaves the process: both are edges where the framework, not the application, has to be the one that fails closed | [ADR-0024](../adr/0024-webhook-ingress-and-callback-security.md), [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md) |
 
 ## A small Core admitted by a two-condition test
 
@@ -134,6 +150,21 @@ observer that never changes behaviour.
 [ADR-0027](../adr/0027-api-error-taxonomy.md),
 [ADR-0028](../adr/0028-runtime-helpers-and-identity-resolution.md)
 
+## Observability over mechanisms that already exist, and a log contract we never configure
+
+The framework owns no observability Protocol. A dispatch fact is the typed outcome a Middleware
+reads, an HTTP attempt reaches the `RequestObserver` pair, bounded-resource state is read from a
+frozen `bot.stats()` snapshot rather than pushed, and the first-party plugin is one more Plugin
+behind the extra named after its library. Logging is a documented catalogue of records whose levels
+are chosen by frequency and audience; the framework installs no handler, sets no level and picks no
+format, and one redaction list guards the two sinks that could otherwise carry a token, a message
+body or a user's data. → [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md),
+[ADR-0049](../adr/0049-what-the-framework-makes-observable.md),
+[ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md),
+[ADR-0051](../adr/0051-first-party-observability-plugin.md),
+[ADR-0053](../adr/0053-log-records-are-a-documented-contract.md),
+[ADR-0055](../adr/0055-one-redaction-list-over-two-sinks.md)
+
 ## Five layers, four import ranks, one direction
 
 Imports point at the Core: testing toolkit → adapter-specific plugins → (Adapter · generic plugins)
@@ -153,6 +184,18 @@ component documents are written in the order their structural contracts require.
 → [ADR-0034](../adr/0034-typed-outcomes-for-caller-branches-exceptions-for-broken-contracts.md),
 [ADR-0033](../adr/0033-identified-tiered-rules-with-a-derived-review-checklist.md),
 [ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md)
+
+## One platform double, one conformance suite per seam
+
+A test of a bot and a test of a storage backend run against the same two things: one stateful
+in-memory Mattermost with typed fault injection, and one conformance suite per Core seam that any
+implementation — ours or a third party's — is expected to pass. `TestBot` wraps the composed Bot
+instead of offering a second composition path, and the toolkit ships behind its own extra, so
+nothing in it reaches a test session that did not ask for it by name.
+→ [ADR-0044](../adr/0044-the-testing-toolkit-requires-pytest-and-is-activated-explicitly.md),
+[ADR-0045](../adr/0045-one-stateful-fake-mattermost-is-the-only-platform-double.md),
+[ADR-0046](../adr/0046-testbot-wraps-the-composed-bot.md),
+[ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md)
 
 ## Quality by mechanism, not by memory
 

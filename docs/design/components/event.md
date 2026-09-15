@@ -20,7 +20,7 @@ Research: [`docs/research/11`](../../research/11-webhook-ingress-patterns.md),
 Event is the immutable generic envelope every Transport hands to the Core and every other Core
 component reads: it carries the platform event name, one typed Payload and the delivery metadata
 that routing, middleware, logging and dependency injection all key off. It is the box named *Event*
-in [§5.5](../05-building-block-view.md#55-level-3--the-core), and it is the one place where "what
+in [§5.2.1](../05-building-block-view.md#521-the-core), and it is the one place where "what
 arrived" is separated from "what it means" — the Core knows the envelope and never a concrete
 Payload ([ADR-0012](../../adr/0012-generic-event-envelope-with-adapter-payloads.md)). Outside it:
 the Payload types and their names, which the Adapter's EventRegistry owns (#69); decoding the wire
@@ -162,7 +162,7 @@ delivery by the Transport, is the identifier every Core log record carries (`ST-
 what a user-visible failure quotes.
 
 **`ReplyChannel[R]`** — the Core-owned Protocol that types `meta.reply`. It is the one **provided**
-seam of [§5.4](../05-building-block-view.md#54-the-seams-of-the-core): the Core hands it to a
+seam of [§5.1.1](../05-building-block-view.md#511-the-seams-of-the-core): the Core hands it to a
 Handler to call rather than calling out through it
 ([ADR-0036](../../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md),
 [ADR-0038](../../adr/0038-seam-inventory-records-the-direction-of-the-call.md)). It has two
@@ -221,8 +221,9 @@ C4Component
 | `ReplyAlreadySent` | Be the one value `send` returns when the slot is already claimed | A name in a Core return annotation is an import, so the value lives in the layer that owns the Protocol, not in the plugin that produces it |
 
 `EventMeta`, `CorrelationId` and `ReplyAlreadySent` are *parts* in the sense of
-[§5.0](../05-building-block-view.md#50-how-to-read-this-section) — named pieces of one reason to
-change, the shape of a delivery — and `ReplyChannel` is the seam row of §5.4 that this document
+[the reading guide of §5](../05-building-block-view.md#how-to-read-this-section) — named pieces
+of one reason to
+change, the shape of a delivery — and `ReplyChannel` is the seam row of §5.1.1 that this document
 specifies (`ST-SOL-01`, `ST-MOD-09`). The component owns no task, no queue, no timeout and no
 logger; every arrow above is a field or a return type, not a call.
 
@@ -396,7 +397,8 @@ no `replace` on an `Event` (`ST-TYP-17`).
 **S.** The component has one reason to change: the shape of a delivery. `EventMeta`,
 `CorrelationId`, `ReplyChannel` and `ReplyAlreadySent` are pieces of that one reason and not four
 more — a delivery has metadata, an identity and, sometimes, a way back that may already be taken —
-which is the *part* distinction [§5.0](../05-building-block-view.md#50-how-to-read-this-section)
+which is the *part* distinction
+[the reading guide of §5](../05-building-block-view.md#how-to-read-this-section)
 draws and `ST-SOL-01` permits. The things that would be second reasons are all elsewhere: decoding
 is the Adapter's, matching is the Router's, enrichment order is the Middleware's.
 

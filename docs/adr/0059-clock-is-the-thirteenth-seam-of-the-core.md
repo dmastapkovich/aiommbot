@@ -16,7 +16,7 @@ the 30 s heartbeat and the 60 s silence monitor, full-jitter backoff to 300 s an
 state TTL ([ADR-0022](0022-state-plugin-model.md)) and the retry backoff of
 [ADR-0026](0026-standalone-typed-api-client-over-an-http-transport-protocol.md). We decided that
 **`Clock` is a Core-owned Protocol and a `required` seam row of
-[§5.4](../design/05-building-block-view.md#54-the-seams-of-the-core)** — the Core calls out through
+[§5.1.1](../design/05-building-block-view.md#511-the-seams-of-the-core)** — the Core calls out through
 it and the implementation arrives from outside, exactly like `KeyValueStore`.
 
 It is a seam and not a settings field because the alternative is the same substitution repeated per
@@ -49,8 +49,8 @@ other App-scoped dependency ([ADR-0019](0019-handler-parameter-resolution-rules.
 
 - The inventory becomes **sixteen Protocols on thirteen seam rows — twelve required, one provided**,
   and the conformance suites become **fourteen**. The count is stated in
-  [§5.4](../design/05-building-block-view.md#54-the-seams-of-the-core) and
-  [§5.10](../design/05-building-block-view.md#510-inventory-summary),
+  [§5.1.1](../design/05-building-block-view.md#511-the-seams-of-the-core) and
+  [the inventory summary](../design/05-building-block-view.md#inventory-summary),
   [ADR-0006](0006-architectural-tenets-of-the-core.md),
   [ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md),
   [ADR-0047](0047-a-conformance-suite-per-core-seam.md),
@@ -63,4 +63,4 @@ other App-scoped dependency ([ADR-0019](0019-handler-parameter-resolution-rules.
   between attempts goes through.
 - `FakeClock` stops being a bare helper and becomes the second shipped implementation of a seam,
   listed as such in
-  [§5.9](../design/05-building-block-view.md#59-level-3--the-testing-toolkit).
+  [§5.2.5](../design/05-building-block-view.md#525-the-testing-toolkit).

@@ -25,14 +25,14 @@ records, which a record pushed after the fact can never be. We decided:
   admission test of [ADR-0002](0002-core-scope-two-condition-test.md) on both conditions — not
   every bot needs it, and the equivalent mechanism is already in the Core.
 - **The observability seam is the `RequestObserver` row of
-  [§5.4](../design/05-building-block-view.md), and nothing else.** It gains a synchronous pair,
+  [§5.1.1](../design/05-building-block-view.md), and nothing else.** It gains a synchronous pair,
   `SyncRequestObserver`, in the same module, so the standalone synchronous client
   ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md)) is observable at all:
   the colour follows the face, which is what httpx does with `Client` and `AsyncClient` hooks
   ([`docs/research/17`](../research/17-http-client-observability.md) §3). `RequestObserver` stays a
   coroutine Protocol, so [ADR-0030](0030-synchronous-callables-by-explicit-declaration.md) is
-  unchanged in substance; the pair is the third row of §5.4 to carry two Protocols, which makes the
-  count **sixteen Protocols on thirteen seam rows — twelve required, one provided**
+  unchanged in substance; the pair is the third row of §5.1.1 to carry two Protocols, which makes
+  the count **sixteen Protocols on thirteen seam rows — twelve required, one provided**
   ([ADR-0038](0038-seam-inventory-records-the-direction-of-the-call.md)) and leaves the thirteen
   conformance suites of [ADR-0047](0047-a-conformance-suite-per-core-seam.md) unchanged, because a
   paired row is one suite parametrised over both faces.

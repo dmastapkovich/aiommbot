@@ -51,7 +51,7 @@ double of the platform anywhere in the toolkit.
 
 - The server is a **component** of the testing toolkit layer with its own design document, not a
   part of the toolkit's: it holds state, it has invariants and it has failure modes of its own
-  (§5.9 of [`05-building-block-view.md`](../design/05-building-block-view.md)).
+  (§5.2.5 of [`05-building-block-view.md`](../design/05-building-block-view.md)).
 - It can lie, and two mechanisms keep it honest: it answers with the generated models through the
   `Codec` seam ([ADR-0025](0025-generated-dataclass-models-with-a-codec-protocol.md)), so a REST
   reply that the spec does not describe is unconstructible, and the resume, sequence and dead-queue

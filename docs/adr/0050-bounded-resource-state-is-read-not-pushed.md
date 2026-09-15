@@ -47,7 +47,7 @@ observable gauge is asked through a callback. We decided:
 
 - `Contributes*` grows from six Protocols to seven, so the rank #85 is deciding covers seven; the
   ticket is told, and nothing about the thirteen seam rows of
-  [§5.4](../design/05-building-block-view.md) changes, because a `Contributes*` Protocol is not a
+  [§5.1.1](../design/05-building-block-view.md) changes, because a `Contributes*` Protocol is not a
   row there.
 - `bot.stats()` is a public name and its snapshot types are public
   ([ADR-0042](0042-a-public-name-is-documented-at-its-package-path.md)); a field of the snapshot is

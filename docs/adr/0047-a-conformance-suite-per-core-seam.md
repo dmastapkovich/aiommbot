@@ -12,7 +12,7 @@ amended-by: [ADR-0048, ADR-0059]
 suite and `ST-DOC-03` makes every Protocol docstring name that suite, while
 [ADR-0015](0015-plugin-contract-and-composition.md) had enumerated four suites, which leaves nine
 seams whose implementers are told to pass something that does not exist. We decided **one suite per
-seam row of [§5.4](../design/05-building-block-view.md), plus one for the plugin lifecycle** —
+seam row of [§5.1.1](../design/05-building-block-view.md), plus one for the plugin lifecycle** —
 fourteen — so the rule needs no threshold and no per-component argument, and each of the three rows
 that carry a paired Protocol is one suite parametrised over the asynchronous and the synchronous
 face ([ADR-0029](0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md),
