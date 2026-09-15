@@ -54,9 +54,12 @@ and the components level 3. We adopted arc42's counting:
 
 ## Consequences
 
-- Sixty-five cross-references of the form `§5.x` and twelve anchors were rewritten across twenty-one
-  files in the commit that made this decision. The window was this one: thirty-two
-  `LLD: <component>` documents cite §5 and none of them is written yet.
+- The catalogue holds sixty-five references of the form `§5.x`; sixty of them point at this section
+  and all sixty were rewritten, with twelve anchors, across twenty files in the commit that made
+  this decision. The other five point at the §5 of `components/event.md` and of
+  [`docs/research/22`](../research/22-public-import-surface-of-modern-libraries.md) and are
+  untouched. The window was this one: thirty-two `LLD: <component>` documents cite §5 and none of
+  them is written yet.
 - **A level is not a layer.** Five layers are one level, and the glossary now carries
   *Building block level* so the two words cannot be swapped.
 - Two sections of §5 carry no number — the reading guide and the inventory summary. arc42 sanctions
