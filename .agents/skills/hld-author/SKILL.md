@@ -31,10 +31,11 @@ here, read only when the rule has to change.
    diagram already committed rather than inventing one.
 5. **Changing a section's number is a sweep, not an edit.** A cross-reference to a numbered section
    may be written bare, and most are: arc42 writes its own that way — `section 1.2` in the
-   template's §10, `Chapter 8` and `Chapter 5` in its published examples, 255 bare against 18
-   linked across its four trees — and it links only on its website, where a section is a URL. So
-   nothing mechanical sees a bare reference go stale. A ticket that renumbers a heading therefore
-   greps `§<old number>` over every tracked Markdown file and repairs it **in the same commit**,
+   template's §10, `Chapter 8` and `Chapter 5` in its published examples. Its FAQ does ask for a
+   hyperlink where a reader is being sent to detail (C-4-3, C-4-2), which is why a *Detail in*
+   column links; a reference in running prose stays bare. So nothing mechanical sees a bare
+   reference go stale. A ticket that renumbers a heading therefore greps `§<old number>` over
+   every tracked Markdown file and repairs it **in the same commit**,
    leaving alone what belongs to another document — a bare `§9` is usually
    `documentation-style.md`'s and `§12.1` is `engineering-style.md`'s. Run
    `.agents/scripts/check-docs.py --links` afterwards: it proves the linked references and the
