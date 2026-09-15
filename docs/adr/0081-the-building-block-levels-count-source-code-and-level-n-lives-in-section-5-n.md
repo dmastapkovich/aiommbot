@@ -54,12 +54,13 @@ and the components level 3. We adopted arc42's counting:
 
 ## Consequences
 
-- The catalogue holds sixty-five references of the form `§5.x`; sixty of them point at this section
-  and all sixty were rewritten, with twelve anchors, across twenty files in the commit that made
-  this decision. The other five point at the §5 of `components/event.md` and of
-  [`docs/research/22`](../research/22-public-import-surface-of-modern-libraries.md) and are
-  untouched. The window was this one: thirty-two `LLD: <component>` documents cite §5 and none of
-  them is written yet.
+- The catalogue references this section by subsection from across `docs/adr/`, `docs/design/` and
+  `docs/research/`, and a reference of the form `§5.x` also occurs for the §5 of
+  `components/event.md`, of
+  [`docs/research/22`](../research/22-public-import-surface-of-modern-libraries.md) and of the RFCs a
+  research note quotes — so a sweep over the form alone rewrites the wrong ones.
+  The window for renumbering was this one: thirty-two `LLD: <component>` documents cite §5 and none
+  of them is written yet.
 - **A level is not a layer.** Five layers are one level, and the glossary now carries
   *Building block level* so the two words cannot be swapped.
 - Two sections of §5 carry no number — the reading guide and the inventory summary. arc42 sanctions

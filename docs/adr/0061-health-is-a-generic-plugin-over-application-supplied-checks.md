@@ -49,8 +49,8 @@ We decided:
 - **A check is a named object with its own bound, and it arrives in the settings.** A frozen
   `ReadinessCheck(name, run, timeout)` in `Health(checks=(...))`; there is **no eighth
   `Contributes*` Protocol** and no registry, so
-  [ADR-0015](0015-plugin-contract-and-composition.md) is unchanged and #85's question about the rank
-  of the seven is untouched. A Plugin with a readiness fact of its own exposes a `ReadinessCheck`
+  [ADR-0015](0015-plugin-contract-and-composition.md) is unchanged and the plugin contract stays at
+  seven rows. A Plugin with a readiness fact of its own exposes a `ReadinessCheck`
   that the composition passes in, which keeps the contribution explicit like everything else
   ([ADR-0002](0002-core-scope-two-condition-test.md)).
 - **Checks run concurrently, each under its own timeout and all under one deadline, and a check that

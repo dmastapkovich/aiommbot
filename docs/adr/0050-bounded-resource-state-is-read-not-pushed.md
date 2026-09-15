@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-09
 ticket: "#29"
-amended-by: [ADR-0059]
+amended-by: [ADR-0059, ADR-0083]
 amends: [ADR-0015, ADR-0023]
 ---
 
@@ -45,10 +45,12 @@ observable gauge is asked through a callback. We decided:
 
 ## Consequences
 
-- `Contributes*` grows from six Protocols to seven, so the rank #85 is deciding covers seven; the
-  ticket is told, and nothing about the thirteen seam rows of
-  [§5.1.1](../design/05-building-block-view.md) changes, because a `Contributes*` Protocol is not a
-  row there.
+- `Contributes*` grows from six Protocols to seven, which is the seventh row of the plugin contract
+  at [§5.1.2](../design/05-building-block-view.md#512-the-plugin-contract)
+  ([ADR-0083](0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)).
+  Nothing about the thirteen seam rows of
+  [§5.1.1](../design/05-building-block-view.md#511-the-seams-of-the-core) changes, because a
+  `Contributes*` Protocol is not a row there.
 - `bot.stats()` is a public name and its snapshot types are public
   ([ADR-0042](0042-a-public-name-is-documented-at-its-package-path.md)); a field of the snapshot is
   therefore covered by the deprecation policy of #28, and a component that gains a bounded resource

@@ -59,10 +59,12 @@ _Held by:_ `ST-PAT-05`, `ST-PAT-07`, `ST-PAT-08`, `ST-PAT-10`, `ST-TYP-08`, `ST-
 
 **The Core owns the Protocols; implementations arrive from outside.** Sixteen Protocols on thirteen
 seams are the whole substitution surface: twelve seams the Core calls out through, and one it hands
-to a Handler to call. Imports point at the Core: testing toolkit → adapter-specific plugins →
-(Adapter · generic plugins) → Core. A generic Plugin may not import the Adapter, which is
-what makes "generic" a checked property instead of a claim.
-_Held by:_ `ST-SOL-04`, `ST-SOL-05`, `ST-MOD-05`, `ST-MOD-10`. _From:_ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md).
+to a Handler to call. Seven more are the plugin contract, where an implementation adds a
+contribution instead of replacing a realisation, and the two surfaces are inventoried apart. Imports
+point at the Core: testing toolkit → adapter-specific plugins → (Adapter · generic plugins) → Core.
+A generic Plugin may not import the Adapter, which is what makes "generic" a checked property
+instead of a claim.
+_Held by:_ `ST-SOL-04`, `ST-SOL-05`, `ST-MOD-05`, `ST-MOD-10`, `ST-MOD-13`. _From:_ [ADR-0032](../adr/0032-layer-model-and-direction-of-allowed-dependencies.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md), [ADR-0083](../adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md).
 
 **A pattern is named and argued, or it is not a pattern.** Every applied pattern is named as on
 [refactoring.guru](https://refactoring.guru/design-patterns), with the problem it solves *here* and

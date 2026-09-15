@@ -181,10 +181,13 @@ _Decided in_: [ADR-0002](../adr/0002-core-scope-two-condition-test.md),
 [ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md),
 [ADR-0075](../adr/0075-a-lifecycle-failure-names-its-plugin-and-several-are-one-group.md),
 [ADR-0076](../adr/0076-a-bot-runs-once.md),
-[ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md).
+[ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md),
+[ADR-0083](../adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md).
 _Ruled by_: [`engineering-style.md`](engineering-style.md) §8 (`ST-MOD-01`…`ST-MOD-13`).
 _Carried by_: Bot, Signal, EventRegistry, every Plugin. Structure:
-[§5.1](05-building-block-view.md), [§5.1.1](05-building-block-view.md).
+[§5.1](05-building-block-view.md), the substitution surface
+[§5.1.1](05-building-block-view.md#511-the-seams-of-the-core) and the plugin contract
+[§5.1.2](05-building-block-view.md#512-the-plugin-contract).
 
 ## 8.7 Configuration and settings
 

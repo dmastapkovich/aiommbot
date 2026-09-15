@@ -36,7 +36,8 @@ marked **UNVERIFIED** where it appears.
 
 ### 1.2 Four projects name the split in their own vocabulary
 
-**pytest** is the sharpest: `doc/en/reference/reference.rst` opens with three top-level sections.
+**pytest** is the sharpest: three of the thirteen level-2 sections of
+`doc/en/reference/reference.rst` are the split, and the page has one title above them all.
 
 > **Fixtures** — "Fixtures are requested by test functions or other fixtures by declaring them as argument names."
 >
@@ -191,10 +192,11 @@ Every doctrine that distinguishes uses the **same** discriminator: direction of 
 charge of the conversation. **None discriminates on who supplies the implementation.**
 
 That is the finding the evidence forces, and it is about our table rather than about the twelfth
-row. §5.4's *title* organises on substitutability ("seams", which by Feathers' direction-neutral
-definition admits the twelfth) while its *introduction* organises on the supply side ("who
-implements it") and asserts dependency inversion (which excludes the twelfth). The two statements
-were already in tension with each other; the twelfth Protocol only made the tension visible.
+row. The seam inventory's *title* organises on substitutability ("seams", which by Feathers'
+direction-neutral definition admits the twelfth) while its *introduction* organises on the supply
+side ("who implements it") and asserts dependency inversion (which excludes the twelfth). The two
+statements were already in tension with each other; the twelfth Protocol only made the tension
+visible.
 
 **Not found:** no canonical guidance anywhere on "one table with a discriminator column" versus
 "two tables" — no arc42 tip, no C4 page, no ADR-community text. The only published precedent
@@ -207,20 +209,21 @@ makes the classification *rule* the durable artefact with the table as a derived
 
 ### 3.1 Census
 
-Fourteen Core-owned Protocols, in three classes by who calls and who implements.
+Fifteen Core-owned Protocols, in three classes by who calls and who implements.
 
-| Class | Members | In §5.4 before #84 |
+| Class | Members | In the seam inventory |
 |---|---|---|
-| **required** — the Core calls out, an outside party implements | `Transport`, `DependencyProvider`, `KeyValueStore`, `LockProvider`, `Codec`, `HTTPTransport`, `SyncHTTPTransport`, `WebSocketConnection`, `StateKeyProvider`, `TokenProvider`, `SyncTokenProvider`, `CallbackTokenCodec`, `RequestObserver` | all — thirteen Protocols on eleven rows |
-| **contribution** — the Core calls, a Plugin implements, arbitrarily many instances | `ContributesRouters`, `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`, `ContributesChecks`, `HasLifecycle` | **none — and no §5 row at all**, not even as a named part |
+| **required** — the Core calls out, an outside party implements | `Transport`, `DependencyProvider`, `KeyValueStore`, `LockProvider`, `Codec`, `HTTPTransport`, `SyncHTTPTransport`, `WebSocketConnection`, `StateKeyProvider`, `TokenProvider`, `SyncTokenProvider`, `CallbackTokenCodec`, `RequestObserver` | all — thirteen Protocols on eleven rows when this was gathered |
+| **contribution** — the Core calls, a Plugin implements, arbitrarily many instances | `ContributesRouters`, `ContributesMiddleware`, `ContributesDependencies`, `ContributesEventTypes`, `ContributesChecks`, `ContributesStats`, `HasLifecycle` | **none** — they are the plugin contract of §5.1.2, an inventory of their own ([ADR-0083](../adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)) |
 | **provided** — the Core hands the object to user code, user code calls it | `ReplyChannel[R]` | no |
 
-Two further contracts sit outside the Core's ownership and stay out of §5.4 on that ground: the
-IdentityCache Protocol is **Adapter-owned** (§5.8 states the reason in the row itself), and
+Two further contracts sit outside the Core's ownership and stay out of the seam inventory on that
+ground: the IdentityCache Protocol is **Adapter-owned** (§5.2.4 states the reason in the row
+itself), and
 `Filter`, `Extractor`, `Middleware`, `Provider` and `Check` are ranked as components or parts.
 
-So §5.4 was never "every Protocol the Core owns", whatever its prose said — six `Contributes*`
-Protocols are Core-owned public API under semver and appear in no §5 row.
+So the seam inventory is not "every Protocol the Core owns", whatever its prose said — the
+contribution class is Core-owned public API under semver and is inventoried apart from it.
 
 ### 3.2 The forecast: `ReplyChannel` is probably exactly one, forever
 
@@ -252,11 +255,11 @@ Supporting facts:
   arguments, not new seams.
 
 **The larger latent population is on the other side.** If the inventory ever admits a second class
-of row keyed on *who implements*, the six `Contributes*` Protocols have as much claim as anything —
-six members, not one. A discriminator keyed on *who calls* leaves them exactly where they are,
-beside the eleven.
+of row keyed on *who implements*, the `Contributes*` Protocols have as much claim as anything — a
+whole class, not one member. A discriminator keyed on *who calls* leaves them exactly where they
+are, outside this table.
 
-### 3.3 What §5.4 already tolerates
+### 3.3 What the seam inventory already tolerates
 
 Three of the supposedly distinguishing traits are already in the table:
 
@@ -265,13 +268,14 @@ Three of the supposedly distinguishing traits are already in the table:
 - `TokenProvider` and `SyncTokenProvider` read "none — the application's".
 - Seam rows and part rows already coexist for the same Protocol in five cases —
   `StateKeyProvider`, the transport and token Protocols, `WebSocketConnection`. Both of
-  `ReplyChannel`'s part rows were already written, in §5.5 for `event.md` and §5.8 for `webhook.md`.
+  `ReplyChannel`'s part rows were already written, in §5.2.1 for `event.md` and §5.2.4 for
+  `webhook.md`.
 
 Whatever makes `ReplyChannel` different, it is not "many instances", not "the application
 implements it" and not "it is also a part somewhere". It is the direction of the call, and nothing
 else.
 
-### 3.4 A third exception to the §5.4 prose
+### 3.4 A third exception to the seam inventory's prose
 
 [ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md) found
 the prose "a Protocol is specified inside the document of the component that consumes it" false for

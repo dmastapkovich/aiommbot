@@ -16,7 +16,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | 2 | `02-constraints.md` | reviewed | #37 | #13 |
 | 3 | `03-context-and-scope.md` | reviewed | #38 | #13 #14 #15 #18 #19 #20 #21 #22 |
 | 4 | `04-solution-strategy.md` | reviewed | #109 | same |
-| 5 | `05-building-block-view.md` | reviewed | #109 | same |
+| 5 | `05-building-block-view.md` | reviewed | #85 | same |
 | 6 | `06-runtime-view.md` | reviewed | #39 | #38 #16 #17 |
 | 7 | `07-deployment-view.md` | reviewed | #40 | #38 #24 #29 |
 | 8 | `08-cross-cutting-concepts.md` | reviewed | #40 | same |
@@ -118,7 +118,7 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 | Reply-slot typing: second type parameter declared contravariant, `ReplyChannel` as the Core's twelfth seam, `ReplyAlreadySent` Core-owned | #57 | 0036 | reviewed |
 | Envelope enrichment: `derive(meta: EventMeta[R2])` only; `dataclasses.replace`, `copy.replace` and `__replace__` on an `Event` banned | #57 | 0037 | reviewed |
 | Seam inventory: direction of the call recorded per row, `required` and `provided`, and the count reconciled | #84 | 0038 | reviewed |
-| Rank of the seven `Contributes*`/`HasLifecycle` plugin Protocols in §5 | #85 | | not started |
+| Where the seven `Contributes*`/`HasLifecycle` plugin Protocols live in §5, and what a rank classifies | #85 | 0083, 0084 | reviewed |
 | Public API shape (prototype) | #31 | | not started |
 | Toolchain skeleton verified (prototype) | #32 | | not started |
 | Risk register | #42 | | not started |
@@ -126,9 +126,10 @@ One row per design decision the map must make. `ADR` is filled when the ticket c
 ## C. Component design documents (LLD)
 
 The inventory summary of `05-building-block-view.md` lists **32 components** across five layers,
-with 32 part rows and sixteen Protocols on thirteen *seam* rows — twelve required, one provided —
-that get no document of their own. One row per component here and one `LLD: <component>` ticket
-each. The file name is the `CONTEXT.md` term in kebab-case.
+with 32 part rows and two interface inventories — sixteen Protocols on thirteen *seam* rows, twelve
+required and one provided (§5.1.1), and the seven Contribution Protocols of the plugin contract
+(§5.1.2) — none of which gets a document of its own. One row per component here and one
+`LLD: <component>` ticket each. The file name is the `CONTEXT.md` term in kebab-case.
 
 | Component | Layer | File | Status | Ticket |
 |---|---|---|---|---|
@@ -184,7 +185,7 @@ and every row names a §10 scenario, and neither section holds anything without 
 | Observability seam and naming | ADR-0048 (no Core Protocol; the `RequestObserver` pair), ADR-0049 (what is observable), ADR-0050 (`bot.stats()`), ADR-0051 (extras, OpenTelemetry conventions, registry, cardinality), ADR-0061 (the probe paths as the sixth mechanism), research 17, 23 | §8.13; `components/observability.md` | [§10.5](10-quality-requirements.md#105-modifiability) | reviewed |
 | Security: callback signing, secrets, PII, replay | ADR-0024 (default-on HMAC token, `CallbackTokenCodec`, nonce opt-in, logging rules), ADR-0023 (`TokenProvider`, rotation is the application's), ADR-0027 (what an auth failure may report), ADR-0055 (the redaction list) | §8.14; §7 for the credentials each Process shape needs | [§10.6](10-quality-requirements.md#106-security) | reviewed |
 | Dependency injection scopes and lifecycle | ADR-0018, ADR-0019, ADR-0046 (overrides exist only in the toolkit) | §8.5 | [§10.3](10-quality-requirements.md#103-correctness-by-mechanism) | reviewed |
-| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0016 (compose, check, start), ADR-0032 (layers and direction), ADR-0038 (the seam inventory), ADR-0040 (directories and contract shape), ADR-0069 (no version, the contract only grows), ADR-0070 (no channel: the composition hands one instance to each consumer), ADR-0071 (list order, no declared dependency), ADR-0072 (what the check phase refuses and where the catalogue lives), ADR-0073 (what a Plugin may not do), ADR-0074 (a failed start runs the one Stop phase and nothing retries), ADR-0075 (the failure names its Plugin, several are one group), ADR-0076 (a Bot runs once), ADR-0080 (the author's kit: a section of the reference page, a name convention, no scaffold), research 30, 33, 34, 41, 42 | style §8; §5, §8.6 | [§10.5](10-quality-requirements.md#105-modifiability) | reviewed |
+| Extension points and plugin isolation (import-linter) | ADR-0002, ADR-0015 (contract), ADR-0016 (compose, check, start), ADR-0032 (layers and direction), ADR-0038 (the seam inventory), ADR-0040 (directories and contract shape), ADR-0069 (no version, the contract only grows), ADR-0070 (no channel: the composition hands one instance to each consumer), ADR-0071 (list order, no declared dependency), ADR-0072 (what the check phase refuses and where the catalogue lives), ADR-0073 (what a Plugin may not do), ADR-0074 (a failed start runs the one Stop phase and nothing retries), ADR-0075 (the failure names its Plugin, several are one group), ADR-0076 (a Bot runs once), ADR-0080 (the author's kit: a section of the reference page, a name convention, no scaffold), ADR-0083 (the contract is the level-1 whitebox's second interface, specified where each contribution is handled), ADR-0084 (an interface carries no rank), research 30, 33, 34, 41, 42 | style §8; §5.1.2, §8.6 | [§10.5](10-quality-requirements.md#105-modifiability) | reviewed |
 | Sync/async duality | ADR-0031 (one asyncio engine), ADR-0026 (bare name async, `Sync` prefix), ADR-0029 (scope, thin Faces, paired `SyncHTTPTransport`, parity and conformance mechanisms), ADR-0030 (callable colours), ADR-0008 (free threading claimed only where the 3.14t job tests it) | §8.4 | [§10.3](10-quality-requirements.md#103-correctness-by-mechanism) | reviewed |
 | Testing strategy (unit / contract / integration / typing / property) | ADR-0033 and style §11 (how tests are written), ADR-0044 (packaging and activation), ADR-0045 (the platform double), ADR-0046 (`TestBot`), ADR-0047 (conformance suites), ADR-0059 (`FakeClock`) | style §11; §5.2.5; §8.15 | [§10.4](10-quality-requirements.md#104-testability) | reviewed |
 | Backpressure and flow control between transport and handlers | ADR-0023 (never-stalling reader, bounded queue, per-kind `OverflowPolicy`), ADR-0030 (Sync executor sized against the Dispatch concurrency, checked at start), ADR-0050 (depth is read, not pushed), ADR-0060 (declining a delivery before the walk, keyed on chat identity) | §8.8, gateway LLD | [§10.2](10-quality-requirements.md#102-reliability) | reviewed |

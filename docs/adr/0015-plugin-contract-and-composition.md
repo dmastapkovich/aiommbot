@@ -2,7 +2,7 @@
 status: accepted
 date: 2026-09-03
 ticket: "#14"
-amended-by: [ADR-0047, ADR-0050, ADR-0056, ADR-0069, ADR-0070, ADR-0071, ADR-0077]
+amended-by: [ADR-0047, ADR-0050, ADR-0056, ADR-0069, ADR-0070, ADR-0071, ADR-0077, ADR-0083]
 ---
 
 # A Plugin is a frozen declaration plus narrow contribution Protocols; exactly one Adapter; plugins are either generic or adapter-specific
@@ -34,7 +34,10 @@ addition, not a rewrite.
   [ADR-0050](0050-bounded-resource-state-is-read-not-pushed.md)),
   `HasLifecycle` (an async context manager for start/stop). No base class, no inheritance
   ([ADR-0006](0006-architectural-tenets-of-the-core.md)); the declaration is readable without
-  running code.
+  running code. The seven are inventoried together at
+  [§5.1.2](../design/05-building-block-view.md#512-the-plugin-contract) and each is specified in the
+  document that handles its contribution
+  ([ADR-0083](0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)).
 - **Ordering.** Plugins enter their lifecycles in the order `plugins=[...]` lists them and stop in
   reverse; no plugin declares a dependency on another and there is no graph to sort
   ([ADR-0071](0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md)).

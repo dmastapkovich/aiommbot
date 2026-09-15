@@ -2,6 +2,7 @@
 status: accepted
 date: 2026-09-07
 ticket: "#41"
+amended-by: [ADR-0083]
 ---
 
 # The order in which component design documents are written is a topological sort of structural §3 dependencies, not the layer table
@@ -25,6 +26,14 @@ rule to be:
   [ADR-0021](0021-core-error-boundary.md) are markers. Neither orders anything. Without this
   clause the rule contradicts itself: `dependency-provider.md` would depend on `bot.md`, which
   depends on it, and the Core would depend on the Adapter through the injectable `Runtime`.
+- **The plugin contract orders nothing**, which is why the rule names §5.1.1 and the components of
+  §5.2 and not the second interface inventory,
+  [§5.1.2](../design/05-building-block-view.md#512-the-plugin-contract). Each Contribution Protocol
+  has one member whose meaning [ADR-0015](0015-plugin-contract-and-composition.md) fixes and whose
+  shape `ST-MOD-13` freezes, so a Plugin's §3 naming one creates no edge under the clause above —
+  which is what already lets `key-value-store.md` open in the first wave although its backends
+  implement `ContributesChecks`
+  ([ADR-0083](0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)).
 - **Collaboration is not contract.** A component named only in §4, §5 or §8 imposes no order. A
   document links its neighbours in both directions whatever the order, so only §3 can carry one.
   §5.2.2 calls the two Faces "thin I/O layers over the Exchange", and that reads like an edge; it is

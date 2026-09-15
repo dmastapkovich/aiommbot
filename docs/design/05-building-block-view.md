@@ -1,6 +1,6 @@
 # 5. Building block view
 
-_Status: reviewed (#109)._
+_Status: reviewed (#85)._
 
 The static decomposition, opened one level at a time. It is the **inventory** behind the
 `LLD: <component>` tickets, and the direction of every arrow is the layer
@@ -16,18 +16,26 @@ shapes a deployment runs and the inventory summary carry no level, and the two s
 them carry no number
 ([ADR-0081](../adr/0081-the-building-block-levels-count-source-code-and-level-n-lives-in-section-5-n.md)).
 
-**Three ranks of block.** Every row of every inventory table is one of:
+**Two ranks of block.** Every row of a building block inventory — the layer table of 5.1 and the
+component tables of 5.2.1 through 5.2.5 — is one of:
 
 | Kind | Meaning | Gets a design document |
 |---|---|---|
 | **component** | A designable unit with its own contract, failure modes and pattern story | yes — `components/<term>.md` |
 | **part** | A named piece that only makes sense inside one component | no — described inside that component's document |
-| **seam** | A Protocol the Core owns that is neither a component nor a part of one, so implementations can be substituted; *required* or *provided* by the direction of the call (5.1.1) | no — described inside the document 5.1.1's *Specified in* column names, which is authoritative; listed in 5.1.1, with the two exceptions named under its table |
 
 The distinction exists so that `RetryPolicy` and `NonceStore` are documented where they are used
 instead of becoming two-page documents of their own, while `Workspace` and the two Faces — which
 [ADR-0029](../adr/0029-synchronous-face-from-a-sans-io-core-with-thin-drivers.md) requires to be
 designed — each get one.
+
+**Two inventories of interfaces, which are not building blocks and carry no rank**
+([ADR-0084](../adr/0084-a-rank-is-a-property-of-a-building-block-and-an-interface-carries-none.md)).
+Both belong to the level-1 whitebox and both list Protocols the Core owns: 5.1.1 holds the ones
+whose implementations are **substituted**, with the direction of the call on each row, and 5.1.2
+holds the ones a Plugin implements to **add** a contribution. A row of either is described in the
+document its *Specified in* column names, and that column is authoritative — it is not always the
+consumer's document.
 
 **Diagram boxes and their documents.** The inventory table directly under each diagram carries the
 link to every box's document, one row per box ([`diagrams.md`](diagrams.md)).
@@ -76,10 +84,11 @@ with that tree is a bug in one of the two.
 
 ### 5.1.1 The seams of the Core
 
-The Protocols the Core owns that are ranked `seam` — neither a component nor a part of one — with
-the direction of the call through each, who implements it, and the document that specifies it.
-Two directions, in the vocabulary UML gives them
-([ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)):
+The first of the level-1 whitebox's two interfaces: the Protocols the Core owns that are neither a
+component nor a part of one **and whose implementations are substituted** — with the direction of
+the call through each, who implements it, and the document that specifies it. The Protocols a Plugin
+implements to add a contribution are the other interface, 5.1.2. Two directions, in the vocabulary
+UML gives them ([ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md)):
 
 - **required** — the Core calls out through the Protocol and an outside party implements it. This is
   the single point of dependency inversion
@@ -90,7 +99,8 @@ Two directions, in the vocabulary UML gives them
 
 A Core-owned Protocol that *is* a component or a part of one is not a row here: `Filter`,
 `Extractor` and `Middleware` are components, `Provider` and `Check` are parts, and the IdentityCache
-Protocol is the Adapter's rather than the Core's (5.2.4). The *Specified in* column is
+Protocol is the Adapter's rather than the Core's (5.2.4). Nor is one an application adds to rather
+than replaces: those are 5.1.2's. The *Specified in* column is
 **authoritative** about where a contract lives — it is not always the consumer's document, and for a
 provided seam the consumer is user code and has no document
 ([ADR-0035](../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md),
@@ -112,11 +122,49 @@ ADR-0038).
 | `RequestObserver`, `SyncRequestObserver` | required | API client | none by default; the Observability plugin | `api-client.md` | [ADR-0026](../adr/0026-standalone-typed-api-client-over-an-http-transport-protocol.md), [ADR-0048](../adr/0048-observability-is-not-a-core-seam.md) |
 | `ReplyChannel` | **provided** | the Handler — user code, not a component | Webhook, as `ReplyChannel[ActionReply]` and `ReplyChannel[DialogReply]`; the testing toolkit's recording slot | `event.md` | [ADR-0036](../adr/0036-reply-slot-as-a-second-type-parameter-over-a-core-owned-reply-channel.md), [ADR-0038](../adr/0038-seam-inventory-records-the-direction-of-the-call.md) |
 
-The seven Contribution Protocols are not rows here: they are the plugin contract of
-[ADR-0015](../adr/0015-plugin-contract-and-composition.md) rather than substitution points, and
-their rank is #85's. There is no observability row beyond the one above — a dispatch fact is the
-typed `Outcome`, observed by Middleware
-([ADR-0048](../adr/0048-observability-is-not-a-core-seam.md)).
+The seven Contribution Protocols are not rows here: a Plugin implementing one adds a contribution
+where an implementation of a seam replaces a realisation, so they are the other interface, 5.1.2
+([ADR-0083](../adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)).
+There is no observability row beyond the one above — a dispatch fact is the typed `Outcome`,
+observed by Middleware ([ADR-0048](../adr/0048-observability-is-not-a-core-seam.md)).
+
+### 5.1.2 The plugin contract
+
+The second of the level-1 whitebox's two interfaces: the seven Protocols through which a Plugin
+contributes something to the composition. They are the whole power a Plugin has
+([ADR-0073](../adr/0073-what-a-plugin-may-not-do.md)), and a Plugin implements only the ones it
+needs. This table is the only place the contract is visible whole — each Protocol is specified in
+the document where its contribution is handled, which is four documents besides `bot.md`
+([ADR-0083](../adr/0083-the-plugin-contract-is-the-second-interface-of-the-level-1-whitebox.md)).
+
+A row here rather than in 5.1.1 because the call runs the same way but the effect does not: the Core
+calls out through both, and an implementation of a seam **replaces** a realisation while an
+implementation of one of these **adds** a contribution, arbitrarily many Plugins at a time. The set
+only ever grows, by gaining a Protocol and never by changing one, and a withdrawn Protocol keeps
+its name
+([ADR-0069](../adr/0069-the-plugin-contract-carries-no-version-and-grows-by-adding-a-protocol.md)).
+
+`PluginSpec` is not a row here and is not missing from it: the contract of
+[ADR-0015](../adr/0015-plugin-contract-and-composition.md) is a frozen declaration **and** these
+narrow Protocols, and the declaration is a value a Plugin carries rather than a contract the Core
+calls — so it is a part of `Bot` in 5.2.1, where a Plugin's name, adapter binding and settings type
+are described.
+
+| Protocol | What a Plugin contributes | When the Bot asks for it | Specified in | Decision |
+|---|---|---|---|---|
+| `ContributesRouters` | Routers, which the Bot attaches; no Plugin holds a handle on another's | compose | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0015](../adr/0015-plugin-contract-and-composition.md) |
+| `ContributesMiddleware` | Middleware with a declaration — layer, name, `before`/`after` by name — which the Bot orders topologically and freezes | compose | `middleware.md` | [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
+| `ContributesDependencies` | Providers for the type-keyed graph, in either Scope | compose | `dependency-provider.md` | [ADR-0018](../adr/0018-core-owned-type-keyed-dependency-injection.md), [ADR-0070](../adr/0070-plugins-do-not-collaborate-the-composition-hands-one-instance-to-both.md) |
+| `ContributesEventTypes` | Payload types for the platform vocabulary, refused on a duplicate name | compose | `event-registry.md` | [ADR-0012](../adr/0012-generic-event-envelope-with-adapter-payloads.md), [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md) |
+| `ContributesChecks` | `Check` objects — pure questions about the frozen composition, including about another Plugin, each prefixed with the contributor's name | check | `bot.md` | [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0066](../adr/0066-the-in-memory-backends-own-the-single-process-check.md), [ADR-0073](../adr/0073-what-a-plugin-may-not-do.md) |
+| `ContributesStats` | A frozen snapshot of a bounded resource it owns, aggregated into `bot.stats()` | every `bot.stats()` call | `bot.md` | [ADR-0050](../adr/0050-bounded-resource-state-is-read-not-pushed.md) |
+| `HasLifecycle` | An asynchronous context manager, entered in the order the composition lists and left in reverse | start, and the Stop phase | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md), [ADR-0074](../adr/0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md) |
+
+`HasLifecycle` is the only row with a conformance suite — the fourteenth of
+[ADR-0047](../adr/0047-a-conformance-suite-per-core-seam.md) — because entering and leaving a
+lifecycle has behaviour to check while returning a list has none. How the contract reaches a
+third-party author is [§8.6](08-cross-cutting-concepts.md#86-extension-points-and-isolation) and
+[ADR-0080](../adr/0080-the-plugin-api-is-a-section-of-the-reference-page.md).
 
 ## 5.2 Level 2 — the components of each layer
 
@@ -168,8 +216,8 @@ callable. Each of the eleven passes the two-condition admission test of
 
 | Block | Kind | Responsibility | Document | Decisions |
 |---|---|---|---|---|
-| **Bot** | component | Composition root: gathers plugin contributions in the order the composition lists them, runs the three-phase compose → check → start, owns the lifecycle, the entry points and the catalogue of every refusal the check phase makes | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md), [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md), [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md) |
-| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()`, the stop signals and `stop_timeout`, the `aiommbot` command, the standard-library `Clock` | part | The plugin declaration, the typed check objects, the process role and its Shutdown budget, the two entry points, the signal handlers `run()` owns and the bound it puts on the whole stop phase, the console script that runs `check` and `run` behind the `click` extra, and the Core's own implementation of the `Clock` seam | `bot.md` | same, plus [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md), [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md), [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |
+| **Bot** | component | Composition root: gathers the contributions of 5.1.2 in the order the composition lists them, runs the three-phase compose → check → start, owns the lifecycle, the entry points and the catalogue of every refusal the check phase makes | `bot.md` | [ADR-0015](../adr/0015-plugin-contract-and-composition.md), [ADR-0016](../adr/0016-three-phase-start-with-checks.md), [ADR-0031](../adr/0031-stdlib-asyncio-with-a-fixed-concurrency-discipline.md), [ADR-0071](../adr/0071-plugins-start-in-list-order-and-declare-no-dependency-on-each-other.md), [ADR-0072](../adr/0072-duplicate-names-are-refused-and-every-refusal-is-one-catalogue-row.md) |
+| `PluginSpec`, `Check`, `ProcessProfile`, `run()`/`serve()`, the stop signals and `stop_timeout`, the `aiommbot` command, the standard-library `Clock` | part | The plugin declaration whose Protocol half is 5.1.2, the typed check objects, the process role and its Shutdown budget, the two entry points, the signal handlers `run()` owns and the bound it puts on the whole stop phase, the console script that runs `check` and `run` behind the `click` extra, and the Core's own implementation of the `Clock` seam | `bot.md` | same, plus [ADR-0058](../adr/0058-the-command-is-a-console-script-behind-the-click-extra.md), [ADR-0059](../adr/0059-clock-is-the-thirteenth-seam-of-the-core.md), [ADR-0063](../adr/0063-the-process-declares-its-shutdown-budget-and-the-bot-bounds-the-stop.md), [ADR-0064](../adr/0064-run-owns-the-stop-signals-and-serve-owns-none.md) |
 | **Dispatcher** | component | Receives every Event the Bot feeds it, drives Inbound then Handler middleware, walks the Router tree to the first match, resolves parameters, returns the typed `Outcome` to the Transport | `dispatcher.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md), [ADR-0020](../adr/0020-two-layer-middleware-chain.md) |
 | `Outcome`, `MatchedHandler`, `Skip` | part | The typed dispatch result, the Event-scoped publication after a match, the `Skip` exception that continues the walk | `dispatcher.md` | same |
 | **Router** | component | The handler tree: registration by annotation, adapter aliases, filter gates, freeze, `bot.routes()`, unreachable-handler check | `router.md` | [ADR-0013](../adr/0013-type-driven-routing-with-a-typed-dispatch-outcome.md) |
@@ -405,10 +453,11 @@ must give each of them, and the arithmetic of the Drain are [§7](07-deployment-
 
 ## Inventory summary
 
-32 components, 32 part rows, and sixteen Protocols on thirteen seam rows — twelve of those rows
-required and one provided (5.1.1). The count matters in one way only: **32 `LLD: <component>`
-tickets**. Parts and seams generate nothing; they are specified inside the document named beside
-them.
+32 components and 32 part rows, over two interface inventories: sixteen Protocols on thirteen seam
+rows — twelve of those rows required and one provided (5.1.1) — and the seven Contribution Protocols
+of the plugin contract (5.1.2). The count matters in one way only: **32 `LLD: <component>`
+tickets**. Parts and the rows of both interface inventories generate nothing; each is specified
+inside the document named beside it.
 
 | Layer | Components |
 |---|---|

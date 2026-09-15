@@ -40,8 +40,8 @@ voluntary eviction. We decided:
   in every deployment rather than in some, so it is a knob with one usable position, which
   [ADR-0002](0002-core-scope-two-condition-test.md) does not admit.
 - *An eighth `Contributes*` Protocol so a Plugin answers "am I ready?"* — rejected for the reason
-  ADR-0061 already gives: the Signals carry every transport transition, and #85's question about the
-  rank of the seven stays untouched.
+  ADR-0061 already gives: the Signals carry every transport transition, and the plugin contract
+  stays at seven rows.
 - *Reporting standby on liveness instead* — rejected: liveness runs no check at all, and a probe
   that distinguishes standby from active would restart the waiting replica.
 
