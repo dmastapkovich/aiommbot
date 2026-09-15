@@ -2,7 +2,7 @@
 
 _Status: not started (#N)._
 _Layer: Core | Adapter | Generic plugin | Adapter-specific plugin | Testing toolkit._
-_ADRs: [ADR-NNNN](../../adr/NNNN-slug.md). Research: [`docs/research/NN`](../../research/NN-slug.md)._
+_ADRs: `ADR-NNNN`. Research: `docs/research/NN`._ Both become links once the component is known.
 
 ## 1. Purpose and boundaries
 

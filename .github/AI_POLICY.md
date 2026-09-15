@@ -17,4 +17,5 @@ the work — are closed without review.
 
 Using AI to translate or polish English you wrote yourself is welcome.
 
-Wording adapted from the [Astral AI policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md) (MIT).
+Wording adapted (MIT) from the
+[Astral AI policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md).

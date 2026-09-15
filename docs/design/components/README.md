@@ -8,8 +8,8 @@ first of the two storage seams it specifies, because the two have no collective 
 *Wave* is the writing order decided by [ADR-0035](../../adr/0035-lld-order-is-a-topological-sort-of-structural-contract-dependencies.md):
 a document waits only for the documents specifying a contract that appears in its own §3. Everything
 in one wave may be written in parallel. The column is derived from the `blocked_by` dependencies on
-the tickets and from nothing else — the tickets are the source of truth. A file is linked once it exists; readiness is the document's
-status line and `TRACKER.md` §C.
+the tickets and from nothing else — the tickets are the source of truth. A file is linked once it
+exists; readiness is the document's status line and `TRACKER.md` §C.
 
 | Component | Layer | File | Wave | Ticket |
 |---|---|---|---|---|

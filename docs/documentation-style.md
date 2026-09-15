@@ -109,12 +109,15 @@ name the component, the constant, the source. Say *why* next to *what*. Quote co
 version numbers from primary sources with a link; mark anything unverified as such. Prefer a table
 when three or more things are compared on the same attributes. No marketing language.
 
-Mechanics: prose wraps at 100 columns (table rows, headings and link-only lines are exempt);
-identifiers, paths and code go in code spans; no emoji; no placeholder text ("TBD", "to be
-written") — an unfinished document says so in its status line and nowhere else. A research note
-records findings with a source per claim and marks what it could not verify; it never argues
-against a decision that was taken after it — where an ADR decided otherwise, the note points at
-the ADR.
+Mechanics: prose wraps at 100 columns. A line is exempt where a wrap would break something or buy
+nothing: a fenced block, front matter, a table row, a heading, a row carrying one record — a
+rulebook field, a checklist item — and a line with no whitespace past the limit, whose longest
+unbreakable run is a link target, a URL or an identifier already wider than the column. Identifiers,
+paths and code go in code spans; no emoji; no placeholder text ("TBD", "to be written") — an
+unfinished document says so in its status line and nowhere else. A research note records findings
+with a source per claim and marks what it could not verify; it never argues against a decision that
+was taken after it — where an ADR decided otherwise, the note points at the ADR. A note is exempt
+from the width rule in full, because it quotes its sources and a rewrap edits quoted material.
 
 ## 9. Target state only
 

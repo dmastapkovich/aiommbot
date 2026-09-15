@@ -29,7 +29,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | not started | `components/_template.md` | reviewed | #56 | not started |
 | not started | `docs/documentation-style.md` | reviewed | #35 | not started |
 | not started | `docs/adr/_template.md`, `docs/adr/README.md` | reviewed | #35 | not started |
-| not started | Docs-as-code linting (markdown, Vale, lychee, Mermaid, index check) | not started | #43 | #26 |
+| not started | Docs-as-code linting (markdown, Vale, lychee, Mermaid, index check); width, links and anchors already run from `.agents/scripts/check-docs.py` | not started | #43 | #26 |
 
 ## B. Decision areas → ADR
 
@@ -172,8 +172,8 @@ Each concern must be decided (ADR), described (§8 or an LLD) and testable (§10
 is the register both §8 and §10 are written from: fifteen of the seventeen rows name a §8 subsection
 and every row names a §10 scenario, and neither section holds anything without a row here
 ([ADR-0062](../adr/0062-a-cross-cutting-concept-is-a-mechanism-a-grid-and-a-limit.md),
-[ADR-0068](../adr/0068-a-quality-scenario-is-a-registered-concern-measured-by-a-fixed-number-or-a-named-check.md)). A row still reading
-`in progress` is waiting on a decision of its own, named in the status.
+[ADR-0068](../adr/0068-a-quality-scenario-is-a-registered-concern-measured-by-a-fixed-number-or-a-named-check.md)).
+A row still reading `in progress` is waiting on a decision of its own, named in the status.
 
 | Concern | Decided in | Described in | Quality scenario | Status |
 |---|---|---|---|---|

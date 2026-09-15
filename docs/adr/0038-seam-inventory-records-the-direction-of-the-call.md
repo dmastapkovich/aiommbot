@@ -97,7 +97,8 @@ decided:
   it. `EventMeta`'s field list is closed at five data fields and one callable, and
   [ADR-0037](0037-derive-is-the-only-enrichment-path-for-an-event.md) fixes the envelope at
   "exactly one method. Everything else about it is data". A second request/response Transport
-  reuses `ReplyChannel[R]` with a new `R` and adds no row. See [`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md) §3.2.
+  reuses `ReplyChannel[R]` with a new `R` and adds no row. See §3.2 of
+  [`docs/research/19`](../research/19-provided-and-required-protocol-inventories.md).
 - A column with eleven identical cells is the price of the twelfth being legible. It is paid once,
   and it makes the axis explicit for every seam added later, which is the property the flat table
   did not have.

@@ -11,10 +11,12 @@ label; the `design-session` skill runs these steps.
 2. **Claim.** Assign the ticket to yourself (`.agents/issue-tracker.md`, *Writes*). *Done when
    the assignee shows.*
 3. **Resolve** — see the type-specific section below.
-4. **Verify.** Walk `.agents/design-quality-checklist.md` for every document touched; fix
-   before anything is committed. Where the decision changes an accepted ADR, rewrite that ADR so it
-   states the current decision and link the two (`amends` / `amended-by`). *Done when every
-   checklist line for the touched documents is true or recorded as a deferral in the ticket.*
+4. **Verify.** Run `.agents/scripts/check-docs.py`, which mechanises the checklist's width, link
+   and anchor lines over the whole catalogue; then walk `.agents/design-quality-checklist.md` by
+   hand for every document touched. Fix before anything is committed. Where the decision changes an
+   accepted ADR, rewrite that ADR so it states the current decision and link the two (`amends` /
+   `amended-by`). *Done when the script exits 0 and every checklist line for the touched documents
+   is true or recorded as a deferral in the ticket.*
 5. **Record.** One commit: new ADR(s) in `docs/adr/`, `CONTEXT.md` terms, the arc42 section or
    component document the ticket owns, the `docs/design/TRACKER.md` rows it changes, links to the
    research it used. Message: `docs(<area>): <what was decided> (#N)`. Push. *Done when

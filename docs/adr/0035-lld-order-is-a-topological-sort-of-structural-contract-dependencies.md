@@ -14,9 +14,9 @@ cannot be written without, and that graph does not follow the layer table. We de
 rule to be:
 
 > Document **X** is written after document **Y** if, and only if, §5.1.1 or the *Document* column of
-> §5.2.1–5.2.5 names **Y** as the document that specifies a Protocol or part appearing in **X**'s §3 as
-> a parameter type, as a return or raised type with structure, or as a Protocol **X** implements or
-> consumes as a seam.
+> §5.2.1–5.2.5 names **Y** as the document that specifies a Protocol or part appearing in **X**'s
+> §3 as a parameter type, as a return or raised type with structure, or as a Protocol **X**
+> implements or consumes as a seam.
 
 - **Structural need, not mention.** A name that appears in §3 only as a key, a label or an element
   of a list creates no edge, because its meaning is fixed by an ADR and there is nothing for the

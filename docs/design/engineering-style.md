@@ -46,9 +46,9 @@ identifier. Each one ends with the rules that hold it up, which is the only way 
 
 **The Core earns its scope; it does not accumulate it.** A capability enters the Core only if every
 bot needs it identically, or if it is specific to a chat protocol and has no mature library
-equivalent. Everything else is a Plugin, an extra, or a documented recipe. A capability shipped in the Core
-can never be removed quietly, so a Core that grows by convenience ends up carrying scheduling,
-metrics, retries, a breaker and a CLI that most bots never call and every bot must load.
+equivalent. Everything else is a Plugin, an extra, or a documented recipe. A capability shipped in
+the Core can never be removed quietly, so a Core that grows by convenience ends up carrying
+scheduling, metrics, retries, a breaker and a CLI that most bots never call and every bot must load.
 _Held by:_ `ST-MOD-07`, `ST-MOD-08`, `ST-PAT-04`. _From:_ [ADR-0002](../adr/0002-core-scope-two-condition-test.md).
 
 **Things are composed, not inherited.** The Bot *has* routers, plugins, a Transport and an Adapter;
@@ -648,10 +648,11 @@ adapts one library, `typing_extensions`, by re-export alone.
 _Tier:_ `tool` — ruff. _Checked in:_ LLD, PR.
 _From:_ [ADR-0008](../adr/0008-python-floor-3-12-with-typing-extensions.md).
 
-> Measured ([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)): with `typing_extensions` imported directly, the same decision is spread
-> over 62 import sites and only one name of ten (`TypedDict`) is mechanically protected — nothing
-> stops a contributor importing the other nine from `typing` and breaking the floor build. That is
-> the failure this rule exists to prevent.
+> Measured ([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)): with
+> `typing_extensions` imported directly, the same decision is spread over 62 import sites and only
+> one name of ten (`TypedDict`) is mechanically protected — nothing stops a contributor importing
+> the other nine from `typing` and breaking the floor build. That is the failure this rule exists
+> to prevent.
 
 #### `ST-TYP-10` — Read annotations through one helper over `get_type_hints`, and never touch `__annotations__`
 
@@ -1263,10 +1264,11 @@ programmer input), use the built-in.
 _Tier:_ `tool` — ruff. _Checked in:_ LLD, PR.
 _From:_ [ADR-0027](../adr/0027-api-error-taxonomy.md), [ADR-0021](../adr/0021-core-error-boundary.md).
 
-> A note on the shape ([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)): a flat hierarchy with no root class, answering "is this
-> user-visible?" by the presence of a `status_code` attribute, forces two hand-maintained tuples
-> kept in step by `NOTE: keep this in sync` comments. A root class with the classification as a
-> property removes that duty, which is why we take the other option here.
+> A note on the shape ([`docs/research/21`](../research/21-measured-facts-behind-the-rules.md)): a
+> flat hierarchy with no root class, answering "is this user-visible?" by the presence of a
+> `status_code` attribute, forces two hand-maintained tuples kept in step by `NOTE: keep this in
+> sync` comments. A root class with the classification as a property removes that duty, which is
+> why we take the other option here.
 
 #### `ST-ERR-10` — Expose retryability as a property of the error, not as knowledge the caller reconstructs
 
@@ -1765,7 +1767,13 @@ means silence on purpose — it suppresses `logging.lastResort`, which is safe o
 serious failure also arrives as a Signal or as `FatalError`
 ([ADR-0053](../adr/0053-log-records-are-a-documented-contract.md)).
 _Tier:_ `tool` — a guard test asserting that the loggers the framework creates are exactly the
-loggers `ST-DOC-08` documents. _Checked in:_ LLD, PR. _From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md), [ADR-0078](../adr/0078-a-logger-is-a-capability-the-composition-supplies.md), [ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md), [`docs/research/24`](../research/24-library-logging-design.md), [`docs/research/43`](../research/43-who-owns-a-librarys-logger.md).
+loggers `ST-DOC-08` documents.
+_Checked in:_ LLD, PR.
+_From:_ [ADR-0053](../adr/0053-log-records-are-a-documented-contract.md),
+[ADR-0078](../adr/0078-a-logger-is-a-capability-the-composition-supplies.md),
+[ADR-0079](../adr/0079-the-record-catalogue-survives-a-supplied-logger.md),
+[`docs/research/24`](../research/24-library-logging-design.md),
+[`docs/research/43`](../research/43-who-owns-a-librarys-logger.md).
 
 #### `ST-LOG-02` — Log identifiers, counts and digests; never content
 

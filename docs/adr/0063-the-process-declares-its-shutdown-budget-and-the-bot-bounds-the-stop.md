@@ -24,10 +24,10 @@ compares against a deadline is a comment. We decided:
   what `terminationGracePeriodSeconds` defaults to (same note, §2).
 - **The Bot's `stop_timeout` bounds the whole stop phase**, under one `asyncio.timeout` around the
   Drain, the plugin stops and every close — including the run of that phase a failed start triggers
-  ([ADR-0074](0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)). Its default is `shutdown_budget` less a **2 s** reserve
-  for signal delivery and interpreter exit, so the shipped arithmetic is a 25 s Drain inside a 28 s
-  stop inside a 30 s budget. On expiry the remaining tasks are cancelled; the Drain's own
-  `DrainTimedOut(count)` still reports what it left.
+  ([ADR-0074](0074-a-failed-start-enters-the-same-stop-phase-and-never-retries.md)). Its default is
+  `shutdown_budget` less a **2 s** reserve for signal delivery and interpreter exit, so the shipped
+  arithmetic is a 25 s Drain inside a 28 s stop inside a 30 s budget. On expiry the remaining tasks
+  are cancelled; the Drain's own `DrainTimedOut(count)` still reports what it left.
 - **One Check of the Bot's, `drain_grace < stop_timeout <= shutdown_budget`.** It is an error, so
   `aiommbot check` ([ADR-0058](0058-the-command-is-a-console-script-behind-the-click-extra.md))
   fails in CI rather than the first rollout failing in production. This is the mechanism that
