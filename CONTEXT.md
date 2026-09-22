@@ -367,7 +367,8 @@ _Avoid_: response (bare), ack (that is the default reply), HTTP response
 The self-issued signed credential the bot places in a button `context` or dialog `state` and
 verifies when the callback returns: versioned, keyed by `kid`, HMAC-SHA256 by default, with optional
 expiry, actor binding and nonce. The only authenticity primitive Mattermost leaves to an external
-bot. _Avoid_: signature (of the request), secret, cookie
+bot.
+_Avoid_: signature (of the request), secret, cookie
 
 **CallbackTokenCodec**:
 The Core Protocol that issues and verifies a Callback token, returning a typed union —

@@ -1,0 +1,74 @@
+# Every check the catalogue owes on a change, except the external link sweep,
+# which belongs to link-check.yml because it depends on somebody else's servers.
+#
+# The hygiene is wemake-services/django-modern-rest's, transcribed from its
+# .github/workflows/lychee.yml: actions frozen to a commit with the version
+# beside it (:22, :27), `persist-credentials: false` on the checkout (:24), the
+# smallest permissions (:14-15), and a concurrency group that cancels a
+# superseded run without letting two pushes to main cancel each other (:10-12).
+#
+# No `paths:` filter. Every tracked file in this repository is Markdown, so a
+# '**/*.md' filter would match every change and buy nothing, while adding a way
+# for a required check to be skipped instead of reported. The two purest
+# documentation repositories in the reference corpus -- prometheus/docs and
+# OWASP/ASVS -- likewise run their Markdown linters on a bare trigger.
+#
+# Two jobs rather than one, so a diagram failure and a lint failure are two
+# entries in the checks list. open-telemetry/semantic-conventions takes the same
+# shape to its conclusion with fourteen sibling jobs in one file.
+
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Markdown, spelling, links, anchors, indexes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # One pipeline, not two: the same .pre-commit-config.yaml a contributor
+      # installs locally is what runs here, over every file. Twenty-nine of the
+      # forty-seven reference clones that carry pre-commit re-run it in CI, and
+      # prek is what the recent adopters use -- CPython, PEPs, FastAPI, ruff, ty.
+      - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+
+  diagrams:
+    name: Mermaid diagrams parse
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+
+      # The install downloads the headless browser mermaid-cli renders through.
+      # This is the step that cannot run in a development sandbox, and the reason
+      # the check lives here rather than in .pre-commit-config.yaml.
+      - name: Install the Mermaid renderer
+        run: npm install --global @mermaid-js/mermaid-cli@11.17.0
+
+      - name: Parse every diagram
+        run: python3 .agents/scripts/check-diagrams.py

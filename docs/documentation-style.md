@@ -154,9 +154,32 @@ register of what is done.
 
 ## 11. Tooling (docs as code)
 
-Enabled by #43 and finalised by #26: Markdown lint, prose lint with a project vocabulary (Vale),
-dead-link check (lychee), Mermaid syntax check, and a check that every file in a typed directory
-appears in its index. Until then the checklist is the lint.
+Six checks hold this standard. Five run before a commit and again over the whole tree on every push
+and pull request; the sixth needs a browser and runs only in CI. The configuration lives with the
+tool that reads it — [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) lists the hooks,
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs them.
+
+| Check | Mechanism | Section it holds |
+|---|---|---|
+| Width, relative links, anchors | `.agents/scripts/check-docs.py` | §6, §8 |
+| Every document is in its index | `.agents/scripts/check-index.py` | §6 |
+| Heading, list and fence structure | markdownlint-cli2, `.markdownlint.yaml` | §4, §8 |
+| Spelling | typos, `.typos.toml` | §8 |
+| Workflow hygiene | zizmor | — |
+| Every Mermaid diagram parses | `.agents/scripts/check-diagrams.py` | §7 |
+
+Each checker does one thing and is named after it, so a failure says which rule broke and a
+maintainer can run that rule alone. A check is a file under `.agents/scripts/`, never a script
+inlined in a workflow, because a copy that lives only in CI cannot be run before the push that
+breaks it.
+
+External URLs are swept nightly by lychee
+([`.github/workflows/link-check.yml`](../.github/workflows/link-check.yml)) and never on a merge: a
+link that belongs to somebody else must not be able to block one. Relative links and their anchors
+are resolved against the file system instead, which needs no network and blocks every push.
+
+The stack that will publish these files — site generator, API reference, executable examples — is
+decided by ticket #26.
 
 ## References
 

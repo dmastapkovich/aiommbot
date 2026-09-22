@@ -53,7 +53,7 @@ The Go reference client uses option 2 for `NewWebSocketClient*` and option 1 (`A
 ## 3. Heartbeat, deadlines, official client reconnect behaviour
 
 **Server side** (`web_conn.go`):
-```
+```go
 writeWaitTime = 30 * time.Second
 pongWaitTime  = 100 * time.Second
 pingInterval  = (pongWaitTime * 6) / 10      // 60s
@@ -63,7 +63,7 @@ The server **sends WS ping frames every 60 s**, sets `SetReadDeadline(pongWaitTi
 **Go client** (`websocket_client.go`): passive. `SetPingHandler` resets a watchdog of `time.Second * (60 + PingTimeoutBufferSeconds)` = 65 s (`PingTimeoutBufferSeconds = 5`); expiry signals `PingTimeoutChannel`. No reconnect: "a closed client should not be reused again. Rather a new client should be created anew." `Sequence` starts at 1 and `wsc.Sequence++` after each send.
 
 **TS client** (`webapp/platform/client/src/websocket.ts`) — the de-facto reference for a resilient client:
-```
+```text
 maxWebSocketFails: 7, minWebSocketRetryTime: 3000, maxWebSocketRetryTime: 300000,
 reconnectJitterRange: 2000, clientPingInterval: 30000
 clientPingTimeoutErrCode = 4000, clientSequenceMismatchErrCode = 4001
@@ -83,7 +83,7 @@ clientPingTimeoutErrCode = 4000, clientSequenceMismatchErrCode = 4001
 {"event": "<name>", "data": {...}, "broadcast": {...}, "seq": <int64>}
 ```
 `seq` is the per-connection server counter (starts at 0 for a fresh connection; the hello is seq 0). `broadcast` (`WebsocketBroadcast`):
-```
+```text
 omit_users map[string]bool | user_id | channel_id | team_id | connection_id | omit_connection_id
 contains_sanitized_data, contains_sensitive_data, required_permissions, broadcast_hooks, broadcast_hook_args (all omitempty)
 ```

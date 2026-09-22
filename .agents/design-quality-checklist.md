@@ -18,10 +18,15 @@ deferral in the ticket, not silently skipped.
 - Every relative link resolves to a committed file and every anchor to a heading there; a planned
   document is named in a code span, unlinked, until its file exists (`docs/documentation-style.md`
   §6). Checked by `.agents/scripts/check-docs.py --links`.
+- The document is listed in its directory's index (`docs/documentation-style.md` §6). Checked by
+  `.agents/scripts/check-index.py`, which also refuses a directory that is neither a typed one nor
+  declared to owe no index.
 - Prose wraps at 100 columns; no placeholder text; identifiers in code spans
   (`docs/documentation-style.md` §8). Checked by `.agents/scripts/check-docs.py --width`, which
   carries §8's exemptions and skips research notes.
 - Diagrams are Mermaid, follow `docs/design/diagrams.md`, and agree with the building-block view.
+  That each one parses is checked by `.agents/scripts/check-diagrams.py`, which needs the renderer
+  and so reports only in CI; that it says the right thing is read.
 - No secret, token, private URL, local path or personal data.
 - English; committed with `docs(<area>): … (#N)` and the `TRACKER.md` row in the same commit.
 

@@ -1,0 +1,64 @@
+# Configuration for checking the external links of this repository.
+#
+# Local links and their #fragments are not lychee's job here: they are resolved
+# against the file system by `.agents/scripts/check-docs.py --links`, which
+# needs no network and blocks every push. The division is the corpus's own.
+# wemake-services/django-modern-rest reaches it with one line -- its
+# .github/lychee.toml:19 sets `scheme = ["https"]`, so a relative link, which
+# lychee resolves to a file: URI, is never requested -- and
+# open-telemetry/semantic-conventions reaches the same split by running lychee
+# twice, once with `--scheme file --include-fragments` and once with its full
+# configuration (.github/scripts/link-check.sh:53-57).
+#
+# The catalogue holds 1964 distinct external URLs over 3435 occurrences, 946 of
+# them on github.com. That is why this check runs on a schedule rather than on
+# every push: arc42/examples.arc42.org-site states the rule in its Makefile:47-51
+# -- "Everything it tests belongs to somebody else, so it must never be able to
+# fail a build or block a merge."
+
+# Only HTTPS is requested. Every other scheme -- file, mailto, http, data -- is
+# left alone, which is what keeps this configuration off the relative links.
+scheme = ["https"]
+require_https = true
+insecure = false
+
+# Check dotfiles too; .github/ and .agents/ hold documents that carry links.
+hidden = true
+
+# Warnings and failures only; a line per successful link buries them.
+verbose = "warn"
+
+user_agent = "curl/8.7.1"
+max_redirects = 1
+
+# The github.com rate limit is what these four knobs exist for.
+# open-telemetry/semantic-conventions sets the first three and says so in place:
+# "this helps slow down the rate of requests to avoid rate limiting" (:39) and
+# "wait between retries to avoid 429 rate limiting from GitHub" (:30).
+# django-modern-rest independently arrives at the same concurrency (:10).
+# The workflow also passes --github-token, which lifts the limit from 60 requests
+# an hour to 5000.
+max_concurrency = 4
+max_retries = 6
+retry_wait_time = 5
+timeout = 60
+
+# jcrist/msgspec is the only clone in the corpus that caches link results
+# (lychee.toml:3); with 3435 occurrences a cold resolve every night is waste.
+cache = true
+
+# 403 is what a rate-limited or bot-averse host returns while being perfectly
+# reachable in a browser. open-telemetry/semantic-conventions accepts it (:3).
+accept = ["200..=299", "403"]
+
+# #fragments on external pages are deliberately not validated. Validating one
+# fetches and parses the target, and every project in the corpus that reached
+# our scale turned it off: mongo-python-driver `linkcheck_anchors = False`,
+# python-attrs/attrs disabling anchors for all of github.com, python/cpython
+# ignoring every github.com URL that carries a fragment. Our own #fragments are
+# checked exactly, against the file they point at, by check-docs.py.
+
+# Hosts that refuse automated requests while being reachable in a browser are
+# recorded here with the reason, the way django-modern-rest records its three
+# (.github/lychee.toml:47-59). Empty until a nightly run names one.
+exclude = []

@@ -12,6 +12,9 @@ Three checks, mechanising two lines of .agents/design-quality-checklist.md:
     links     a relative link whose target file does not exist (§6)
     anchors   a relative link whose #fragment matches no heading there (§6)
 
+Indexes are `check-index.py`; diagrams are `check-diagrams.py`. The
+Markdown all three read is `_markdown.py`.
+
 What the width check does not report, and why. §8 states the rule; this is how
 each clause of it is recognised.
 
@@ -47,12 +50,10 @@ from __future__ import annotations
 
 import argparse
 import re
-import subprocess
 import sys
-from collections import Counter
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+from _markdown import ABSOLUTE, LINK, REPO, anchors, body, markdown_files, prose
 
 WIDTH = 100
 """Columns of prose, from docs/documentation-style.md §8."""
@@ -62,68 +63,6 @@ EXEMPT_WIDTH = ("docs/research/", ".agents/research/")
 
 RECORD_ROW = re.compile(r"- \[[ x]\] |_[A-Z]")
 """A line holding one record: a checklist row, or a rulebook field such as `_Tier:_`."""
-
-FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
-CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)(?:(?!\1).)*?\1(?!`)", re.DOTALL)
-LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
-HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*$")
-ABSOLUTE = ("http://", "https://", "mailto:", "//")
-
-
-def markdown_files(paths: list[str]) -> list[Path]:
-    """Every tracked *.md under the given paths, or under the repository root."""
-    argv = ["git", "-C", str(REPO), "ls-files", "-z", "--", *(paths or ["*.md"])]
-    listing = subprocess.run(argv, capture_output=True, text=True, check=True).stdout
-    return sorted(REPO / name for name in listing.split("\0") if name.endswith(".md"))
-
-
-def body(lines: list[str]) -> list[str]:
-    """The file with fenced blocks and front matter blanked, numbering preserved."""
-    kept: list[str] = []
-    fence: str | None = None
-    front = bool(lines) and lines[0].strip() == "---"
-    for number, line in enumerate(lines, start=1):
-        if front:
-            front = not (number > 1 and line.strip() == "---")
-            kept.append("")
-            continue
-        edge = FENCE.match(line)
-        if fence is None and edge:
-            fence = edge.group(1)[0]
-            kept.append("")
-            continue
-        if fence is not None:
-            if edge and edge.group(1)[0] == fence:
-                fence = None
-            kept.append("")
-            continue
-        kept.append(line)
-    return kept
-
-
-def prose(lines: list[str]) -> list[str]:
-    """`body` with inline code spans blanked, so a quoted link is not read as one."""
-    blanked = CODE_SPAN.sub(lambda m: " " * len(m.group(0)), "\n".join(body(lines)))
-    return blanked.split("\n")
-
-
-def slug(heading: str) -> str:
-    """GitHub's heading anchor: link text kept, punctuation dropped, spaces hyphenated."""
-    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", heading).replace("`", "").lower()
-    return re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", text).strip())
-
-
-def anchors(lines: list[str]) -> set[str]:
-    """Every anchor the file offers; a repeated slug takes GitHub's `-1`, `-2` suffix."""
-    seen: Counter[str] = Counter()
-    found: set[str] = set()
-    for line in body(lines):
-        heading = HEADING.match(line)
-        if heading:
-            base = slug(heading.group(2))
-            found.add(base if not seen[base] else f"{base}-{seen[base]}")
-            seen[base] += 1
-    return found
 
 
 def check_width(path: Path, lines: list[str]) -> list[str]:

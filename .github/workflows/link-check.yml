@@ -1,0 +1,52 @@
+# The external link sweep, on a schedule rather than on a merge.
+#
+# arc42/examples.arc42.org-site states the rule this workflow follows, in the
+# Makefile:47-51 comment that keeps its own external check out of `make check`:
+# "Everything it tests belongs to somebody else, so it must never be able to
+# fail a build or block a merge. Run it by hand, or from a scheduled job."
+# Four clones in the reference corpus moved external link checking to a
+# schedule for that reason -- open-telemetry/semantic-conventions daily,
+# mongodb/mongo-python-driver nightly, pytest-dev/pytest weekly,
+# python-telegram-bot bimonthly.
+#
+# Relative links and their #fragments are not checked here. They are resolved
+# against the file system by `.agents/scripts/check-docs.py --links`, which runs
+# on every push in docs.yml and needs no network. `.github/lychee.toml` keeps
+# this run off them with one line, `scheme = ["https"]`.
+#
+# 04:17 rather than the hour: a cron pinned to :00 arrives with everybody
+# else's. The arc42 sites stagger theirs deliberately for the same reason.
+
+name: link-check
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external:
+    name: Every external URL still resolves
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --config .github/lychee.toml .
+          fail: true
+          jobSummary: true
+        env:
+          # Lifts the github.com limit from 60 requests an hour to 5000, which
+          # the 946 distinct github.com URLs in this catalogue need.
+          # open-telemetry/semantic-conventions passes the same token on every
+          # one of its link-check steps (.github/scripts/link-check.sh:50).
+          GITHUB_TOKEN: ${{ github.token }}

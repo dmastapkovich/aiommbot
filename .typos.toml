@@ -1,0 +1,20 @@
+# Spelling for the catalogue.
+#
+# typos is the spell checker ADR-0011 already chose for this project, and it is
+# what the strictness benchmark runs: wemake-services/django-modern-rest pairs
+# it with codespell in .pre-commit-config.yaml (:54, :59), as does
+# python-trio/trio (:43, :36). Ten of the ninety-three reference clones run it.
+#
+# The list below is empty on purpose. Django states the discipline a word list
+# needs in docs/internals/contributing/writing-documentation.txt:244 -- reword
+# the sentence first, and add a word only when it cannot be reworded -- and the
+# corpus shows the cost of ignoring it: 603 hand-maintained lines in Django, 597
+# in Celery, 426 in aiohttp. A name that belongs to the design belongs in
+# CONTEXT.md; this file holds only what the glossary cannot.
+#
+# typos reads .gitignore, so the `.refs/` clones are skipped without naming them.
+
+[default.extend-words]
+
+[files]
+extend-exclude = []

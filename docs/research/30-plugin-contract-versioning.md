@@ -697,7 +697,7 @@ and `badreturn2.py` returns a bare `class MyPlugin` that does not inherit `Plugi
 output is
 ([`test-data/unit/check-custom-plugin.test`](https://github.com/python/mypy/blob/master/test-data/unit/check-custom-plugin.test)):
 
-```
+```text
 tmp/mypy.ini:3: error: Type object expected as the return value of "plugin"; got None (in <ROOT>/test-data/unit/plugins/badreturn.py)
 tmp/mypy.ini:2: error: Return value of "plugin" must be a subclass of "mypy.plugin.Plugin" (in <ROOT>/test-data/unit/plugins/badreturn2.py)
 ```
@@ -795,7 +795,7 @@ end-to-end test `testDaemonRunRestartPluginVersion` appends a single space to `p
 the transcript
 ([`test-data/unit/daemon.test`](https://github.com/python/mypy/blob/master/test-data/unit/daemon.test)):
 
-```
+```console
 $ {python} -c "print(' ')" >> plug.py
 $ dmypy run -- foo.py --no-error-summary
 Restarting: plugins changed
