@@ -22,7 +22,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | 8 | `08-cross-cutting-concepts.md` | reviewed | #40 | same |
 | 9 | `docs/adr/` | rolling | every grilling ticket | not started |
 | 10 | `10-quality-requirements.md` | reviewed | #37 | #13 |
-| 11 | `11-risks-and-technical-debt.md` | not started | #42 | #40 #41 |
+| 11 | `11-risks-and-technical-debt.md` | reviewed | #42 | #40 #41 |
 | 12 | `CONTEXT.md` | rolling | every ticket | not started |
 | not started | `engineering-style.md` | reviewed | #36 | #23 #13 |
 | not started | `diagrams.md` | reviewed | #35 | not started |
