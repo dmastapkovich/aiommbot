@@ -1,0 +1,14 @@
+# Configuration for zizmor, run as a hook from .pre-commit-config.yaml
+# https://docs.zizmor.sh/configuration/
+rules:
+  adhoc-packages:
+    ignore:
+      # `npm install --global @mermaid-js/mermaid-cli@11.17.0` in the diagrams
+      # job. The audit wants the install to come from a lockfile, and it is right
+      # in general -- an exact version still floats its transitive tree. This
+      # repository has no manifest of any kind to hold one: no package.json, no
+      # pyproject.toml, no package code. Adding a Node manifest for a single
+      # renderer would settle a question ADR-0039 and ticket #32 own, which is
+      # where the toolchain and its lockfiles are decided. When #32 stands the
+      # skeleton up, this install moves to a lockfile and this entry goes.
+      - docs.yml

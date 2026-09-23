@@ -15,6 +15,20 @@
 # typos reads .gitignore, so the `.refs/` clones are skipped without naming them.
 
 [default.extend-words]
+# Both entries are names this design fixed, and both were measured: left to
+# write, typos renamed them across the catalogue on its first run.
+#
+# NAM is one of the ten rule areas ADR-0033 fixes -- SOL, PAT, TYP, ASY, ERR,
+# NAM, MOD, LOG, DOC, TST -- in the same sentence that says an identifier is
+# never renumbered and never reused. typos read it as `NAME` and rewrote
+# `ST-NAM-01` in ADR-0033, ADR-0040, §8.4 and components/event.md while leaving
+# engineering-style.md, which defines every one of those rules, untouched.
+NAM = "NAM"
+# CNA is a participant alias in the sequence diagram of §6.8. typos read it as a
+# transposition of CAN and renamed it on three lines of a six-line exchange,
+# leaving the `participant CNB` beside it -- a diagram drawing a participant it
+# no longer declares.
+CNA = "CNA"
 
 [files]
 # The two research directories are excluded for the reason

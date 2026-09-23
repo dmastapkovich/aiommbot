@@ -31,6 +31,15 @@ repos:
     rev: 512fc24f32f44ab01972217aaaf3dc86ec234d53  # frozen: v1.50.2
     hooks:
       - id: typos
+        # Report, never rewrite. The hook writes its corrections by default, and
+        # the first run proved what that costs here: it renamed the Mermaid
+        # participant `CNA` to `CAN` on one line of docs/design/06-runtime-view.md
+        # and left the other three, and `CNB` beside it, alone -- a diagram that
+        # no longer declares the participant it draws. A spelling correction in
+        # prose full of identifiers is the author's call, not the hook's.
+        # `--force-exclude` is what makes [files] extend-exclude of .typos.toml
+        # apply when pre-commit passes the file names explicitly.
+        args: ["--force-exclude"]
 
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: fa412071e4f5d44d44f9e365f4676f9df92456a2  # frozen: v1.30.1

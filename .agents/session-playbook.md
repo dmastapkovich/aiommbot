@@ -32,7 +32,8 @@ label; the `design-session` skill runs these steps.
    (`.agents/issue-tracker.md`). *Done when the map body shows the new line.*
 7. **Clear the fog.** Graduate anything the answer made specifiable into new tickets (create, then
    wire `blocked_by`, then add as sub-issues of #1); remove the graduated line from *Not yet
-   specified*; rule mis-scoped tickets out of scope by closing them with a line in *Out of scope*;
+   specified*; rule a wrongly scoped ticket out of scope by closing it with a line in *Out of
+   scope*;
    update or delete tickets the decision invalidated. *Done when the map's frontier is the true set
    of takeable work.*
 8. **Report** to the maintainer in Russian: what was decided, files changed, the next frontier
