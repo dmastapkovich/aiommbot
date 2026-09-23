@@ -29,7 +29,7 @@ Legend: `not started` · `in progress` · `reviewed` (passes `.agents/design-qua
 | not started | `components/_template.md` | reviewed | #56 | not started |
 | not started | `docs/documentation-style.md` | reviewed | #35 | not started |
 | not started | `docs/adr/_template.md`, `docs/adr/README.md` | reviewed | #35 | not started |
-| not started | Docs-as-code linting: `check-docs.py` (width, links, anchors), `check-index.py`, `check-diagrams.py`, markdownlint, typos and zizmor before every commit and in CI, lychee nightly on external URLs | in progress | #43 | not started |
+| not started | Docs-as-code linting: `check-docs.py` (width, links, anchors), `check-index.py`, `check-diagrams.py`, markdownlint, typos and zizmor before every commit and in CI, lychee nightly on external URLs | reviewed | #43 | not started |
 
 ## B. Decision areas → ADR
 
