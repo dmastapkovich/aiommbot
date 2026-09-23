@@ -1,25 +1,47 @@
-# Structural rules for every Markdown file in the catalogue.
+# Structural rules for the Markdown this catalogue writes.
 #
 # The shape is astral-sh/ruff's and astral-sh/ty's -- start from every rule and
 # subtract -- with pydantic/pydantic's habit of a reason above each override,
-# which is what lets a later reader re-enable a rule safely.
+# which is what lets a later reader re-enable a rule safely. Every count below
+# was produced by running markdownlint-cli2 v0.22.1 over the 165 tracked files.
 #
-# Four rules the corpus disables are kept on here, because the reason the corpus
-# gives does not transfer:
-#   MD041 first-line-h1   ruff, ty, pydantic, OWASP, open-telemetry and trallnag
-#                         all disable it because mkdocs inserts the H1. Nothing
-#                         generates our files; each one opens with its own title.
+# Research notes are not linted at all; `.pre-commit-config.yaml` excludes them.
+# They quote their sources verbatim, which is the same reason
+# docs/documentation-style.md §8 exempts them from the width rule and
+# `.agents/scripts/check-docs.py` carries EXEMPT_WIDTH. Linting them reports
+# 1922 findings, every one an artefact of somebody else's formatting: 221 list
+# markers, 123 hard tabs inside quoted Go, 24 blockquote blanks, 23 spaces
+# inside code spans.
+#
+# Three rules the corpus disables are kept on here, because the reason the
+# corpus gives does not transfer:
+#   MD041 first-line-h1    all six corpus configurations disable it, but only
+#                          pydantic states why -- mkdocs inserts the H1. ruff
+#                          and ty build with mkdocs and give no reason; OWASP,
+#                          open-telemetry and trallnag have no mkdocs and no
+#                          reason either. Nothing generates our files; each one
+#                          opens with its own title.
 #   MD046 code-block-style ruff and pydantic disable it for mkdocs-material
-#                         content tabs and PyMdown admonitions. We have neither,
-#                         and OWASP/ASVS keeps it pinned to fenced for nothing.
-#   MD059 link-text       ruff disables it because "here" is convenient.
-#                         documentation-style.md §6 requires the opposite: link
-#                         text names the target.
-#   MD007 ul-indent       four of the six corpus configs set indent 4, which is
-#                         what mkdocs needs. All 13 nested list items in this
-#                         catalogue use 2, which is the rule's own default.
+#                          content tabs and PyMdown admonitions. We have
+#                          neither, and OWASP/ASVS keeps it pinned to fenced.
+#   MD059 link-text        ruff disables it because "here" is convenient.
+#                          documentation-style.md §6 requires the opposite:
+#                          link text names the target.
+# MD007 ul-indent is left at its default of 2 rather than the 4 that four of
+# the six corpus configurations set -- 4 is what mkdocs needs for ruff, ty and
+# pydantic, and OWASP sets it without one -- because all 13 nested list items in
+# this catalogue use 2.
 
 default: true
+
+# MD001/heading-increment
+# Nine findings, all in `docs/design/engineering-style.md`, all the same shape:
+# a numbered section is `##` and a rule is `####`, with no `###` between unless
+# the section happens to have subsections. That is the rulebook's convention --
+# a rule identifier sits at one fixed level so a rule looks the same wherever it
+# is -- and MD001 cannot express "this level is fixed by role". Demoting the
+# rules would make a rule's level depend on whether its section has subsections.
+MD001: false
 
 # MD013/line-length
 # Width is documentation-style.md §8 and `.agents/scripts/check-docs.py --width`
@@ -36,10 +58,8 @@ MD024:
   siblings_only: true
 
 # MD033/no-inline-html
-# Six occurrences, every one an arc42 template placeholder quoted verbatim in a
-# documentation-engineering note -- `| _<Q-goal 1>_ | _<Text>_ |`. Rewriting
-# them edits quoted material, which is the same reason §8 exempts a note from
-# the width rule.
+# Six occurrences, every one an arc42 template placeholder quoted verbatim --
+# `| _<Q-goal 1>_ | _<Text>_ |`. Rewriting them edits quoted material.
 MD033: false
 
 # MD034/no-bare-urls
@@ -48,3 +68,18 @@ MD033: false
 # write, and wrapping one in a link changes what the source said. OWASP/ASVS is
 # the only corpus configuration that touches this rule, and it disables it.
 MD034: false
+
+# MD049/emphasis-style
+# 1063 spans use `*asterisk*` and 598 use `_underscore_`, and the two carry
+# different jobs: an underscore marks a field label fixed by a template --
+# `_Status: reviewed (#N)._`, `_Avoid_:`, `_<placeholder>_` -- and an asterisk
+# marks emphasis in prose. Either style alone would erase that distinction.
+MD049: false
+
+# MD060/table-column-style
+# 1771 findings, one per pipe: every table in the catalogue pads its data rows
+# (`| Type | Home |`) and writes its separator tight (`|---|---|`), which the
+# rule reads as two styles in one table. The style is uniform across 165 files
+# and the rule is new in markdownlint v0.40 -- no configuration in the reference
+# corpus adopts it, and padding 1771 separators buys nothing a reader can see.
+MD060: false

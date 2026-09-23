@@ -20,6 +20,12 @@ repos:
     rev: 916ad0aaa108c64d294101002066f530ea170b10  # frozen: v0.23.3
     hooks:
       - id: markdownlint-cli2
+        # A research note quotes its sources verbatim, so its list markers, its
+        # tabs and its blockquote spacing are somebody else's. Linting the two
+        # research directories reports 1922 findings and would teach an author
+        # to reformat a quotation. §8 already exempts them from the width rule
+        # for the same reason, and `check-docs.py` carries the same two prefixes.
+        exclude: ^(docs|\.agents)/research/
 
   - repo: https://github.com/crate-ci/typos
     rev: 512fc24f32f44ab01972217aaaf3dc86ec234d53  # frozen: v1.50.2

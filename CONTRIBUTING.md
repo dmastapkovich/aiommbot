@@ -10,6 +10,18 @@ Design decisions are made as GitHub issues labelled `wayfinder:*`. The issue lab
 question lives in [`docs/adr/`](docs/adr/) (decisions) and `CONTEXT.md` (vocabulary). Read those
 before proposing a change — an argument that is already settled there needs new evidence to reopen.
 
+## Before your first commit
+
+Install the hooks, once per clone:
+
+```console
+pre-commit install
+```
+
+They are the checks [`docs/documentation-style.md` §11](docs/documentation-style.md#11-tooling-docs-as-code)
+describes, and CI re-runs the same configuration over the whole tree. A check that only runs in CI
+runs after the push that broke it.
+
 ## Ground rules
 
 - Code, comments, tests, docs, commit messages and issues are written in English.

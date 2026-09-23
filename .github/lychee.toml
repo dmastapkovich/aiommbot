@@ -32,9 +32,10 @@ user_agent = "curl/8.7.1"
 max_redirects = 1
 
 # The github.com rate limit is what these four knobs exist for.
-# open-telemetry/semantic-conventions sets the first three and says so in place:
-# "this helps slow down the rate of requests to avoid rate limiting" (:39) and
-# "wait between retries to avoid 429 rate limiting from GitHub" (:30).
+# open-telemetry/semantic-conventions sets all four and says why in place:
+# "this helps slow down the rate of requests to avoid rate limiting" (:38-39) and
+# "wait between retries to avoid 429 rate limiting from GitHub" (:29-30); its
+# max_retries and timeout carry the same "better to be safe and avoid failures".
 # django-modern-rest independently arrives at the same concurrency (:10).
 # The workflow also passes --github-token, which lifts the limit from 60 requests
 # an hour to 5000.

@@ -15,10 +15,12 @@ label; the `design-session` skill runs these steps.
    mechanise the checklist's width, link, anchor and index lines over the whole catalogue; then walk
    `.agents/design-quality-checklist.md` by hand for every document touched. Fix before anything is
    committed. Diagrams are checked by `.agents/scripts/check-diagrams.py`, which needs a renderer no
-   session has, so a new diagram is read here and parsed by CI. Where the decision changes an
-   accepted ADR, rewrite that ADR so it states the current decision and link the two (`amends` /
-   `amended-by`). *Done when both scripts exit 0 and every checklist line for the touched documents
-   is true or recorded as a deferral in the ticket.*
+   session has, so a new diagram is read here and parsed by CI. The remaining checks of
+   `docs/documentation-style.md` §11 — markdownlint, the spell check, workflow hygiene — are hooks
+   and fire on the commit of step 5; run them early with `pre-commit run --all-files` rather than
+   meeting them there. Where the decision changes an accepted ADR, rewrite that ADR so it states the
+   current decision and link the two (`amends` / `amended-by`). *Done when both scripts exit 0 and
+   every checklist line for the touched documents is true or recorded as a deferral in the ticket.*
 5. **Record.** One commit: new ADR(s) in `docs/adr/`, `CONTEXT.md` terms, the arc42 section or
    component document the ticket owns, the `docs/design/TRACKER.md` rows it changes, links to the
    research it used. Message: `docs(<area>): <what was decided> (#N)`. Push. *Done when

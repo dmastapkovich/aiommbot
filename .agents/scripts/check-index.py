@@ -35,7 +35,12 @@ import argparse
 import sys
 from pathlib import Path
 
+import re
+
 from _markdown import ABSOLUTE, LINK, REPO, markdown_files, prose
+
+DEFINITION = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*(\S+)")
+"""A reference definition, `[row]: name.md`, which names a file without linking it inline."""
 
 INDEXED = (
     ".agents/research",
@@ -71,14 +76,25 @@ def declared(directory: str) -> str | None:
 
 
 def listed(index: Path) -> set[str]:
-    """Every file name the index links to, relative to its own directory."""
+    """Every file name the index names, relative to its own directory.
+
+    Both link forms count, and so does a reference definition, because an index
+    row is a row whichever way its author wrote the link. A name is normalised
+    -- pointy brackets dropped, a leading `./` removed -- so that `[Doc](./a.md)`
+    and `[Doc](<a.md>)` are the same row as `[Doc](a.md)` rather than a finding.
+    """
     lines = index.read_text(encoding="utf-8").split("\n")
     names = set()
+    targets = []
     for line in prose(lines):
-        for match in LINK.finditer(line):
-            target = match.group(1)
-            if not target.startswith(ABSOLUTE):
-                names.add(target.partition("#")[0])
+        targets += [match.group(1) for match in LINK.finditer(line)]
+        targets += [match.group(1) for match in DEFINITION.finditer(line)]
+    for target in targets:
+        target = target.strip().lstrip("<").rstrip(">")
+        if target.startswith(ABSOLUTE):
+            continue
+        name = target.partition("#")[0]
+        names.add(name.removeprefix("./"))
     return names
 
 
@@ -103,8 +119,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("paths", nargs="*", default=[])
     args = parser.parse_args(argv)
 
+    found = markdown_files(args.paths)
+    if args.paths and not found:
+        print(
+            f"check-index: no tracked Markdown under {' '.join(args.paths)}", file=sys.stderr
+        )
+        return 2
+
     holding: dict[str, list[Path]] = {}
-    for path in markdown_files(args.paths):
+    for path in found:
         holding.setdefault(str(path.parent.relative_to(REPO)), []).append(path)
 
     findings: list[str] = []

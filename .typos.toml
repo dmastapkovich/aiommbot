@@ -1,11 +1,11 @@
-# Spelling for the catalogue.
+# Spelling for the prose this catalogue writes.
 #
 # typos is the spell checker ADR-0011 already chose for this project, and it is
 # what the strictness benchmark runs: wemake-services/django-modern-rest pairs
 # it with codespell in .pre-commit-config.yaml (:54, :59), as does
 # python-trio/trio (:43, :36). Ten of the ninety-three reference clones run it.
 #
-# The list below is empty on purpose. Django states the discipline a word list
+# The word list is empty on purpose. Django states the discipline a word list
 # needs in docs/internals/contributing/writing-documentation.txt:244 -- reword
 # the sentence first, and add a word only when it cannot be reworded -- and the
 # corpus shows the cost of ignoring it: 603 hand-maintained lines in Django, 597
@@ -17,4 +17,12 @@
 [default.extend-words]
 
 [files]
-extend-exclude = []
+# The two research directories are excluded for the reason
+# docs/documentation-style.md §8 already gives: a note quotes its sources and
+# editing a quotation to satisfy a tool falsifies it. Four misspellings sit
+# inside quotation marks in .agents/research/28-arc42-deployment-view-and-cross-
+# cutting-concepts.md alone -- "neccessary" at :116, :199 and :763, "refering" at
+# :673 -- each one arc42's own text. The same two prefixes are exempt from the
+# width rule in `.agents/scripts/check-docs.py` and from markdownlint in
+# `.pre-commit-config.yaml`; a note is evidence, and the tools treat it as one.
+extend-exclude = ["docs/research/", ".agents/research/"]

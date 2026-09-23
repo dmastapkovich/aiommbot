@@ -3,11 +3,15 @@
 # arc42/examples.arc42.org-site states the rule this workflow follows, in the
 # Makefile:47-51 comment that keeps its own external check out of `make check`:
 # "Everything it tests belongs to somebody else, so it must never be able to
-# fail a build or block a merge. Run it by hand, or from a scheduled job."
-# Four clones in the reference corpus moved external link checking to a
-# schedule for that reason -- open-telemetry/semantic-conventions daily,
-# mongodb/mongo-python-driver nightly, pytest-dev/pytest weekly,
-# python-telegram-bot bimonthly.
+# fail a build or block a merge. Run it by hand, or from a scheduled job that
+# opens an issue." We do not open an issue: a failed run is a red entry in the
+# Actions list, which is the half of that sentence this workflow leaves to the
+# maintainer.
+# Three clones in the reference corpus moved external link checking off merges
+# entirely -- mongodb/mongo-python-driver nightly, pytest-dev/pytest weekly,
+# python-telegram-bot bimonthly. open-telemetry/semantic-conventions is not one
+# of them: it adds a daily all-files sweep (daily-link-check.yml) on top of the
+# per-pull-request check it keeps in checks.yml:52.
 #
 # Relative links and their #fragments are not checked here. They are resolved
 # against the file system by `.agents/scripts/check-docs.py --links`, which runs

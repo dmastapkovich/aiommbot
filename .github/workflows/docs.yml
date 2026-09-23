@@ -7,11 +7,16 @@
 # smallest permissions (:14-15), and a concurrency group that cancels a
 # superseded run without letting two pushes to main cancel each other (:10-12).
 #
-# No `paths:` filter. Every tracked file in this repository is Markdown, so a
-# '**/*.md' filter would match every change and buy nothing, while adding a way
-# for a required check to be skipped instead of reported. The two purest
-# documentation repositories in the reference corpus -- prometheus/docs and
-# OWASP/ASVS -- likewise run their Markdown linters on a bare trigger.
+# No `paths:` filter. A '**/*.md' filter would skip CI on exactly the changes
+# that most need it: the seventeen tracked files that are not Markdown are the
+# linting machinery itself -- the four checkers, these two workflows and the four
+# tool configurations -- and `.pre-commit-config.yaml` gates the checkers on
+# `^\.agents/scripts/.*\.py$` for that reason. The two purest documentation
+# repositories in the reference corpus -- prometheus/docs and OWASP/ASVS --
+# likewise trigger without a paths filter (md-validation.yml:3-4,
+# markdown-linter.yml:3-8), though both then narrow scope inside the tool rather
+# than at the trigger: OWASP with `files: './5.0*'` and prometheus/docs with a
+# single file in Makefile:2, under a TODO to add more.
 #
 # Two jobs rather than one, so a diagram failure and a lint failure are two
 # entries in the checks list. open-telemetry/semantic-conventions takes the same
@@ -45,9 +50,11 @@ jobs:
           persist-credentials: false
 
       # One pipeline, not two: the same .pre-commit-config.yaml a contributor
-      # installs locally is what runs here, over every file. Twenty-nine of the
-      # forty-seven reference clones that carry pre-commit re-run it in CI, and
-      # prek is what the recent adopters use -- CPython, PEPs, FastAPI, ruff, ty.
+      # installs locally is what runs here, over every file. Thirty-one of the
+      # forty-seven reference clones that carry pre-commit re-run it in CI --
+      # twenty-six by a workflow, directly or through tox, nox or just, and five
+      # more through pre-commit.ci. prek is what the recent adopters run it with:
+      # CPython, PEPs, FastAPI, ruff and ty.
       - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
 
   diagrams:
@@ -64,9 +71,11 @@ jobs:
         with:
           node-version: 24.19.0
 
-      # The install downloads the headless browser mermaid-cli renders through.
-      # This is the step that cannot run in a development sandbox, and the reason
-      # the check lives here rather than in .pre-commit-config.yaml.
+      # mermaid-cli takes puppeteer as a peer dependency, so this install also
+      # pulls puppeteer in and its postinstall downloads the headless browser the
+      # renderer drives. That download is what cannot happen in a development
+      # sandbox, and the reason this check lives here rather than in
+      # .pre-commit-config.yaml.
       - name: Install the Mermaid renderer
         run: npm install --global @mermaid-js/mermaid-cli@11.17.0
 

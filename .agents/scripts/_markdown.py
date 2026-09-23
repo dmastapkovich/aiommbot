@@ -49,11 +49,18 @@ def _opens(line: str) -> tuple[str, str] | None:
 
 
 def _closes(line: str, marker: str) -> bool:
-    """Whether a line closes the fence opened by `marker`."""
+    """Whether a line closes the fence opened by `marker`.
+
+    A closing fence carries no info string (CommonMark 4.5). Without that
+    clause a line inside the block that merely starts with enough backticks
+    ends it, the real closer then opens a phantom block, and everything after
+    it is blanked -- which is to say checked by nothing.
+    """
     edge = FENCE.match(line)
     if edge is None:
         return False
-    return edge.group(1)[0] == marker[0] and len(edge.group(1)) >= len(marker)
+    same = edge.group(1)[0] == marker[0] and len(edge.group(1)) >= len(marker)
+    return same and not edge.group(2).strip()
 
 
 def fences(lines: list[str]):
@@ -94,10 +101,27 @@ def body(lines: list[str]) -> list[str]:
     return kept
 
 
+def _blank(match: re.Match[str]) -> str:
+    """The match, every character but a newline replaced by a space.
+
+    Blanking a newline would join two lines and shift every line number after
+    it, so a finding would name the wrong line.
+    """
+    return re.sub(r"[^\n]", " ", match.group(0))
+
+
 def prose(lines: list[str]) -> list[str]:
-    """`body` with inline code spans blanked, so a quoted link is not read as one."""
-    blanked = CODE_SPAN.sub(lambda m: " " * len(m.group(0)), "\n".join(body(lines)))
-    return blanked.split("\n")
+    """`body` with inline code spans blanked, so a quoted link is not read as one.
+
+    A code span is inline, so it cannot cross a blank line. Matching over the
+    whole file instead lets one unbalanced backtick pair with the next one
+    anywhere below it and blank every link in between.
+    """
+    blanked = [
+        chunk if not chunk.strip() else CODE_SPAN.sub(_blank, chunk)
+        for chunk in re.split(r"(\n[ \t]*\n)", "\n".join(body(lines)))
+    ]
+    return "".join(blanked).split("\n")
 
 
 def slug(heading: str) -> str:

@@ -12,9 +12,10 @@ the build: GitHub renders each fenced block in a cross-origin iframe
 error is invisible to everything upstream of the reader. This is the
 check that makes the noise instead.
 
-No project in the reference corpus validates Mermaid in CI -- 18 of the
-93 clones ship diagrams and none parses them, across 656 workflow files
-and 48 pre-commit configurations. This check is therefore ours rather
+No project in the reference corpus validates Mermaid in CI -- 20 of the
+93 clones ship a Mermaid diagram (a ```mermaid or ```{mermaid} fence, a
+`.. mermaid::` directive, or a .mmd source) and none parses one, across
+656 workflow files and 48 pre-commit configurations. This check is ours rather
 than borrowed, and it is built the only way the corpus leaves open: the
 renderer itself, run headless. The shape is taken from
 koxudaxi/datamodel-code-generator, which drives the same binary through

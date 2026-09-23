@@ -161,11 +161,17 @@ as `class ImproperlyConfiguredException(HTTPException, ValueError)` and re-expor
 - An ASGI handler may not share its path with anything, and a mount may not carry path parameters
   ([`litestar/_asgi/routing_trie/validate.py`](https://github.com/litestar-org/litestar/blob/main/litestar/_asgi/routing_trie/validate.py#L26-L42)):
 
-  ```python raise ImproperlyConfiguredException("ASGI handlers must have a unique path not shared by
-  other route handlers.") ```
+  ```python
+  raise ImproperlyConfiguredException(
+      "ASGI handlers must have a unique path not shared by other route handlers."
+  )
+  ```
 
-  ```python raise ImproperlyConfiguredException("Path parameters are not allowed under a static or
-  mount route.") ```
+  ```python
+  raise ImproperlyConfiguredException(
+      "Path parameters are not allowed under a static or mount route."
+  )
+  ```
 
 There is a quieter Litestar collision with no message at all. `PluginRegistry.__init__` builds
 `self._plugins_by_type = {type(p): p for p in plugins}`, so a second plugin of the same concrete

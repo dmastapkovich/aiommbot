@@ -33,9 +33,9 @@ expressible:
 
 **A documented recipe is a how-to page of the user documentation**, in the Diátaxis quadrant
 [`documentation-style.md` §1](../documentation-style.md#1-document-types-and-where-they-live)
-already names; it is not a new document type and it never lives under `docs/`. This decision owes
-#26 two pages: *Run something periodically inside the bot* and *Run a scheduled job beside the bot*,
-the second naming the single-instance hazard rather than hiding it.
+already names; it is not a new document type and it never lives under `docs/`. This decision owes #26
+two pages: *Run something periodically inside the bot* and *Run a scheduled job beside the bot*, the
+second naming the single-instance hazard rather than hiding it.
 
 ## Considered options
 

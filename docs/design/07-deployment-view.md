@@ -191,8 +191,6 @@ by force deletion and by network partitions. A bot that must never double-proces
 lease and reads `Standby` to know the second replica is behaving
 ([ADR-0065](../adr/0065-a-transport-waiting-on-the-consumer-lease-is-standby-and-counts-as-ready.md)).
 
-
-
 ## 7.7 On Docker Compose
 
 Compose is the second host worth writing down, and its default is the opposite of Kubernetes': the

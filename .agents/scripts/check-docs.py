@@ -111,8 +111,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     files = markdown_files(args.paths)
+    if args.paths and not files:
+        print(
+            f"check-docs: no tracked Markdown under {' '.join(args.paths)}", file=sys.stderr
+        )
+        return 2
     text = {path: path.read_text(encoding="utf-8").split("\n") for path in files}
-    index = {path.resolve(): anchors(lines) for path, lines in text.items()}
+    # Anchors come from the whole catalogue, not from the files being checked, so
+    # that running over a subset reports fewer findings rather than weaker ones:
+    # a #fragment into a file outside the subset is still resolved.
+    index = {
+        path.resolve(): anchors(path.read_text(encoding="utf-8").split("\n"))
+        for path in markdown_files([])
+    }
 
     findings: list[str] = []
     exempt = 0

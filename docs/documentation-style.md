@@ -154,19 +154,26 @@ register of what is done.
 
 ## 11. Tooling (docs as code)
 
-Six checks hold this standard. Five run before a commit and again over the whole tree on every push
-and pull request; the sixth needs a browser and runs only in CI. The configuration lives with the
-tool that reads it — [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) lists the hooks,
-[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs them.
+Six checks hold this standard. Five are hooks in
+[`.pre-commit-config.yaml`](../.pre-commit-config.yaml), which
+[`CONTRIBUTING.md`](../CONTRIBUTING.md) says how to install and
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) re-runs over the whole tree; the sixth
+needs a browser and runs in that workflow alone. Each configuration file sits where its tool looks
+for it.
 
-| Check | Mechanism | Section it holds |
-|---|---|---|
-| Width, relative links, anchors | `.agents/scripts/check-docs.py` | §6, §8 |
-| Every document is in its index | `.agents/scripts/check-index.py` | §6 |
-| Heading, list and fence structure | markdownlint-cli2, `.markdownlint.yaml` | §4, §8 |
-| Spelling | typos, `.typos.toml` | §8 |
-| Workflow hygiene | zizmor | — |
-| Every Mermaid diagram parses | `.agents/scripts/check-diagrams.py` | §7 |
+| Check | Mechanism | Configuration | Rule it holds |
+|---|---|---|---|
+| Width, relative links, anchors | [`check-docs.py`](../.agents/scripts/check-docs.py) | — | §6, §8 |
+| Every document is in its index | [`check-index.py`](../.agents/scripts/check-index.py) | — | §6 |
+| Heading, list and fence structure | markdownlint-cli2 | [`.markdownlint.yaml`](../.markdownlint.yaml) | this section |
+| Spelling | typos | [`.typos.toml`](../.typos.toml) | §8 |
+| Workflow hygiene | zizmor | — | — |
+| Every Mermaid diagram parses | [`check-diagrams.py`](../.agents/scripts/check-diagrams.py) | — | §7 |
+
+The structural rules markdownlint enforces are its own; the file that states them is its
+configuration, and every rule switched off there carries the measurement that switched it off. A
+research note is exempt from markdownlint and from the spell check for the reason §8 already gives
+for the width rule: it quotes its sources, and editing a quotation to satisfy a tool falsifies it.
 
 Each checker does one thing and is named after it, so a failure says which rule broke and a
 maintainer can run that rule alone. A check is a file under `.agents/scripts/`, never a script
@@ -174,9 +181,10 @@ inlined in a workflow, because a copy that lives only in CI cannot be run before
 breaks it.
 
 External URLs are swept nightly by lychee
-([`.github/workflows/link-check.yml`](../.github/workflows/link-check.yml)) and never on a merge: a
-link that belongs to somebody else must not be able to block one. Relative links and their anchors
-are resolved against the file system instead, which needs no network and blocks every push.
+([`.github/workflows/link-check.yml`](../.github/workflows/link-check.yml),
+[`.github/lychee.toml`](../.github/lychee.toml)) and never on a merge: a link that belongs to
+somebody else must not be able to block one. Relative links and their anchors are resolved against
+the file system instead, which needs no network and so runs in the hook, before the commit.
 
 The stack that will publish these files — site generator, API reference, executable examples — is
 decided by ticket #26.
