@@ -29,6 +29,11 @@ NAM = "NAM"
 # leaving the `participant CNB` beside it -- a diagram drawing a participant it
 # no longer declares.
 CNA = "CNA"
+# German, in the one place the arc42 rules are quoted verbatim because the
+# English and German templates differ in substance: the German says "Liste oder
+# Tabelle" where the English says only "List". Rewording is the discipline this
+# file states, and it is exactly what a verbatim quotation forbids.
+oder = "oder"
 
 [files]
 # The two research directories are excluded for the reason
